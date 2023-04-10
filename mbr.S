@@ -1,3 +1,4 @@
+%include "boot.S"
 
 SECTION MBR vstart=0x7c00
 
@@ -39,7 +40,7 @@ SECTION MBR vstart=0x7c00
       ; mem addr
     mov bx, LOADER_BASE_ADDR
       ; len/ sector count
-    mov cx, 1
+    mov cx, 4
     call rd_disk_m_16
     jmp LOADER_BASE_ADDR
 
