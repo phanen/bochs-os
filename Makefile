@@ -3,8 +3,8 @@
 run: mbr.bin
 	bochs -q -f bochs.conf
 
-mbr.bin: mbr.asm hd60M.img
-	nasm mbr.asm -o mbr.bin
+mbr.bin: mbr.S hd60M.img
+	nasm mbr.S -o mbr.bin -I include
 	dd if=mbr.bin of=hd60M.img bs=512B count=1 conv=notrunc
 
 disk:
