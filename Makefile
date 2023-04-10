@@ -1,4 +1,4 @@
-.PHONY = run disk dep clean mbr-disasm
+.PHONY = run disk dep clean mbr-disasm loader-disasm
 
 run: mbr.bin loader.bin
 	bochs -q -f bochs.conf
@@ -15,6 +15,9 @@ disk:
 	bximage -q -hd -mode="flat" -size=60 hd60M.img
 	# TODO
 	# dd if=/dev/zero of=hd60M.img bs=4K count=15360
+
+loader-disasm: loader.bin
+	objdump -D -b binary -mi386 -Mintel,i8086 loader.bin
 
 mbr-disasm: mbr.bin
 	objdump -D -b binary -mi386 -Mintel,i8086 mbr.bin
