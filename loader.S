@@ -17,7 +17,7 @@ section loader vstart=LOADER_BASE_ADDR
     mov byte [gs:0x08], 'e'
     mov byte [gs:0x09], 0xa4
 
-    mov byte [gs:0x08], 'r'
-    mov byte [gs:0x09], 0xa4
+    mov byte [gs:0x0a], 'r'
+    mov byte [gs:0x0b], 0xa4
 
     jmp $
