@@ -113,6 +113,7 @@ rd_disk_m_16:
       ; cs = 0:ax = ax
     mov cx, ax
 
+    mov dx, 0x1f0
   .go_on_read:
       ; read a word each time
     in ax, dx
