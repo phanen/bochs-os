@@ -1,4 +1,4 @@
-.PHONY = run disk dep
+.PHONY = run disk dep mbr-disasm
 
 run: mbr.bin
 	bochs -q -f bochs.conf
@@ -11,6 +11,12 @@ disk:
 	bximage -q -hd -mode="flat" -size=60 hd60M.img
 	# TODO
 	# dd if=/dev/zero of=hd60M.img bs=4K count=15360
+
+mbr-disasm: mbr.bin
+	objdump -D -b binary -mi386 -Mintel,i8086 mbr.bin
+	# AT&T
+	# objdump -D -b binary -mi386 -Maddr16,data16 mbr.bin
+	# ndisasm -b16 -o7c00h -a -s7c3eh mbr.bin
 
 dep:
 	sudo pacman -S nasm gtk-2 xorg
