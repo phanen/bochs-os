@@ -1,11 +1,15 @@
-.PHONY = run disk dep mbr-disasm
+.PHONY = run disk dep clean mbr-disasm
 
-run: mbr.bin
+run: mbr.bin loader.bin
 	bochs -q -f bochs.conf
 
 mbr.bin: mbr.S hd60M.img
 	nasm mbr.S -o mbr.bin -I include
 	dd if=mbr.bin of=hd60M.img bs=512B count=1 conv=notrunc
+
+loader.bin: loader.S hd60M.img
+	nasm loader.S -o loader.bin -I include
+	dd if=loader.bin of=hd60M.img bs=512B count=1 seek=2 conv=notrunc
 
 disk:
 	bximage -q -hd -mode="flat" -size=60 hd60M.img
@@ -17,6 +21,9 @@ mbr-disasm: mbr.bin
 	# AT&T
 	# objdump -D -b binary -mi386 -Maddr16,data16 mbr.bin
 	# ndisasm -b16 -o7c00h -a -s7c3eh mbr.bin
+
+clean:
+	rm *.bin -rf
 
 dep:
 	sudo pacman -S nasm gtk-2 xorg
