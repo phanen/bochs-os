@@ -42,7 +42,7 @@ SECTION MBR vstart=0x7c00
       ; len/ sector count
     mov cx, 4
     call rd_disk_m_16
-    jmp LOADER_BASE_ADDR
+    jmp LOADER_BASE_ADDR + 0x300
 
     ; load from disk to mem
     ; in 16 bit mode
@@ -123,8 +123,6 @@ rd_disk_m_16:
     add bx, 2
       ; check cs
     loop .go_on_read
-          ; however, disasm of `.go_on_read` in bochs is:
-          ; add byte ptr ds:[bx+si], al    
     ret
 
 
