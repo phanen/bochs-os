@@ -30,7 +30,7 @@ section loader vstart=LOADER_BASE_ADDR
     GDT_LIMIT equ GDT_SIZE - 1
 
       ; reserve 60 entry for easy extend..
-    ; times 60 dq 0
+    times 60 dq 0
 
     ; get selector
     SELECTOR_CODE  equ (0x0001 << 3) + TI_GDT + RPL0
@@ -83,4 +83,12 @@ p_mode_start:
   mov gs, ax
   
   mov byte[gs:160], 'P'
+  mov byte[gs:162], 'R'
+  mov byte[gs:164], 'O'
+  mov byte[gs:166], 'T'
+  mov byte[gs:168], 'E'
+  mov byte[gs:170], 'C'
+  mov byte[gs:172], 'T'
+  mov byte[gs:174], 'E'
+  mov byte[gs:176], 'D'
   jmp $

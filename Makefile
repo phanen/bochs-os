@@ -9,7 +9,7 @@ mbr.bin: mbr.S hd60M.img
 
 loader.bin: loader.S hd60M.img
 	nasm loader.S -o loader.bin -I include
-	dd if=loader.bin of=hd60M.img bs=512B count=1 seek=2 conv=notrunc
+	dd if=loader.bin of=hd60M.img bs=512B count=4 seek=2 conv=notrunc
 
 disk:
 	bximage -q -hd -mode="flat" -size=60 hd60M.img
