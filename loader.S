@@ -169,3 +169,61 @@ section loader vstart=LOADER_BASE_ADDR
     mov byte[gs:174], 'E'
     mov byte[gs:176], 'D'
     jmp $
+
+    ; enable paging
+  .setup_page:
+
+    ; set PDT at 0x100000
+    mov ecx, 4096
+    mov esi, 0
+    .clear_page_dir:
+      mov byte [PAGE_DIR_TABLE_POS + esi], 0
+      inc esi
+      loop .clear_page_dir
+
+    ; first 3 pde
+      ; vaddr 0x0 -> pt at 0x101000 -> paddr 0x0
+      ; vaddr 3G  -> pt at 0x101000 -> paddr 0x0
+    .create_pde:
+      mov eax, PAGE_DIR_TABLE_POS
+      add eax, 0x1000
+      mov ebx, eax ; addr of 1th pt
+        ; set low bit (i.e. attribution of entry)
+      or eax, PG_US_U | PG_RW_W | PG_P
+        ; pde: 0x0 -> pt 0x101000
+      mov [PAGE_DIR_TABLE_POS + 0x0], eax
+        ; pde: 3G  -> pt 0x101000
+          ; (1024*3/4*4M)
+      mov [PAGE_DIR_TABLE_POS + 0xc00], eax
+
+      sub eax, 0x1000
+        ; pde: top 1M -> pt 0x100000 (i.e pde itself)
+      mov [PAGE_DIR_TABLE_POS + 4092], eax ; 4092 = 1023 * 4
+
+    ; set PT at 0x101000
+      ; to map vaddr 0-1M-> paddr 0-1M
+      ; set 256/1024 entry (256*4K=1M)
+    mov ecx, 256
+    mov esi, 0
+    mov edx, PG_US_U | PG_RW_W | PG_P
+    .create_pte:
+      mov [ebx + esi * 4], edx
+      add edx, 0x1000
+      inc esi
+      loop .create_pte
+    
+    ; set other pde (3G-4G)
+    mov eax, PAGE_DIR_TABLE_POS
+    add eax, 0x2000
+    or eax, PG_US_U | PG_RW_W | PG_P
+    mov ebx, PAGE_DIR_TABLE_POS
+    mov ecx, 254
+    mov esi, 769
+    .create_kernel_pde:
+      ; 769-1022(3G-4G) -> 0x102000,0x103000 ... 0x200000
+      ; 1-767 ??
+      mov [ebx + esi * 4], eax
+      inc esi
+      add eax, 0x1000
+      loop .create_kernel_pde
+      ret
