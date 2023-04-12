@@ -168,9 +168,41 @@ section loader vstart=LOADER_BASE_ADDR
     mov byte[gs:172], 'T'
     mov byte[gs:174], 'E'
     mov byte[gs:176], 'D'
+
+    ; prepare to page
+    ; NOTE: after paging, all current paddr will become vaddr,
+      ; (of course, including the paddr in gdt entry)
+      ; so we need to explicitly remap them
+    call .setup_page
+      ; backup the gdtr before paging
+        ; (though actually unnecessary here)
+    sgdt [gdt_ptr]
+    
+      ; get video gdte
+      ; remap video gdte's vaddr to 3G
+    mov ebx, [gdt_ptr + 2]
+    or dword [ebx + 0x18 + 4], 0xc0_000000
+
+    ; remap the gdt base to 3G
+    add dword [gdt_ptr + 2], 0xc0_000000
+    add esp, 0xc0000000
+
+    ; set cr3, point to the PD
+    mov eax, PAGE_DIR_TABLE_POS
+    mov cr3, eax
+
+    ; enable PG in cr0
+    mov eax, cr0
+    or eax, 0x80000000
+    mov cr0, eax
+
+    ; load gdtr again after paging
+    lgdt [gdt_ptr]
+    
+    mov byte [gs:160], 'V'
     jmp $
 
-    ; enable paging
+    ; setup PD and PT
   .setup_page:
 
     ; set PDT at 0x100000
