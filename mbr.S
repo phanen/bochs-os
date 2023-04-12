@@ -54,7 +54,7 @@ rd_disk_m_16:
       ; backup
     mov esi, eax
     mov di, cx
-      
+
     ; set sector count
     mov dx, 0x1f2
     mov al, cl
@@ -73,7 +73,7 @@ rd_disk_m_16:
     shr eax, cl
     out dx, al
 
-    ; set lba high 
+    ; set lba high
     mov dx, 0x1f5
     shr eax, cl
     out dx, al

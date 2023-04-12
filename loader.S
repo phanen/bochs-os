@@ -18,7 +18,7 @@ section loader vstart=LOADER_BASE_ADDR
       ; a data seg (flat)
     DATA_STACK_DESC:
       dd 0x0000ffff
-      dd DESC_DATA_HIGH4    
+      dd DESC_DATA_HIGH4
       ; a display seg
     VIDOE_DESC:
       ; (0xbffff - 0xb8000) / 4k
@@ -74,7 +74,7 @@ section loader vstart=LOADER_BASE_ADDR
         ; start of ARDS array
       mov ebx, ards_buf
         ; max size
-      xor edx, edx 
+      xor edx, edx
       .find_max_mem_area:
         ; no need to check type
         mov eax, [ebx]
@@ -126,7 +126,7 @@ section loader vstart=LOADER_BASE_ADDR
       shl edx, 16
       or edx, eax
       add edx, 0x100000
-    
+
 
     .mem_get_ok:
       mov [total_mem_bytes], edx
@@ -158,7 +158,7 @@ section loader vstart=LOADER_BASE_ADDR
     mov esp, LOADER_STACK_TOP
     mov ax, SELECTOR_VIDEO
     mov gs, ax
-    
+
     mov byte[gs:160], 'P'
     mov byte[gs:162], 'R'
     mov byte[gs:164], 'O'
@@ -177,7 +177,7 @@ section loader vstart=LOADER_BASE_ADDR
       ; backup the gdtr before paging
         ; (though actually unnecessary here)
     sgdt [gdt_ptr]
-    
+
       ; get video gdte
       ; remap video gdte's vaddr to 3G
     mov ebx, [gdt_ptr + 2]
@@ -198,7 +198,7 @@ section loader vstart=LOADER_BASE_ADDR
 
     ; load gdtr again after paging
     lgdt [gdt_ptr]
-    
+
     mov byte [gs:160], 'V'
     jmp $
 
@@ -243,7 +243,7 @@ section loader vstart=LOADER_BASE_ADDR
       add edx, 0x1000
       inc esi
       loop .create_pte
-    
+
     ; set other pde (3G-4G)
     mov eax, PAGE_DIR_TABLE_POS
     add eax, 0x2000
