@@ -1,5 +1,7 @@
 *.bin
 *.img
 *.log
+*.o
+*.out
 
 tests/
