@@ -161,11 +161,15 @@ section loader vstart=LOADER_BASE_ADDR
 
     mov byte[gs:160], 'P'
 
+    mov eax, KERNEL_START_SECTOR
+    mov ebx, KERNEL_BIN_BASE_ADDR
+    mov ecx, 200 ; sector
+    call rd_disk_m_32
+
     ; prepare to page
-    ; NOTE: after paging, all current paddr will become vaddr,
-      ; (of course, including the paddr in gdt entry)
-      ; so we need to explicitly remap them
-    call .setup_page
+    ; NOTE: after paging, paddr -> vaddr
+      ; explicitly remap paddr in vaddr
+    call setup_page
       ; backup the gdtr before paging
         ; (though actually unnecessary here)
     sgdt [gdt_ptr]
@@ -191,11 +195,19 @@ section loader vstart=LOADER_BASE_ADDR
     ; load gdtr again after paging
     lgdt [gdt_ptr]
 
-    mov byte [gs:160], 'V'
-    jmp $
+    ; flush the pipeline
+    jmp SELECTOR_CODE:enter_kernel
+
+  enter_kernel:
+    call kernel_init ; load kernel into 3G+
+    mov esp, 0xc009f000 ; 4k align ...
+    jmp KERNEL_ENTRY_POINT ; 0x1500
+
+    ; mov byte [gs:160], 'V'
+    ; jmp $
 
     ; setup PD and PT
-  .setup_page:
+  setup_page:
 
     ; set PDT at 0x100000
     mov ecx, 4096
@@ -251,3 +263,114 @@ section loader vstart=LOADER_BASE_ADDR
       add eax, 0x1000
       loop .create_kernel_pde
       ret
+
+  ; load entry into vaddr
+kernel_init:
+  xor eax, eax
+  xor ebx, ebx ; e_phoff
+  xor ecx, ecx ; e_phnum
+  xor edx, edx ; e_phentsize
+
+  mov dx, [KERNEL_BIN_BASE_ADDR + 42]
+  mov cx, [KERNEL_BIN_BASE_ADDR + 44]
+  mov ebx, [KERNEL_BIN_BASE_ADDR + 28]
+    ; e_phoff + base_addr = addr of this ph
+  add ebx, KERNEL_BIN_BASE_ADDR
+
+  .each_segment:
+      ; if p_type = 0 (unused), then jmp
+    cmp byte [ebx + 0], PT_NULL
+    je .PTNULL
+
+      ; load entry into vaddr?
+    push dword [ebx + 16] ; p_filesz
+    mov eax, [ebx + 4] ; p_offset
+    add eax, KERNEL_BIN_BASE_ADDR
+    push eax
+    push dword [ebx + 8] ; p_vaddr
+      ; memcpy(dst, src, size)
+    call mem_cpy
+    add esp, 12
+  .PTNULL:
+    add ebx, edx
+    loop .each_segment
+  ret
+
+mem_cpy:
+  cld ; set DF = 0 (edi, esi +)
+  push ebp
+  mov ebp, esp
+  push ecx ; for loop, saved by callee
+
+  mov edi, [ebp + 8] ; dst
+  mov esi, [ebp + 12] ; src
+  mov ecx, [ebp + 16] ; size
+  rep movsb ; --ecx, [edi] <- [esi]
+
+  ; restore the env
+  pop ecx
+  pop ebp
+  ret
+
+rd_disk_m_32:
+     ; eax LBA (disk addr)
+     ; ebx mem addr
+     ; ecx sector count
+    mov esi, eax
+    mov di, cx
+
+    ; set sector count
+    mov dx, 0x1f2
+    mov al, cl
+    out dx, al
+
+    mov eax, esi
+
+    ; set lba low
+    mov dx, 0x1f3
+    out dx, al
+
+    ; set lba mid
+    mov dx, 0x1f4
+    mov cl, 8
+    shr eax, cl
+    out dx, al
+
+    ; set lba high
+    mov dx, 0x1f5
+    shr eax, cl
+    out dx, al
+
+    ; set device
+    mov dx, 0x1f6
+    shr eax, cl
+    and al, 0x0f ; low 4
+    or al, 0xe0 ; high 4
+    out dx, al
+
+    ; set command
+    mov dx, 0x1f7
+    mov al, 0x20
+    out dx, al
+
+    ; PIO (bsy)
+    .not_ready:
+    nop
+    in al, dx
+    and al, 0x88
+    cmp al, 0x08 ; 4th drdy, 7th bsy
+    jnz .not_ready
+
+    ; read
+    mov ax, di
+    mov dx, 256
+    mul dx ; eax
+    mov cx, ax
+    mov dx, 0x1f0
+
+    .go_on_read:
+    in ax,dx
+    mov [ebx], ax
+    add ebx, 2
+    loop .go_on_read
+    ret
