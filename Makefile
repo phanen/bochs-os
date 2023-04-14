@@ -1,6 +1,6 @@
 .PHONY = run disk dep clean mbr-disasm loader-disasm
 
-run: mbr.bin loader.bin
+run: mbr.bin loader.bin kernel.bin
 	bochs -q -f bochs.conf
 
 mbr.bin: mbr.S hd60M.img
@@ -10,6 +10,13 @@ mbr.bin: mbr.S hd60M.img
 loader.bin: loader.S hd60M.img
 	nasm loader.S -o loader.bin -I include
 	dd if=loader.bin of=hd60M.img bs=512B count=4 seek=2 conv=notrunc
+
+kernel.bin:
+	# nasm loader.S -o loader.bin -I include
+	# dd is smart enough
+	gcc -o main.o -c -m32 main.c
+	ld -o kernel.bin -e main -Ttext 0xc0001500 -m elf_i386 main.o
+	dd if=kernel.bin of=hd60M.img bs=512B count=200 seek=9 conv=notrunc
 
 disk:
 	bximage -q -hd -mode="flat" -size=60 hd60M.img
@@ -26,7 +33,7 @@ mbr-disasm: mbr.bin
 	# ndisasm -b16 -o7c00h -a -s7c3eh mbr.bin
 
 clean:
-	rm *.bin -rf
+	rm *.bin *.o *.out -rf
 
 dep:
 	sudo pacman -S nasm gtk-2 xorg
