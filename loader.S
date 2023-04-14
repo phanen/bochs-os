@@ -90,7 +90,7 @@ section loader vstart=LOADER_BASE_ADDR
         jmp .mem_get_ok
 
     .e820_failed_so_try_e801:
-      mov ax, 0xe0810
+      mov ax, 0xe081
       int 0x15
       jc .e801_failed_so_try_88
         ; low mem part (<15MB)
@@ -160,14 +160,6 @@ section loader vstart=LOADER_BASE_ADDR
     mov gs, ax
 
     mov byte[gs:160], 'P'
-    mov byte[gs:162], 'R'
-    mov byte[gs:164], 'O'
-    mov byte[gs:166], 'T'
-    mov byte[gs:168], 'E'
-    mov byte[gs:170], 'C'
-    mov byte[gs:172], 'T'
-    mov byte[gs:174], 'E'
-    mov byte[gs:176], 'D'
 
     ; prepare to page
     ; NOTE: after paging, all current paddr will become vaddr,
