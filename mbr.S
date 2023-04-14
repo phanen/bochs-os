@@ -35,17 +35,13 @@ SECTION MBR vstart=0x7c00
     mov byte [gs:0x06], 'g'
     mov byte [gs:0x07], 0xa4
 
-      ; disk addr
-    mov eax, LOADER_START_SECTOR
-      ; mem addr
-    mov bx, LOADER_BASE_ADDR
-      ; len/ sector count
-    mov cx, 4
+    mov eax, LOADER_START_SECTOR ; disk addr
+    mov bx, LOADER_BASE_ADDR ; mem addr
+    mov cx, 4 ; len/ sector count
     call rd_disk_m_16
     jmp LOADER_BASE_ADDR + 0x300
 
-    ; load from disk to mem
-    ; in 16 bit mode
+    ; load from disk to mem, in 16 bit mode
 rd_disk_m_16:
       ; eax = disk addr
       ; bx = mem addr
@@ -121,7 +117,7 @@ rd_disk_m_16:
       ; otherwise it wrap back to 0x0000
     mov [bx], ax
     add bx, 2
-      ; check cs
+      ; check cx
     loop .go_on_read
     ret
 
