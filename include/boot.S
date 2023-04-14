@@ -1,8 +1,13 @@
 
-; loader
+; loader (size < 2000B)
 LOADER_BASE_ADDR    equ      0x900
 LOADER_START_SECTOR equ        0x2
 PAGE_DIR_TABLE_POS  equ   0x100000
+
+; kernel (size < 100K)
+KERNEL_START_SECTOR   equ        0x9 ; 0x2~0x8 for loader
+KERNEL_BIN_BASE_ADDR  equ    0x70000 ; in 0x7e00~0x9fbff
+KERNEL_ENTRY_POINT    equ 0xc0001500
 
 ; gdt attribution
 DESC_G_4K         equ   10000000_00000000_00000000b
@@ -62,3 +67,6 @@ PG_RW_W             equ    10b
 ; PL 0 1 2
 PG_US_S             equ   000b
 PG_US_U             equ   100b
+
+; program header table attribution
+PT_NULL             equ      0
