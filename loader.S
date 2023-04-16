@@ -161,9 +161,10 @@ section loader vstart=LOADER_BASE_ADDR
 
     mov byte[gs:160], 'P'
 
+    ; load kernel
     mov eax, KERNEL_START_SECTOR
     mov ebx, KERNEL_BIN_BASE_ADDR
-    mov ecx, 200 ; sector
+    mov ecx, 200 ; kernel <= 100K
     call rd_disk_m_32
 
     ; prepare to page
@@ -198,13 +199,13 @@ section loader vstart=LOADER_BASE_ADDR
     ; flush the pipeline
     jmp SELECTOR_CODE:enter_kernel
 
-  enter_kernel:
+    enter_kernel:
+    mov byte [gs:160], 'V'
+    ; jmp $
     call kernel_init ; load kernel into 3G+
     mov esp, 0xc009f000 ; 4k align ...
     jmp KERNEL_ENTRY_POINT ; 0x1500
 
-    ; mov byte [gs:160], 'V'
-    ; jmp $
 
     ; setup PD and PT
   setup_page:
@@ -271,10 +272,10 @@ kernel_init:
   xor ecx, ecx ; e_phnum
   xor edx, edx ; e_phentsize
 
-  mov dx, [KERNEL_BIN_BASE_ADDR + 42]
-  mov cx, [KERNEL_BIN_BASE_ADDR + 44]
-  mov ebx, [KERNEL_BIN_BASE_ADDR + 28]
-    ; e_phoff + base_addr = addr of this ph
+  mov dx, [KERNEL_BIN_BASE_ADDR + 42] ; 32B
+  mov cx, [KERNEL_BIN_BASE_ADDR + 44] ; 8
+  mov ebx, [KERNEL_BIN_BASE_ADDR + 28] ; 0x34 = 52
+    ; e_phoff + base_addr = addr of first ph
   add ebx, KERNEL_BIN_BASE_ADDR
 
   .each_segment:
