@@ -11,11 +11,12 @@ loader.bin: loader.S hd60M.img
 	nasm loader.S -o loader.bin -I include
 	dd if=loader.bin of=hd60M.img bs=512B count=4 seek=2 conv=notrunc
 
-kernel.bin:
+kernel.bin: main.o main.c
 	# nasm loader.S -o loader.bin -I include
 	# dd is smart enough
-	gcc -o main.o -c -m32 main.c
-	ld -o kernel.bin -e main -Ttext 0xc0001500 -m elf_i386 main.o
+	clang -o main.o -c -m32 --static -nostdlib main.c
+	ld -o kernel.bin -e main --static -Ttext 0xc0001500 -m elf_i386 main.o
+	# strip -R .got.plt kernel.bin -R .note.gnu.property -R .eh_frame kernel.bin
 	dd if=kernel.bin of=hd60M.img bs=512B count=200 seek=9 conv=notrunc
 
 disk:
