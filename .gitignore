@@ -5,3 +5,4 @@
 *.out
 
 tests/
+compile_commands.json
