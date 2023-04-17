@@ -119,3 +119,25 @@ put_char:
     .put_char_done:
     popad
     ret
+
+global put_str
+put_str:
+    push ebx
+    push ecx
+    xor ecx, ecx
+    mov ebx, [esp + 12] ; 4 + 4 + size(eip)
+  .goon:
+    mov cl, [ebx]
+    cmp cl, 0
+      ; c str end with \0
+    jz .str_over
+    push ecx
+    call put_char
+    add esp, 4
+    inc ebx
+    jmp .goon
+
+  .str_over:
+    pop ecx
+    pop ebx
+    ret
