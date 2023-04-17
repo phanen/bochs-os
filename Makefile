@@ -1,7 +1,10 @@
-.PHONY = run disk dep clean mbr-disasm loader-disasm
+.PHONY = bochs bochs-gdb disk dep clean mbr-disasm loader-disasm
 
-run: mbr.bin loader.bin kernel.bin
+bochs: mbr.bin loader.bin kernel.bin
 	bochs -q -f bochs.conf
+
+bochs-gdb: mbr.bin loader.bin kernel.bin
+	BXSHARE=/usr/local/share/bochs bochs-gdb -q -f bochs-gdb.conf
 
 mbr.bin: mbr.S hd60M.img
 	nasm mbr.S -o mbr.bin -I include
@@ -11,14 +14,17 @@ loader.bin: loader.S hd60M.img
 	nasm loader.S -o loader.bin -I include
 	dd if=loader.bin of=hd60M.img bs=512B count=4 seek=2 conv=notrunc
 
-kernel.bin: main.o main.c
-	# nasm loader.S -o loader.bin -I include
-	# dd is smart enough
-	clang -o main.o -c -m32 --static -nostdlib main.c
-	ld -o kernel.bin -e main --static -Ttext 0xc0001500 -m elf_i386 main.o
+kernel.bin: main.o lib/kernel/print.o
+	ld -o kernel.bin -e main --static -Ttext 0xc0001500 -m elf_i386 main.o lib/kernel/print.o
 	# strip -R .got.plt kernel.bin -R .note.gnu.property -R .eh_frame kernel.bin
-	dd if=kernel.bin of=hd60M.img bs=512B count=200 seek=9 conv=notrunc
+	dd if=kernel.bin of=hd60M.img bs=512B count=200 seek=9 conv=notrunc # dd is smart enough
 
+lib/kernel/print.o: lib/kernel/print.S lib/kernel/print.h
+	nasm -f elf -o lib/kernel/print.o lib/kernel/print.S
+
+main.o: main.c
+	clang -I ./lib/kernel/ -o main.o -c -m32 --static -nostdlib main.c
+	
 disk:
 	bximage -q -hd -mode="flat" -size=60 hd60M.img
 	# TODO
@@ -34,7 +40,7 @@ mbr-disasm: mbr.bin
 	# ndisasm -b16 -o7c00h -a -s7c3eh mbr.bin
 
 clean:
-	rm *.bin *.o *.out -rf
+	rm {*,lib/kernel/*}.{bin,o,out} -rf
 
 dep:
 	sudo pacman -S nasm gtk-2 xorg
