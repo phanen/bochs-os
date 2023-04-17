@@ -3,6 +3,9 @@ RPL0           equ  000
 SELECTOR_VIDEO equ (0x0003 << 3) + TI_GDT + RPL0
 
 [bits 32]
+section .data
+    put_int_buffer dq 0
+
 section .text
 global put_char ; export
 put_char:
@@ -140,4 +143,65 @@ put_str:
   .str_over:
     pop ecx
     pop ebx
+    ret
+
+
+global put_int
+put_int:
+    pushad
+
+    mov ebp, esp
+    mov eax, [ebp + 4 * 9] ; 8 + size(eip)
+    mov edx, eax
+    mov edi, 7 ; 7 6 -> .. -> 0
+    mov ecx, 8 ; 32=8*4, 8 (hex char)
+    mov ebx, put_int_buffer
+
+
+  ; get low 4 bit, parse out hex char
+  .16based_4bits:
+    and edx, 0x0000_000f
+    cmp edx, 9
+    jg .is_a2f ; a-f
+    add edx, '0' ; 0-9
+      ; store the char to be put
+    jmp .store
+
+  .is_a2f:
+    sub edx, 10
+    add edx, 'a'
+    
+  ; store 8 hex char in big endian
+  .store:
+    mov [ebx + edi], dl
+    dec edi
+    shr eax, 4
+    mov edx, eax
+    loop .16based_4bits
+  
+  .rdy_to_print:
+    inc edi ; -1 -> 0
+    
+  ; 000xx -> xx
+  .trunc_prefix_0:
+    cmp edi, 8
+    je .all0 ; 0x0000_0000 -> 0
+    mov cl, [put_int_buffer + edi]
+    inc edi
+    cmp cl, '0'
+    je .trunc_prefix_0
+    dec edi ; edi = the first high hex != 0x0
+    jmp .put_each_num
+
+  .all0:
+    mov cl, '0'
+  .put_each_num:
+    push ecx    
+    call put_char
+    add esp, 4
+    inc edi
+    mov cl, [put_int_buffer + edi]
+    cmp edi, 8
+    jl .put_each_num
+    popad
     ret
