@@ -1,17 +1,17 @@
-.PHONY = bochs bochs-gdb disk dep clean mbr-disasm loader-disasm
+.PHONY = bochs gdb disk dep clean mbr-disasm loader-disasm
 
 bochs: mbr.bin loader.bin kernel.bin
 	bochs -q -f bochs.conf
 
-bochs-gdb: mbr.bin loader.bin kernel.bin
+gdb: mbr.bin loader.bin kernel.bin
 	BXSHARE=/usr/local/share/bochs bochs-gdb -q -f bochs-gdb.conf
 
-mbr.bin: mbr.S hd60M.img
-	nasm mbr.S -o mbr.bin -I include
+mbr.bin: boot/mbr.S hd60M.img
+	nasm boot/mbr.S -o mbr.bin -I boot/include
 	dd if=mbr.bin of=hd60M.img bs=512B count=1 conv=notrunc
 
-loader.bin: loader.S hd60M.img
-	nasm loader.S -o loader.bin -I include
+loader.bin: boot/loader.S hd60M.img
+	nasm boot/loader.S -o loader.bin -I boot/include
 	dd if=loader.bin of=hd60M.img bs=512B count=4 seek=2 conv=notrunc
 
 kernel.bin: main.o lib/kernel/print.o
@@ -22,8 +22,8 @@ kernel.bin: main.o lib/kernel/print.o
 lib/kernel/print.o: lib/kernel/print.S lib/kernel/print.h
 	nasm -f elf -o lib/kernel/print.o lib/kernel/print.S
 
-main.o: main.c
-	clang -I ./lib/kernel/ -o main.o -c -m32 --static -nostdlib main.c
+main.o: kernel/main.c
+	clang -I ./lib/kernel/ -o main.o -c -m32 --static -nostdlib kernel/main.c
 	
 disk:
 	bximage -q -hd -mode="flat" -size=60 hd60M.img
