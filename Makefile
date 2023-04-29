@@ -1,5 +1,12 @@
 .PHONY = bochs gdb disk dep clean mbr-disasm loader-disasm
 
+INCS = -I lib/kernel/ -I lib/ -I kernel/
+CFLAGS = -m32 -static -nostdlib -fno-stack-protector # -fno-builtin
+LDFLAGS = -e main -static -Ttext 0xc0001500 -m elf_i386
+NASMFLAGS = -f elf
+
+CC = clang
+
 bochs: mbr.bin loader.bin kernel.bin
 	bochs -q -f bochs.conf
 
@@ -7,24 +14,33 @@ gdb: mbr.bin loader.bin kernel.bin
 	BXSHARE=/usr/local/share/bochs bochs-gdb -q -f bochs-gdb.conf
 
 mbr.bin: boot/mbr.S hd60M.img
-	nasm boot/mbr.S -o mbr.bin -I boot/include
+	nasm -o mbr.bin -I boot/include boot/mbr.S
 	dd if=mbr.bin of=hd60M.img bs=512B count=1 conv=notrunc
 
 loader.bin: boot/loader.S hd60M.img
-	nasm boot/loader.S -o loader.bin -I boot/include
+	nasm -o loader.bin -I boot/include boot/loader.S
 	dd if=loader.bin of=hd60M.img bs=512B count=4 seek=2 conv=notrunc
 
-kernel.bin: main.o lib/kernel/print.o
-	ld -o kernel.bin -e main --static -Ttext 0xc0001500 -m elf_i386 main.o lib/kernel/print.o
+kernel.bin: main.o print.o hd60M.img # init.o interrupt.o kernel.o
+	ld -o kernel.bin  $(LDFLAGS) main.o print.o # init.o interrupt.o kernel.o
 	# strip -R .got.plt kernel.bin -R .note.gnu.property -R .eh_frame kernel.bin
 	dd if=kernel.bin of=hd60M.img bs=512B count=200 seek=9 conv=notrunc # dd is smart enough
 
-lib/kernel/print.o: lib/kernel/print.S lib/kernel/print.h
-	nasm -f elf -o lib/kernel/print.o lib/kernel/print.S
-
 main.o: kernel/main.c
-	clang -I ./lib/kernel/ -o main.o -c -m32 --static -nostdlib kernel/main.c
-	
+	$(CC) -o main.o $(INCS) $(CFLAGS) -c kernel/main.c
+
+# init.o: kernel/init.c kernel/init.h
+# 	$(CC) -o init.o $(INCS) $(CFLAGS) -c kernel/init.c
+#
+# interrupt.o: kernel/interrupt.c kernel/interrupt.h
+# 	$(CC) -o interrupt.o $(INCS) $(CFLAGS) -c kernel/interrupt.c
+
+kernel.o: kernel/kernel.S
+	nasm -o kernel.o $(NASMFLAGS) kernel/kernel.S
+
+print.o: lib/kernel/print.S lib/kernel/print.h
+	nasm -o print.o $(NASMFLAGS) lib/kernel/print.S
+
 disk:
 	bximage -q -hd -mode="flat" -size=60 hd60M.img
 	# TODO
@@ -40,13 +56,13 @@ mbr-disasm: mbr.bin
 	# ndisasm -b16 -o7c00h -a -s7c3eh mbr.bin
 
 clean:
-	rm {*,lib/kernel/*}.{bin,o,out} -rf
+	rm *.{bin,o,out} -rf
 
 dep:
 	sudo pacman -S nasm gtk-2 xorg
 	wget "https://sourceforge.net/projects/bochs/files/bochs/2.6.2/bochs-2.6.2.tar.gz/download" &&\
-	tar -xzf bochs-2.6.2.tar.gz &&\
-	(cd bochs-2.6.2 && ./configure \
+		tar -xzf bochs-2.6.2.tar.gz &&\
+		(cd bochs-2.6.2 && ./configure \
 		--enable-debugger \
 		--enable-disasm \
 		--enable-iodebug \
