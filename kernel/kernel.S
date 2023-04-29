@@ -35,7 +35,7 @@ section .text
   ; so we'll exactly get a array `intr_entry_table`
   ; where we can find all addr of interrupt
 section .data
-  dd intr%1_entry
+  dd intr%1entry
 %endmacro
 
 ; define 33 interrupt handler
