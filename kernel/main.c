@@ -1,4 +1,5 @@
 #include "print.h"
+#include "init.h"
 
 void test_print() {
   put_str("call put_str in kernel\n");
@@ -6,9 +7,19 @@ void test_print() {
   put_char('\n');
   put_int(0x23048);
   put_char('\n');
-  while(1);
+  // while(1);
+  // return;
 }
 
 int main() {
+
   test_print();
+  test_print();
+  test_print();
+  test_print();
+  test_print();
+  test_print();
+
+  while(1);
 }
+
