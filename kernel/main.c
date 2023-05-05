@@ -1,6 +1,19 @@
 #include "print.h"
 #include "init.h"
 
+void test_print();
+
+int main() {
+
+  // test_print();
+  put_str("you are in kernel now\n");
+
+  init_all();
+    // set eflags.IF = 1 to enable intrrupt
+  asm volatile("sti");
+  while(1);
+}
+
 void test_print() {
   put_str("call put_str in kernel\n");
   put_int(0x123abc);
@@ -10,16 +23,3 @@ void test_print() {
   // while(1);
   // return;
 }
-
-int main() {
-
-  test_print();
-  test_print();
-  test_print();
-  test_print();
-  test_print();
-  test_print();
-
-  while(1);
-}
-

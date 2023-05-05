@@ -21,19 +21,19 @@ loader.bin: boot/loader.S hd60M.img
 	nasm -o loader.bin -I boot/include boot/loader.S
 	dd if=loader.bin of=hd60M.img bs=512B count=4 seek=2 conv=notrunc
 
-kernel.bin: main.o print.o hd60M.img # init.o interrupt.o kernel.o
-	ld -o kernel.bin  $(LDFLAGS) main.o print.o # init.o interrupt.o kernel.o
+kernel.bin: main.o print.o hd60M.img init.o interrupt.o kernel.o
+	ld -o kernel.bin  $(LDFLAGS) main.o print.o init.o interrupt.o kernel.o
 	# strip -R .got.plt kernel.bin -R .note.gnu.property -R .eh_frame kernel.bin
 	dd if=kernel.bin of=hd60M.img bs=512B count=200 seek=9 conv=notrunc # dd is smart enough
 
 main.o: kernel/main.c
 	$(CC) -o main.o $(INCS) $(CFLAGS) -c kernel/main.c
 
-# init.o: kernel/init.c kernel/init.h
-# 	$(CC) -o init.o $(INCS) $(CFLAGS) -c kernel/init.c
-#
-# interrupt.o: kernel/interrupt.c kernel/interrupt.h
-# 	$(CC) -o interrupt.o $(INCS) $(CFLAGS) -c kernel/interrupt.c
+init.o: kernel/init.c kernel/init.h
+	$(CC) -o init.o $(INCS) $(CFLAGS) -c kernel/init.c
+
+interrupt.o: kernel/interrupt.c kernel/interrupt.h
+	$(CC) -o interrupt.o $(INCS) $(CFLAGS) -c kernel/interrupt.c
 
 kernel.o: kernel/kernel.S
 	nasm -o kernel.o $(NASMFLAGS) kernel/kernel.S
