@@ -3,6 +3,8 @@
 %define ZERO push 0 ; non-error-code intr, then pad a dummy error_code
 
 extern put_str
+extern idt_table
+
 section .data
 intr_str db "interrupt occur!", 0xa, 0
 
@@ -10,26 +12,25 @@ global intr_entry_table
 intr_entry_table:
 
 ; a helper to contruct interrupt handler
-  ; 2 args: iv number, pre-hook (good idea)
+  ; 2 args: iv number + hook
 %macro VECTOR 2
 section .text
   intr%1entry:
-
   %2 ; push a dummy or not, depend on if error code exixt
-
-    ; logging as handler
-  push intr_str
-  call put_str
-  add esp, 4
+  push ds
+  push es
+  push fs
+  push gs
+  pushad ; eax ecx edx ebx esp ebp esi edi
 
   ; send EOI to 8259A
   mov al, 0x20
   out 0xa0, al ; to master chip
   out 0x20, al ; to slave chip
 
-  ; ignore error code before iret
-  add esp, 4
-  iret
+  push %1 ; push intr num, we need it to debug anyway
+  call [idt_table + %1 * 4]
+  jmp intr_exit
 
   ; be at ease, all data will finally merge together
   ; so we'll exactly get a array `intr_entry_table`
@@ -38,7 +39,19 @@ section .data
   dd intr%1entry
 %endmacro
 
-; define 33 interrupt handler
+section .text
+global intr_exit
+intr_exit:
+  add esp, 4 ; drop arg: intr num
+  popad
+  pop gs
+  pop fs
+  pop es
+  pop ds
+  add esp, 4 ; error code
+  iretd ; ?
+
+  ; define 33 interrupt handler
   ; 0-19  is built-in for CPU
   ; 20-31 is reserved by intel
   ; so OS can customize from 0x20?

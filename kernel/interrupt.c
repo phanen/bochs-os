@@ -23,10 +23,13 @@ struct gate_desc {
 
 // static mem for idt
 static struct gate_desc idt[IDT_DESC_CNT];
-// get the addr of handler
+// get the addr of handler (only as entry)
 extern intr_handler intr_entry_table[IDT_DESC_CNT];
 
 static void make_idt_desc(struct gate_desc* p_gdesc, uint8_t attr, intr_handler function);
+
+char *intr_name[IDT_DESC_CNT]; // for debug ...
+intr_handler idt_table[IDT_DESC_CNT]; // use c to define body of handler
 
 // init 8259A
 static void pic_init(void) {
@@ -67,13 +70,53 @@ static void idt_desc_init(void) {
   put_str("   idt_desc_init done\n");
 }
 
+// general-purpose or so_called `template` handler
+static void general_intr_handler(uint8_t vec_nr) {
+    // IRQ7 or IRQ15 -> spurious interrupt
+   if (vec_nr == 0x27 || vec_nr == 0x2f) return;
+  // 
+   put_str("int vector: 0x"); put_int(vec_nr); put_char('\n');
+}
+
+// 完成一般中断处理函数注册及异常名称注册
+static void exception_init(void) {    
+  int i;
+  for (i = 0; i < IDT_DESC_CNT; i++) {
+    idt_table[i] = general_intr_handler; // init from template handler for now, we'll extend it by `register` in future
+    intr_name[i] = "unknown"; // we will implement 20 of 33 entries next, so randomly name all first...
+  }
+
+  intr_name[0] = "#DE Divide Error";
+  intr_name[1] = "#DB Debug Exception";
+  intr_name[2] = "NMI Interrupt";
+  intr_name[3] = "#BP Breakpoint Exception";
+  intr_name[4] = "#OF Overflow Exception";
+  intr_name[5] = "#BR BOUND Range Exceeded Exception";
+  intr_name[6] = "#UD Invalid Opcode Exception";
+  intr_name[7] = "#NM Device Not Available Exception";
+  intr_name[8] = "#DF Double Fault Exception";
+  intr_name[9] = "Coprocessor Segment Overrun";
+  intr_name[10] = "#TS Invalid TSS Exception";
+  intr_name[11] = "#NP Segment Not Present";
+  intr_name[12] = "#SS Stack Fault Exception";
+  intr_name[13] = "#GP General Protection Exception";
+  intr_name[14] = "#PF Page-Fault Exception";
+  // intr_name[15] reserved for intel?
+  intr_name[16] = "#MF x87 FPU Floating-Point Error";
+  intr_name[17] = "#AC Alignment Check Exception";
+  intr_name[18] = "#MC Machine-Check Exception";
+  intr_name[19] = "#XF SIMD Floating-Point Exception";
+
+}
+
 // main procedure to do init
 void idt_init() {
   put_str("idt_init start\n");
   idt_desc_init();
+  exception_init();	   // 异常名初始化并注册通常的中断处理函数
   pic_init();
 
-    // why uint32_t?
+  // why uint32_t?
   uint64_t idt_operand = ((sizeof(idt) - 1) | ((uint64_t)((uint32_t)idt << 16)));
   asm volatile("lidt %0" : : "m" (idt_operand));
   put_str("idt_init done\n");
