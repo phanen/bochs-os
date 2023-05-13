@@ -12,6 +12,9 @@
 
 #define IDT_DESC_CNT 0x21 // current total num of intr
 
+#define EFLAGS_IF   0x00000200  // mask of eflags.if
+#define GET_EFLAGS(EFLAG_VAR) asm volatile("pushfl; popl %0" : "=g" (EFLAG_VAR)) // dump eflags to a macro?
+
 // idt entry
 struct gate_desc {
   uint16_t    func_offset_low_word;
@@ -74,12 +77,12 @@ static void idt_desc_init(void) {
 static void general_intr_handler(uint8_t vec_nr) {
     // IRQ7 or IRQ15 -> spurious interrupt
    if (vec_nr == 0x27 || vec_nr == 0x2f) return;
-  // 
+  //
    put_str("int vector: 0x"); put_int(vec_nr); put_char('\n');
 }
 
 // 完成一般中断处理函数注册及异常名称注册
-static void exception_init(void) {    
+static void exception_init(void) {
   int i;
   for (i = 0; i < IDT_DESC_CNT; i++) {
     idt_table[i] = general_intr_handler; // init from template handler for now, we'll extend it by `register` in future
@@ -120,4 +123,40 @@ void idt_init() {
   uint64_t idt_operand = ((sizeof(idt) - 1) | ((uint64_t)((uint32_t)idt << 16)));
   asm volatile("lidt %0" : : "m" (idt_operand));
   put_str("idt_init done\n");
+}
+
+// enable intr and return old status
+enum intr_status intr_enable() {
+  enum intr_status old_status;
+  if (INTR_ON == intr_get_status()) {
+    old_status = INTR_ON;
+    return old_status;
+  } else {
+    old_status = INTR_OFF;
+    asm volatile("sti"); // eflags.if=1
+    return old_status;
+  }
+}
+
+// disable intr and return old status
+enum intr_status intr_disable() {
+  enum intr_status old_status;
+  if (INTR_ON == intr_get_status()) {
+    old_status = INTR_ON;
+    asm volatile("cli" : : : "memory");  // eflags.if=1
+    return old_status;
+  } else {
+    old_status = INTR_OFF;
+    return old_status;
+  }
+}
+
+enum intr_status intr_set_status(enum intr_status status) {
+  return status & INTR_ON ? intr_enable() : intr_disable();
+}
+
+enum intr_status intr_get_status() {
+  uint32_t eflags = 0;
+  GET_EFLAGS(eflags);
+  return (EFLAGS_IF & eflags) ? INTR_ON : INTR_OFF;
 }
