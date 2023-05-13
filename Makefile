@@ -1,56 +1,69 @@
-.PHONY = bochs gdb disk dep clean mbr-disasm loader-disasm
+.PHONY = bochs gdb empty-disk disk dep clean mbr-disasm loader-disasm
 
-INCS = -I lib/kernel/ -I lib/ -I kernel/
+BUILD_DIR = ./build
+ENTRY_POINT = 0xc0001500
+
+AS = nasm
+CC = clang
+LD = ld
+
+ASINCS = -I boot/include
+INCS = -I lib/kernel/ -I lib/ -I kernel/ -I device/
+
+ASFLAGS = -f elf
 CFLAGS = -m32 -static -nostdlib -fno-stack-protector # -fno-builtin
 LDFLAGS = -e main -static -Ttext 0xc0001500 -m elf_i386
-NASMFLAGS = -f elf
 
-CC = clang
+OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o \
+	   $(BUILD_DIR)/timer.o $(BUILD_DIR)/kernel.o $(BUILD_DIR)/print.o \
+	   $(BUILD_DIR)/debug.o 
 
-bochs: mbr.bin loader.bin kernel.bin
+bochs: disk
 	bochs -q -f bochs.conf
 
 gdb: mbr.bin loader.bin kernel.bin
 	BXSHARE=/usr/local/share/bochs bochs-gdb -q -f bochs-gdb.conf
 
-mbr.bin: boot/mbr.S hd60M.img
-	nasm -o mbr.bin -I boot/include boot/mbr.S
-	dd if=mbr.bin of=hd60M.img bs=512B count=1 conv=notrunc
+$(BUILD_DIR)/mbr.bin: boot/mbr.S
+	$(AS) $(ASINCS) $< -o $@
 
-loader.bin: boot/loader.S hd60M.img
-	nasm -o loader.bin -I boot/include boot/loader.S
-	dd if=loader.bin of=hd60M.img bs=512B count=4 seek=2 conv=notrunc
+$(BUILD_DIR)/loader.bin: boot/loader.S
+	$(AS) $(ASINCS) $< -o $@
 
-kernel.bin: hd60M.img main.o init.o interrupt.o kernel.o print.o timer.o debug.o
-	ld -o kernel.bin  $(LDFLAGS) main.o init.o interrupt.o kernel.o print.o timer.o debug.o
-	# strip -R .got.plt kernel.bin -R .note.gnu.property -R .eh_frame kernel.bin
-	dd if=kernel.bin of=hd60M.img bs=512B count=200 seek=9 conv=notrunc # dd is smart enough
+$(BUILD_DIR)/kernel.bin: $(OBJS)
+	$(LD) $(LDFLAGS) $^ -o $@
 
-main.o: kernel/main.c
-	$(CC) -o main.o $(INCS) $(CFLAGS) -c kernel/main.c
+$(BUILD_DIR)/kernel.o: kernel/kernel.S
+	$(AS) $(ASFLAGS) $< -o $@
 
-init.o: kernel/init.c kernel/init.h
-	$(CC) -o init.o $(INCS) $(CFLAGS) -c kernel/init.c
+$(BUILD_DIR)/print.o: lib/kernel/print.S lib/kernel/print.h
+	$(AS) $(ASFLAGS) $< -o $@
 
-interrupt.o: kernel/interrupt.c kernel/interrupt.h
-	$(CC) -o interrupt.o $(INCS) $(CFLAGS) -c kernel/interrupt.c
+$(BUILD_DIR)/main.o: kernel/main.c kernel/init.h lib/kernel/print.h lib/stdint.h kernel/init.h
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
-kernel.o: kernel/kernel.S
-	nasm -o kernel.o $(NASMFLAGS) kernel/kernel.S
+$(BUILD_DIR)/init.o: kernel/init.c kernel/init.h
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
-print.o: lib/kernel/print.S lib/kernel/print.h
-	nasm -o print.o $(NASMFLAGS) lib/kernel/print.S
+$(BUILD_DIR)/interrupt.o: kernel/interrupt.c kernel/interrupt.h
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
-timer.o: device/timer.c device/timer.h
-	$(CC) -o timer.o $(INCS) $(CFLAGS) -c device/timer.c
+$(BUILD_DIR)/timer.o: device/timer.c device/timer.h
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
-debug.o: kernel/debug.c kernel/debug.h
-	$(CC) -o debug.o $(INCS) $(CFLAGS) -c kernel/debug.c
+$(BUILD_DIR)/debug.o: kernel/debug.c kernel/debug.h
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
-disk:
+empty-disk:
 	bximage -q -hd -mode="flat" -size=60 hd60M.img
 	# TODO
 	# dd if=/dev/zero of=hd60M.img bs=4K count=15360
+
+disk: $(BUILD_DIR)/mbr.bin $(BUILD_DIR)/loader.bin $(BUILD_DIR)/kernel.bin
+	dd if=$(BUILD_DIR)/mbr.bin of=hd60M.img bs=512B count=1 conv=notrunc
+	dd if=$(BUILD_DIR)/loader.bin of=hd60M.img bs=512B count=4 seek=2 conv=notrunc
+	# strip -R .got.plt kernel.bin -R .note.gnu.property -R .eh_frame kernel.bin
+	dd if=$(BUILD_DIR)/kernel.bin of=hd60M.img bs=512B count=200 seek=9 conv=notrunc # dd is smart enough
 
 loader-disasm: loader.bin
 	objdump -D -b binary -mi386 -Mintel,i8086 loader.bin
