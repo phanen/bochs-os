@@ -1,5 +1,6 @@
 #include "print.h"
 #include "init.h"
+#include "debug.h"
 
 void test_print();
 
@@ -9,9 +10,13 @@ int main() {
   put_str("you are in kernel now\n");
 
   init_all();
-    // set eflags.IF = 1 to enable intrrupt
+  // set eflags.IF = 1 to enable intrrupt
   asm volatile("sti");
+
+  ASSERT(1 == 2);
+
   while(1);
+  return 0;
 }
 
 void test_print() {

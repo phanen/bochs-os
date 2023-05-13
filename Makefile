@@ -21,8 +21,8 @@ loader.bin: boot/loader.S hd60M.img
 	nasm -o loader.bin -I boot/include boot/loader.S
 	dd if=loader.bin of=hd60M.img bs=512B count=4 seek=2 conv=notrunc
 
-kernel.bin: hd60M.img main.o init.o interrupt.o kernel.o print.o timer.o
-	ld -o kernel.bin  $(LDFLAGS) main.o init.o interrupt.o kernel.o print.o timer.o
+kernel.bin: hd60M.img main.o init.o interrupt.o kernel.o print.o timer.o debug.o
+	ld -o kernel.bin  $(LDFLAGS) main.o init.o interrupt.o kernel.o print.o timer.o debug.o
 	# strip -R .got.plt kernel.bin -R .note.gnu.property -R .eh_frame kernel.bin
 	dd if=kernel.bin of=hd60M.img bs=512B count=200 seek=9 conv=notrunc # dd is smart enough
 
@@ -43,6 +43,9 @@ print.o: lib/kernel/print.S lib/kernel/print.h
 
 timer.o: device/timer.c device/timer.h
 	$(CC) -o timer.o $(INCS) $(CFLAGS) -c device/timer.c
+
+debug.o: kernel/debug.c kernel/debug.h
+	$(CC) -o debug.o $(INCS) $(CFLAGS) -c kernel/debug.c
 
 disk:
 	bximage -q -hd -mode="flat" -size=60 hd60M.img
