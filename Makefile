@@ -11,12 +11,13 @@ ASINCS = -I boot/include
 INCS = -I lib/kernel/ -I lib/ -I kernel/ -I device/
 
 ASFLAGS = -f elf
-CFLAGS = -m32 -static -nostdlib -fno-stack-protector # -fno-builtin
-LDFLAGS = -e main -static -Ttext 0xc0001500 -m elf_i386
+CFLAGS = -m32 -static -fno-builtin -nostdlib -fno-stack-protector \
+		 # -W -Wstrict-prototypes -Wmissing-prototypes
+LDFLAGS = -e main -static -Ttext $(ENTRY_POINT) -m elf_i386
 
 OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o \
 	   $(BUILD_DIR)/timer.o $(BUILD_DIR)/kernel.o $(BUILD_DIR)/print.o \
-	   $(BUILD_DIR)/debug.o 
+	   $(BUILD_DIR)/debug.o $(BUILD_DIR)/string.o
 
 bochs: disk
 	bochs -q -f bochs.conf
@@ -54,6 +55,9 @@ $(BUILD_DIR)/timer.o: device/timer.c device/timer.h
 $(BUILD_DIR)/debug.o: kernel/debug.c kernel/debug.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
+$(BUILD_DIR)/string.o: lib/string.c lib/string.h
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
+
 empty-disk:
 	bximage -q -hd -mode="flat" -size=60 hd60M.img
 	# TODO
@@ -76,6 +80,7 @@ mbr-disasm: mbr.bin
 
 clean:
 	rm *.{bin,o,out} -rf
+	rm build/* -rf
 
 dep:
 	sudo pacman -S nasm gtk-2 xorg
