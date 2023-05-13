@@ -17,7 +17,7 @@ LDFLAGS = -e main -static -Ttext $(ENTRY_POINT) -m elf_i386
 
 OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o \
 	   $(BUILD_DIR)/timer.o $(BUILD_DIR)/kernel.o $(BUILD_DIR)/print.o \
-	   $(BUILD_DIR)/debug.o $(BUILD_DIR)/string.o
+	   $(BUILD_DIR)/debug.o $(BUILD_DIR)/string.o $(BUILD_DIR)/bitmap.o
 
 bochs: disk
 	bochs -q -f bochs.conf
@@ -56,6 +56,9 @@ $(BUILD_DIR)/debug.o: kernel/debug.c kernel/debug.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/string.o: lib/string.c lib/string.h
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/bitmap.o: lib/kernel/bitmap.c lib/kernel/bitmap.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 empty-disk:
