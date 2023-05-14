@@ -2,7 +2,7 @@
 ; loader (size < 2000B)
 LOADER_BASE_ADDR    equ      0x900
 LOADER_START_SECTOR equ        0x2
-PAGE_DIR_TABLE_POS  equ   0x100000
+PAGE_DIR_TABLE_POS  equ   0x100000 ; paddr of first PD
 
 ; kernel (size < 100K)
 KERNEL_START_SECTOR   equ        0x9 ; 0x2~0x8 for loader

@@ -210,7 +210,7 @@ section loader vstart=LOADER_BASE_ADDR
     ; setup PD and PT
   setup_page:
 
-    ; set PDT at 0x100000
+    ; set PD at 0x100000
     mov ecx, 4096
     mov esi, 0
     .clear_page_dir:
@@ -227,18 +227,19 @@ section loader vstart=LOADER_BASE_ADDR
       mov ebx, eax ; addr of 1th pt
         ; set low bit (i.e. attribution of entry)
       or eax, PG_US_U | PG_RW_W | PG_P
-        ; pde: 0x0 -> pt 0x101000
+        ; pde: 0x0 -> pt at 0x101000
       mov [PAGE_DIR_TABLE_POS + 0x0], eax
-        ; pde: 3G  -> pt 0x101000
+        ; pde: 3G  -> pt at 0x101000
           ; (1024*3/4*4M)
       mov [PAGE_DIR_TABLE_POS + 0xc00], eax
 
       sub eax, 0x1000
-        ; pde: top 1M -> pt 0x100000 (i.e pde itself)
+        ; pde: top 1M -> pt at 0x100000 (i.e pde itself)
+        ; which means the PD will be parsed as PT
       mov [PAGE_DIR_TABLE_POS + 4092], eax ; 4092 = 1023 * 4
 
     ; set PT at 0x101000
-      ; to map vaddr 0-1M-> paddr 0-1M
+      ; map vaddr 0-1M -> paddr 0-1M
       ; set 256/1024 entry (256*4K=1M)
     mov ecx, 256
     mov esi, 0
