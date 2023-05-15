@@ -1,6 +1,11 @@
 #include "memory.h"
 #include "stdint.h"
+#include "global.h"
+#include "debug.h"
 #include "print.h"
+#include "string.h"
+
+#define NULL  ((void *) 0)
 
 #define PG_SIZE 4096 // bytes
 
@@ -15,6 +20,10 @@
 // vaddr 3G + 1M
 #define K_HEAP_START 0xc0100000
 
+// mask to get index of PDE, PTE
+#define PDE_IDX(addr) ((addr & 0xffc00000) >> 22)
+#define PTE_IDX(addr) ((addr & 0x003ff000) >> 12)
+
 // pool for paddr
 struct pool {
     struct bitmap pool_bitmap;
@@ -24,6 +33,128 @@ struct pool {
 
 struct pool kernel_pool, user_pool; // paddr pool ofr kernel and user
 struct virtual_addr kernel_vaddr; // vaddr pool for kernel
+
+// request `pg_cnt` page from vaddr pool
+static void* vaddr_get(enum pool_flags pf, uint32_t pg_cnt) {
+    int vaddr_start = 0, bit_idx_start = -1;
+    uint32_t cnt = 0;
+    if (pf == PF_KERNEL) {
+        bit_idx_start  = bitmap_scan(&kernel_vaddr.vaddr_bitmap, pg_cnt);
+        if (bit_idx_start == -1) {
+            return NULL;
+        }
+        // set used bits
+        while(cnt < pg_cnt) {
+            bitmap_set(&kernel_vaddr.vaddr_bitmap, bit_idx_start + cnt++, 1);
+        }
+        // bit id to mem vaddr
+        vaddr_start = kernel_vaddr.vaddr_start + bit_idx_start * PG_SIZE;
+    } else {
+        // TODO: user vaddr pool
+    }
+    return (void*)vaddr_start;
+}
+
+// from a vaddr, get its correspondent PTE ptr
+// valid only if its PDE exist...
+uint32_t* pte_ptr(uint32_t vaddr) {
+    // first, 0xffc00000 to locate the PD
+    // second, (vaddr&0xffc00000)>>10 to locate the PT
+    // then we only care about the PTE id
+    uint32_t* pte = (uint32_t*)(0xffc00000 + \
+        ((vaddr & 0xffc00000) >> 10) + \
+        PTE_IDX(vaddr) * 4);
+    return pte;
+}
+
+// from a vaddr, get its correspondent PDE ptr
+// always valid? even if vaddr is not mapped
+uint32_t* pde_ptr(uint32_t vaddr) {
+    // 0xfffff000 to locate the PD, and the last PDE (i.e. PD itself)
+    // then we only care about the PDE id
+    uint32_t* pde = (uint32_t*)((0xfffff000) + PDE_IDX(vaddr) * 4);
+    return pde;
+}
+
+// alloc a phy page
+static void* palloc(struct pool* m_pool) {
+    int bit_idx = bitmap_scan(&m_pool->pool_bitmap, 1); // atom?
+    if (bit_idx == -1 ) {
+        return NULL;
+    }
+    bitmap_set(&m_pool->pool_bitmap, bit_idx, 1);
+    uint32_t page_phyaddr = ((bit_idx * PG_SIZE) + m_pool->phy_addr_start);
+    return (void*)page_phyaddr;
+}
+
+// map one vpage to one ppage(page frame), i.e. vaddr to paddr
+// set PDE -> set PTE, if PDE not exist, palloc then map
+// PTE should not exist (only `add`, not change)
+static void page_table_add(void* _vaddr, void* _page_phyaddr) {
+    uint32_t vaddr = (uint32_t)_vaddr, page_phyaddr = (uint32_t)_page_phyaddr;
+    uint32_t* pde = pde_ptr(vaddr); // good utility
+    uint32_t* pte = pte_ptr(vaddr); // good utility
+
+    // PDE exist?
+    if (*pde & 0x00000001) {
+        ASSERT(!(*pte & 0x00000001)); // assert PTE not exist
+        if (!(*pte & 0x00000001)) { // normally not exist
+            *pte = (page_phyaddr | PG_US_U | PG_RW_W | PG_P_1);
+        } else { // PTE exist, should not happend
+            PANIC("pte repeat");
+            *pte = (page_phyaddr | PG_US_U | PG_RW_W | PG_P_1);
+        }
+    } else { // PDE not exist
+        // first alloc its PT, assign the PDE
+        uint32_t pde_phyaddr = (uint32_t)palloc(&kernel_pool);
+        *pde = (pde_phyaddr | PG_US_U | PG_RW_W | PG_P_1);
+
+        // NOTE: PTE is invalid if PDE not exist before
+        pte = pte_ptr(vaddr); // update, now pte is a vaddr point into new `pde_phyaddr`
+
+        memset((void*)((int)pte & 0xfffff000), 0, PG_SIZE); // ensure the new alloc PT is clean
+
+        ASSERT(!(*pte & 0x00000001));
+        *pte = (page_phyaddr | PG_US_U | PG_RW_W | PG_P_1);      // US=1,RW=1,P=1
+    }
+}
+
+// alloc `pg_cnt` pages, return vaddr (i.e. malloc by pages)
+// vaddr_get -> palloc -> page_table_add
+//  pages is continuous in vaddr, 
+//  but can be not continuous in paddr
+void* malloc_page(enum pool_flags pf, uint32_t pg_cnt) {
+    // should be alloc all space
+    ASSERT(pg_cnt > 0 && pg_cnt < 3840); // 15M/4K = 3840 page (TODO: 3840 can be dynamic...)
+
+    // alloc vpages
+    void* vaddr_start = vaddr_get(pf, pg_cnt);
+    if (vaddr_start == NULL) {
+        return NULL;
+    }
+    uint32_t vaddr = (uint32_t)vaddr_start, cnt = pg_cnt;
+    struct pool* mem_pool = pf & PF_KERNEL ? &kernel_pool : &user_pool;
+
+    // alloc ppages then associte vpages, one by one
+    while (cnt--) {
+        void* page_phyaddr = palloc(mem_pool);
+        if (page_phyaddr == NULL) { // TODO: better handle, need roll back all alloced vaddr and paddr
+            return NULL;
+        }
+        page_table_add((void*)vaddr, page_phyaddr); // happily map
+        vaddr += PG_SIZE;
+    }
+    return vaddr_start;
+}
+
+// kernel malloc by pages
+void* get_kernel_pages(uint32_t pg_cnt) {
+    void* vaddr =  malloc_page(PF_KERNEL, pg_cnt);
+    if (vaddr != NULL) { // clean the page frame
+        memset(vaddr, 0, pg_cnt * PG_SIZE);
+    }
+    return vaddr;
+}
 
 // init
 static void mem_pool_init(uint32_t all_mem) {
@@ -84,7 +215,7 @@ static void mem_pool_init(uint32_t all_mem) {
     put_int(user_pool.phy_addr_start + user_pool.pool_size); put_str("\n");
 
     // init all bit to zero(free)
-    bitmap_init(&kernel_pool.pool_bitmap); 
+    bitmap_init(&kernel_pool.pool_bitmap);
     bitmap_init(&user_pool.pool_bitmap);
 
 
