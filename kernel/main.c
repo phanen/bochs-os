@@ -1,6 +1,7 @@
 #include "print.h"
 #include "init.h"
 #include "debug.h"
+#include "memory.h"
 
 void test_print();
 
@@ -11,10 +12,14 @@ int main() {
 
   init_all();
   // set eflags.IF = 1 to enable intrrupt
-  asm volatile("sti");
+  // asm volatile("sti");
 
-  ASSERT(1 == 2);
+  void* addr = get_kernel_pages(3);
+  put_str("\n get_kernel_pages start vaddr is ");
+  put_int((uint32_t)addr);
+  put_str("\n");
 
+  // ASSERT(1 == 2);
   while(1);
   return 0;
 }
