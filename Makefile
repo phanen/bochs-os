@@ -18,7 +18,8 @@ LDFLAGS = -e main -static -Ttext $(ENTRY_POINT) -m elf_i386
 OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o \
 	   $(BUILD_DIR)/timer.o $(BUILD_DIR)/kernel.o $(BUILD_DIR)/print.o \
 	   $(BUILD_DIR)/debug.o $(BUILD_DIR)/string.o $(BUILD_DIR)/bitmap.o \
-	   $(BUILD_DIR)/memory.o $(BUILD_DIR)/thread.o
+	   $(BUILD_DIR)/memory.o $(BUILD_DIR)/thread.o $(BUILD_DIR)/list.o \
+	   $(BUILD_DIR)/switch.o
 
 bochs: disk
 	bochs -q -f bochs.conf
@@ -67,6 +68,12 @@ $(BUILD_DIR)/memory.o: kernel/memory.c kernel/memory.h
 
 $(BUILD_DIR)/thread.o: thread/thread.c thread/thread.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/list.o: lib/kernel/list.c lib/kernel/list.h
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/switch.o: thread/switch.S
+	$(AS) $(ASFLAGS) $< -o $@
 
 empty-disk:
 	bximage -q -hd -mode="flat" -size=60 hd60M.img
