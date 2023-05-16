@@ -2,6 +2,7 @@
 #define __THREAD_THREAD_H
 
 #include "stdint.h"
+#include "list.h"
 
 // template function type for thread
 typedef void thread_func(void*);
@@ -60,17 +61,31 @@ struct thread_stack {
     void* func_arg;
 };
 
-// PCB
+// PCB (or TCB?)
 struct task_struct {
+
     uint32_t* self_kstack; // each kernel thread has its own kernel stack
     enum task_status status;
-    uint8_t priority;
     char name[16];
+    uint8_t priority;
+
+    uint8_t ticks; // time slice (-1 each clock intr)
+    uint32_t elapsed_ticks; // total tick counter (since execution)
+
+    // used with the help of macro `offset`, macro `elem2entry`
+    struct list_elem general_tag; // `tag` to denote the thread in ready_list?
+    struct list_elem all_list_tag; // `tag` to denote the thread in all_list?
+
+    uint32_t* pgdir; // used by proc, NULL for thread
+
     uint32_t stack_magic; // guard to check stack overflow (some intrs may do tons of push)
 };
 
 void thread_create(struct task_struct* pthread, thread_func function, void* func_arg);
 void init_thread(struct task_struct* pthread, char* name, int prio);
 struct task_struct* thread_start(char* name, int prio, thread_func function, void* func_arg);
+
+struct task_struct* running_thread();
+void thread_init();
 
 #endif
