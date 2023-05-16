@@ -75,10 +75,28 @@ static void idt_desc_init(void) {
 
 // general-purpose or so_called `template` handler
 static void general_intr_handler(uint8_t vec_nr) {
-    // IRQ7 or IRQ15 -> spurious interrupt
-   if (vec_nr == 0x27 || vec_nr == 0x2f) return;
+  // IRQ7 or IRQ15 -> spurious interrupt
+  if (vec_nr == 0x27 || vec_nr == 0x2f) return;
   //
-   put_str("int vector: 0x"); put_int(vec_nr); put_char('\n');
+  // put_str("int vector: 0x"); put_int(vec_nr); put_char('\n');
+
+  set_cursor(0);
+  for (int cursor_pos = 0; cursor_pos < 320; cursor_pos++) {
+    put_char(' ');
+  }
+  set_cursor(0);
+  put_str("!!!!!!!      excetion message begin  !!!!!!!!\n");
+  set_cursor(88); // 1:8
+  put_str(intr_name[vec_nr]);
+
+  if (vec_nr == 14) { // page fault
+    // print cr2 (the vaddr)
+    int page_fault_vaddr = 0;
+    asm ("movl %%cr2, %0" : "=r" (page_fault_vaddr));
+    put_str("\npage fault addr is "); put_int(page_fault_vaddr);
+  }
+  put_str("\n!!!!!!!      excetion message end    !!!!!!!!\n");
+  while(1); // eflags.if = 0
 }
 
 // 完成一般中断处理函数注册及异常名称注册
@@ -116,7 +134,7 @@ static void exception_init(void) {
 void idt_init() {
   put_str("idt_init start\n");
   idt_desc_init();
-  exception_init();	   // 异常名初始化并注册通常的中断处理函数
+  exception_init(); // assign exception name, register handler
   pic_init();
 
   // why uint32_t?
