@@ -3,10 +3,12 @@
 #include "debug.h"
 #include "memory.h"
 #include "thread.h"
+#include "interrupt.h"
 
 void test_print();
 
 void k_thread_a(void*);
+void k_thread_b(void*);
 
 int main() {
 
@@ -18,8 +20,9 @@ int main() {
   init_all();
 
   // // test intr
-  // set eflags.IF = 1 to enable intrrupt
+  // // set eflags.IF = 1 to enable intrrupt
   // asm volatile("sti");
+   intr_enable();
 
   // // test ASSERT
   // ASSERT(1 == 2);
@@ -30,10 +33,13 @@ int main() {
   // put_int((uint32_t)addr);
   // put_str("\n");
 
-  // // test thread
-  // thread_start("k_thread_a", 31, k_thread_a, "argA ");
+  // test thread
+  thread_start("k_thread_a", 31, k_thread_a, "argA ");
+  thread_start("k_thread_b", 15, k_thread_b, "argB ");
 
-  while(1);
+  while(1) {
+    put_str("Main ");
+  }
   return 0;
 }
 
@@ -49,6 +55,12 @@ void test_print() {
 }
 
 void k_thread_a(void* arg) {
+
+  char* para = arg;
+  while (1) { put_str(para); };
+}
+
+void k_thread_b(void* arg) {
 
   char* para = arg;
   while (1) { put_str(para); };
