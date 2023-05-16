@@ -15,7 +15,12 @@ struct task_struct* main_thread; // PCB for main thread (take `main()` as a thre
 struct list thread_ready_list; // TASK_READY
 struct list thread_all_list; // all kind of task
 
-// get PCB of running thread
+static struct list_elem* thread_tag; // just a buffer
+//  but... why not use locale var?
+
+extern void switch_to(struct task_struct* cur, struct task_struct* next);
+
+// get the PCB of running thread
 struct task_struct* running_thread() {
     uint32_t esp;
     asm ("mov %%esp, %0": "=g" (esp)); // get stack top
@@ -95,7 +100,36 @@ static void make_main_thread() {
     list_append(&thread_all_list, &main_thread->all_list_tag);
 }
 
-// init thread (thread lists and main thread) 
+// naive round-robin
+void schedule() {
+
+    ASSERT(intr_get_status() == INTR_OFF);
+
+    // push current thread into rdy list
+    struct task_struct* cur = running_thread();
+    if (cur->status == TASK_RUNNING) { // due to ticks exhausted
+	ASSERT(!elem_find(&thread_ready_list, &cur->general_tag));
+	list_append(&thread_ready_list, &cur->general_tag);
+	cur->ticks = cur->priority;
+	cur->status = TASK_READY;
+    } else {
+	// due to waiting event (e.g. block by IO, sync...)
+    }
+
+    // pop ready thread from rdy list (converted from a list elem tag)
+    ASSERT(!list_empty(&thread_ready_list)); // no idle now...
+    thread_tag = NULL; // necessary? good habit?
+    thread_tag = list_pop(&thread_ready_list);
+    // to get the addr of PCB from a PCB field
+    //	though we can still do the same as in `running_thread`
+    //	why bother a new way? because we can
+    struct task_struct* next = elem2entry(struct task_struct, general_tag, thread_tag);
+    next->status = TASK_RUNNING;
+
+    switch_to(cur, next); // written in asm
+}
+
+// init thread (thread lists and main thread)
 void thread_init(void) {
     put_str("thread_init start\n");
     list_init(&thread_ready_list);
