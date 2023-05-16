@@ -8,7 +8,7 @@ CC = clang
 LD = ld
 
 ASINCS = -I boot/include
-INCS = -I lib/kernel/ -I lib/ -I kernel/ -I device/
+INCS = -I lib/kernel/ -I lib/ -I kernel/ -I device/ -I thread/
 
 ASFLAGS = -f elf
 CFLAGS = -m32 -static -fno-builtin -nostdlib -fno-stack-protector \
@@ -18,7 +18,7 @@ LDFLAGS = -e main -static -Ttext $(ENTRY_POINT) -m elf_i386
 OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o \
 	   $(BUILD_DIR)/timer.o $(BUILD_DIR)/kernel.o $(BUILD_DIR)/print.o \
 	   $(BUILD_DIR)/debug.o $(BUILD_DIR)/string.o $(BUILD_DIR)/bitmap.o \
-	   $(BUILD_DIR)/memory.o
+	   $(BUILD_DIR)/memory.o $(BUILD_DIR)/thread.o
 
 bochs: disk
 	bochs -q -f bochs.conf
@@ -63,6 +63,9 @@ $(BUILD_DIR)/bitmap.o: lib/kernel/bitmap.c lib/kernel/bitmap.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/memory.o: kernel/memory.c kernel/memory.h
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/thread.o: thread/thread.c thread/thread.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 empty-disk:
