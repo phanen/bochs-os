@@ -1,5 +1,5 @@
 #include "timer.h"
-#include "../kernel/io.h"
+#include "io.h"
 #include "print.h"
 
 #define IRQ0_FREQUENCY	   100
