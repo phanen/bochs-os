@@ -5,7 +5,7 @@
 #include "thread.h"
 #include "debug.h"
 
-#define IRQ0_FREQUENCY	   20//50
+#define IRQ0_FREQUENCY	   200 //50
 #define INPUT_FREQUENCY	   1193180
 #define COUNTER0_VALUE	   INPUT_FREQUENCY / IRQ0_FREQUENCY
 #define CONTRER0_PORT	   0x40
