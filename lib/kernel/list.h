@@ -3,7 +3,9 @@
 
 #include "global.h"
 
-#define offset(struct_type,member) (int)(&((struct_type*)0)->member)
+// A MAGIC UTILITY
+// convert a list elem to a specific struct when contain it (during compile time!!!)
+#define offset(struct_type, member) (int)(&((struct_type*)0)->member)
 #define elem2entry(struct_type, struct_member_name, elem_ptr) \
     (struct_type*)((int)elem_ptr - offset(struct_type, struct_member_name))
 
