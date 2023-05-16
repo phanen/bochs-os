@@ -170,7 +170,7 @@ put_int:
   .is_a2f:
     sub edx, 10
     add edx, 'a'
-    
+
   ; store 8 hex char in big endian
   .store:
     mov [ebx + edi], dl
@@ -178,10 +178,10 @@ put_int:
     shr eax, 4
     mov edx, eax
     loop .16based_4bits
-  
+
   .rdy_to_print:
     inc edi ; -1 -> 0
-    
+
   ; 000xx -> xx
   .trunc_prefix_0:
     cmp edi, 8
@@ -196,7 +196,7 @@ put_int:
   .all0:
     mov cl, '0'
   .put_each_num:
-    push ecx    
+    push ecx
     call put_char
     add esp, 4
     inc edi
@@ -205,3 +205,24 @@ put_int:
     jl .put_each_num
     popad
     ret
+
+global set_cursor
+set_cursor:
+   pushad
+   mov bx, [esp + 36]
+
+   mov dx, 0x03d4
+   mov al, 0x0e
+   out dx, al
+   mov dx, 0x03d5
+   mov al, bh
+   out dx, al
+
+   mov dx, 0x03d4
+   mov al, 0x0f
+   out dx, al
+   mov dx, 0x03d5
+   mov al, bl
+   out dx, al
+   popad
+   ret
