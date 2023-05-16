@@ -2,8 +2,11 @@
 #define __KERNEL_INTERRUPT_H
 
 #include "stdint.h"
+
 typedef void* intr_handler;
 void idt_init(void);
+
+void register_handler(uint8_t vector_no, intr_handler function);
 
 // status of interrupt
 enum intr_status {

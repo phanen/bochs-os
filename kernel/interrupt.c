@@ -130,6 +130,12 @@ static void exception_init(void) {
 
 }
 
+// register the intr handler by vector_no
+void register_handler(uint8_t vector_no, intr_handler function) {
+  // kernel/kernel.S -> call [idt_table + %1*4]
+  idt_table[vector_no] = function; 
+}
+
 // main procedure to do init
 void idt_init() {
   put_str("idt_init start\n");
