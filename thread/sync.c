@@ -75,5 +75,5 @@ void lock_release(struct lock* plock) {
 
     plock->holder = NULL;
     plock->holder_repeat_nr = 0;
-    sema_up(&plock->semaphore);	
+    sema_up(&plock->semaphore);
 }
