@@ -10,7 +10,7 @@
 #define PIC_S_CTRL 0xa0 // slave ctrl port
 #define PIC_S_DATA 0xa1 // salve data port
 
-#define IDT_DESC_CNT 0x21 // current total num of intr
+#define IDT_DESC_CNT 0x30 // current total num of intr
 
 #define EFLAGS_IF   0x00000200  // mask of eflags.if
 #define GET_EFLAGS(EFLAG_VAR) asm volatile("pushfl; popl %0" : "=g" (EFLAG_VAR)) // dump eflags to a macro?
@@ -48,9 +48,13 @@ static void pic_init(void) {
   outb (PIC_S_DATA, 0x02);	// ICW3: slave -> IR[2]
   outb (PIC_S_DATA, 0x01);	// ICW4: uPM=1, AEOI=0
 
-  // block all intrrupt except clock intrrupt
-  outb (PIC_M_DATA, 0xfe);  // OCW1: IMR, only IR0 (clock intr)
-  outb (PIC_S_DATA, 0xff);  // OCW1: IMR, all masked
+  // // block all intrrupt except clock intrrupt
+  // outb (PIC_M_DATA, 0xfe);  // OCW1: IMR, only IR0 (clock intr)
+  // outb (PIC_S_DATA, 0xff);  // OCW1: IMR, all masked
+
+  // enable keyboard intr
+  outb (PIC_M_DATA, 0xfd);  // OCW1: 11111101
+  outb (PIC_S_DATA, 0xff);
 
   put_str("   pic_init done\n"); // manual tab, emm...
 }
@@ -80,12 +84,13 @@ static void general_intr_handler(uint8_t vec_nr) {
   //
   // put_str("int vector: 0x"); put_int(vec_nr); put_char('\n');
 
+  // pad a empty screen area
   set_cursor(0);
   for (int cursor_pos = 0; cursor_pos < 320; cursor_pos++) {
     put_char(' ');
   }
   set_cursor(0);
-  put_str("!!!!!!!      excetion message begin  !!!!!!!!\n");
+  put_str("!!!!!!!      exception message begin  !!!!!!!!\n");
   set_cursor(88); // 1:8
   put_str(intr_name[vec_nr]);
 
@@ -95,7 +100,7 @@ static void general_intr_handler(uint8_t vec_nr) {
     asm ("movl %%cr2, %0" : "=r" (page_fault_vaddr));
     put_str("\npage fault addr is "); put_int(page_fault_vaddr);
   }
-  put_str("\n!!!!!!!      excetion message end    !!!!!!!!\n");
+  put_str("\n!!!!!!!      exception message end    !!!!!!!!\n");
   while(1); // eflags.if = 0
 }
 
@@ -104,7 +109,7 @@ static void exception_init(void) {
   int i;
   for (i = 0; i < IDT_DESC_CNT; i++) {
     idt_table[i] = general_intr_handler; // init from template handler for now, we'll extend it by `register` in future
-    intr_name[i] = "unknown"; // we will implement 20 of 33 entries next, so randomly name all first...
+    intr_name[i] = "unknown intr or handler unimplemented"; // we will implement 20 of 33 entries next, so randomly name all first...
   }
 
   intr_name[0] = "#DE Divide Error";
@@ -133,7 +138,7 @@ static void exception_init(void) {
 // register the intr handler by vector_no
 void register_handler(uint8_t vector_no, intr_handler function) {
   // kernel/kernel.S -> call [idt_table + %1*4]
-  idt_table[vector_no] = function; 
+  idt_table[vector_no] = function;
 }
 
 // main procedure to do init
