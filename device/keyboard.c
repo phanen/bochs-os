@@ -161,9 +161,7 @@ static void intr_keyboard_handler(void) {
          (scancode == 0x28) || (scancode == 0x33) || \
          (scancode == 0x34) || (scancode == 0x35)) 
          {
-            if (shift_down_last) {  // 如果同时按下了shift键
-               shift = 1;
-            }
+            shift = shift_down_last; // as long as shift press
          } 
       else {
          if (shift_down_last && caps_lock_last || !shift_down_last && !caps_lock_last) {
