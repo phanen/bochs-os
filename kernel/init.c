@@ -5,6 +5,7 @@
 #include "timer.h"
 #include "thread.h"
 #include "console.h"
+#include "keyboard.h"
 
 void init_all() {
    put_str("init_all\n");
@@ -13,4 +14,5 @@ void init_all() {
    thread_init(); // abstract main as thread
    timer_init(); // init PIT
    console_init(); // define console as a public resource
+   keyboard_init(); // register keyboard event handler
 }
