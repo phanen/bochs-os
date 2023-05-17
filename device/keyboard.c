@@ -7,8 +7,9 @@
 #define KBD_BUF_PORT 0x60 // 8042 spec I/O port
 
 static void intr_keyboard_handler(void) {
-   put_char('k');
-   inb(KBD_BUF_PORT); // consume it (else 8042 will stop to response to keyboard)
+   uint8_t scancode = inb(KBD_BUF_PORT); // consume it (else 8042 will stop to response to keyboard)
+   put_int(scancode);
+   put_char(' ');
 }
 
 void keyboard_init() {
