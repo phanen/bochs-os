@@ -52,8 +52,8 @@ static void pic_init(void) {
   // outb (PIC_M_DATA, 0xfe);  // OCW1: IMR, only IR0 (clock intr)
   // outb (PIC_S_DATA, 0xff);  // OCW1: IMR, all masked
 
-  // enable keyboard intr
-  outb (PIC_M_DATA, 0xfd);  // OCW1: 11111101
+  // enable both keyboard and clock intr
+  outb (PIC_M_DATA, 0xfc);  // OCW1: IMR 11111100
   outb (PIC_S_DATA, 0xff);
 
   put_str("   pic_init done\n"); // manual tab, emm...
