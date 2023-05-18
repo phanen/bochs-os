@@ -88,7 +88,7 @@ $(BUILD_DIR)/keyboard.o: device/keyboard.c device/keyboard.h
 $(BUILD_DIR)/ioqueue.o: device/ioqueue.c device/ioqueue.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/tss.o: userprog/tss.c device/tss.h
+$(BUILD_DIR)/tss.o: userprog/tss.c userprog/tss.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 empty-disk:
