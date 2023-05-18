@@ -3,6 +3,7 @@
 #include "interrupt.h"
 #include "io.h"
 #include "global.h"
+#include "ioqueue.h"
 
 #define KBD_BUF_PORT 0x60 // 8042 spec I/O port
 
@@ -33,6 +34,8 @@
 #define ctrl_r_make  	0xe01d
 #define ctrl_r_break 	0xe09d
 #define caps_lock_make 	0x3a
+
+struct ioqueue kbd_buf;
 
 // record press/release status of modkey
 static int ctrl_status, shift_status, alt_status, caps_lock_status;
@@ -177,7 +180,11 @@ static void intr_keyboard_handler(void) {
       // only handler ascii != 0 
       // (or if put_char can ignore 0, that's better...)
       if (cur_char) {
-         put_char(cur_char);
+         // add cur to buf
+         if (!ioq_full(&kbd_buf)) {
+            put_char(cur_char);
+            ioq_putchar(&kbd_buf, cur_char);
+         }
          return;
       }
 
@@ -198,6 +205,7 @@ static void intr_keyboard_handler(void) {
 
 void keyboard_init() {
    put_str("keyboard init start\n");
+   ioqueue_init(&kbd_buf);
    register_handler(0x21, intr_keyboard_handler);
    put_str("keyboard init done\n");
 }
