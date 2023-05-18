@@ -6,6 +6,7 @@
 #include "thread.h"
 #include "console.h"
 #include "keyboard.h"
+#include "tss.h"
 
 void init_all() {
    put_str("init_all\n");
@@ -15,4 +16,5 @@ void init_all() {
    timer_init(); // init PIT
    console_init(); // define console as a public resource
    keyboard_init(); // register keyboard event handler
+   tss_init();
 }
