@@ -5,6 +5,8 @@
 
 #define NULL ((void*)0)
 
+// however, the implement is meaningless...
+
 void ioqueue_init(struct ioqueue* ioq) {
    lock_init(&ioq->lock);
    ioq->producer = ioq->consumer = NULL;
@@ -18,20 +20,30 @@ static int32_t next_pos(int32_t pos) {
 
 // if the queue is full
 int ioq_full(struct ioqueue* ioq) {
-   ASSERT(intr_get_status() == INTR_OFF);
+   ASSERT(intr_get_status() == INTR_OFF); // here is ugly...
+
+   // TODO: I think that a user himself never need to disable intr
+
+   // so... why we need intr off here?
+   // proof: e.g.
+   //    first you get: next_pos(ioq->head)
+   //    then the schedule happends: 
+   //    when back here: ioq->head has changes (may point to anywhere...
+
+   // brief: we want the following statement be atom
    return next_pos(ioq->head) == ioq->tail;
 }
 
 // if the queue is empty
 int ioq_empty(struct ioqueue* ioq) {
-   ASSERT(intr_get_status() == INTR_OFF);
+   ASSERT(intr_get_status() == INTR_OFF); // ugly again...
    return ioq->head == ioq->tail;
 }
 
 // make cur thread wait for buf ready
+// (by set waiters list (list size is 1 though)
 static void ioq_wait(struct task_struct** waiter) {
-   ASSERT(*waiter == NULL && waiter != NULL); // one waiters at most only
-   // deal with one producer/consumer only?
+   ASSERT(*waiter == NULL && waiter != NULL);
    *waiter = running_thread();
    thread_block(TASK_BLOCKED);
 }
@@ -45,6 +57,7 @@ static void ioq_wake(struct task_struct** waiter) {
 
 // consume from tail of queue
 char ioq_getchar(struct ioqueue* ioq) {
+   // ugly... but this statement seems not necesary?
    ASSERT(intr_get_status() == INTR_OFF);
 
    // check if buf is ready
@@ -57,7 +70,7 @@ char ioq_getchar(struct ioqueue* ioq) {
       //                               -> but now the buf is empty
       //                               -> must be consumed after producer sleep
       //                               -> the consumer will weak up producer
-      //                               -> the producer cannot be waiting here 
+      //                               -> the producer cannot be waiting here
       lock_acquire(&ioq->lock);
 
       // when no other waiting, now it can set the wait flag
@@ -72,7 +85,7 @@ char ioq_getchar(struct ioqueue* ioq) {
    char byte = ioq->buf[ioq->tail];
    ioq->tail = next_pos(ioq->tail);
 
-   // 
+   //
    if (ioq->producer != NULL) {
       ioq_wake(&ioq->producer);
    }
@@ -84,7 +97,7 @@ char ioq_getchar(struct ioqueue* ioq) {
 void ioq_putchar(struct ioqueue* ioq, char byte) {
    ASSERT(intr_get_status() == INTR_OFF);
 
-   // 
+   //
    while (ioq_full(ioq)) {
       lock_acquire(&ioq->lock);
       ioq_wait(&ioq->producer);

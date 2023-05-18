@@ -7,7 +7,7 @@
 
 #define bufsize 64
 
-// circular buffer
+// circular buffer (thread-safe)
 struct ioqueue {
   struct lock lock; // write lock (who can set the waitlist and buf?)
 
