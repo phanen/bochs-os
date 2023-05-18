@@ -12,6 +12,7 @@ INCS = -I lib/kernel/ -I lib/ -I kernel/ -I device/ -I thread/ -I userprog/
 
 ASFLAGS = -f elf
 CFLAGS = -m32 -static -fno-builtin -nostdlib -fno-stack-protector \
+		-mno-sse
 		 # -W -Wstrict-prototypes -Wmissing-prototypes
 LDFLAGS = -e main -static -Ttext $(ENTRY_POINT) -m elf_i386
 
