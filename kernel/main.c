@@ -5,6 +5,8 @@
 #include "thread.h"
 #include "interrupt.h"
 #include "console.h"
+#include "ioqueue.h"
+#include "keyboard.h"
 
 // void test_print();
 
@@ -15,16 +17,10 @@ int main() {
 
   put_str("you are in kernel now\n");
 
-  // // test print
-  // test_print();
-
   init_all();
 
-  // // test intr
-  // // set eflags.IF = 1 to enable intrrupt
+  // // test intr, set eflags.IF = 1 to enable
   // asm volatile("sti");
-
-  // // test ASSERT
   // ASSERT(1 == 2);
 
   // // test malloc
@@ -33,34 +29,31 @@ int main() {
   // put_int((uint32_t)addr);
   // put_str("\n");
 
-  // // test thread
-  // thread_start("k_thread_a", 44, k_thread_a, "argA ");
-  // thread_start("k_thread_b", 15, k_thread_b, "argB ");
+  thread_start("k_thread_a", 31, k_thread_a, "argA ");
+  thread_start("k_thread_b", 31, k_thread_b, "argB ");
 
   intr_enable();
-
   while(1) {
     // console_put_str("Main ");
   }
   return 0;
 }
 
-// void test_print() {
-//
-//   put_str("call put_str in kernel\n");
-//   put_int(0x123abc);
-//   put_char('\n');
-//   put_int(0x23048);
-//   put_char('\n');
-//   // while(1);
-//   // return;
-// }
-
 void k_thread_a(void* arg) {
 
   char* para = arg;
   while (1) {
-    console_put_str(para);
+    // disable intr?
+    // since you disable intr....
+    // both the `console_put_str` and `ioq_getchar` don't need to be thread-safe
+    // why bother you use them?
+    enum intr_status old_status = intr_disable();
+    if (!ioq_empty(&kbd_buf)) {
+      console_put_str(para);
+      char byte = ioq_getchar(&kbd_buf);
+      console_put_char(byte);
+    }
+    intr_set_status(old_status);
   };
 }
 
@@ -68,6 +61,12 @@ void k_thread_b(void* arg) {
 
   char* para = arg;
   while (1) {
-    console_put_str(para);
+    enum intr_status old_status = intr_disable();
+    if (!ioq_empty(&kbd_buf)) {
+      console_put_str(para);
+      char byte = ioq_getchar(&kbd_buf);
+      console_put_char(byte);
+    }
+    intr_set_status(old_status);
   };
 }
