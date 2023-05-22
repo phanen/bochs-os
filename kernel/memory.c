@@ -1,4 +1,5 @@
 #include "memory.h"
+#include "console.h"
 #include "stdint.h"
 #include "global.h"
 #include "debug.h"
@@ -130,7 +131,7 @@ static void page_table_add(void* _vaddr, void* _page_phyaddr) {
 
 // alloc `pg_cnt` pages, return vaddr (i.e. malloc by pages)
 // vaddr_get -> palloc -> page_table_add
-//  pages is continuous in vaddr, 
+//  pages is continuous in vaddr,
 //  but can be not continuous in paddr
 void* malloc_page(enum pool_flags pf, uint32_t pg_cnt) {
     // should be alloc all space
@@ -158,25 +159,25 @@ void* malloc_page(enum pool_flags pf, uint32_t pg_cnt) {
 
 // kernel malloc by pages
 void* get_kernel_pages(uint32_t pg_cnt) {
-    lock_acquire(&user_pool.lock);
+    lock_acquire(&kernel_pool.lock);
     void* vaddr =  malloc_page(PF_KERNEL, pg_cnt);
     if (vaddr != NULL) { // clean the page frame
         memset(vaddr, 0, pg_cnt * PG_SIZE);
     }
-    lock_release(&user_pool.lock);
+    lock_acquire(&kernel_pool.lock);
     return vaddr;
 }
 
 // user malloc by pages
 void* get_user_pages(uint32_t pg_cnt) {
-   lock_acquire(&user_pool.lock);
-   void* vaddr = malloc_page(PF_USER, pg_cnt);
+    lock_acquire(&user_pool.lock);
+    void* vaddr = malloc_page(PF_USER, pg_cnt);
     if (vaddr != NULL) { // clean the page frame
         memset(vaddr, 0, pg_cnt * PG_SIZE);
     }
-   memset(vaddr, 0, pg_cnt * PG_SIZE);
-   lock_release(&user_pool.lock);
-   return vaddr;
+    memset(vaddr, 0, pg_cnt * PG_SIZE);
+    lock_release(&user_pool.lock);
+    return vaddr;
 }
 
 // malloc, but use specific vaddr
@@ -197,7 +198,7 @@ void* get_a_page(enum pool_flags pf, uint32_t vaddr) {
         bit_idx = (vaddr - kernel_vaddr.vaddr_start) / PG_SIZE;
         ASSERT(bit_idx > 0);
         bitmap_set(&kernel_vaddr.vaddr_bitmap, bit_idx, 1);
-    } 
+    }
     else {
         PANIC("get_a_page: not allow kernel alloc userspace or user alloc kernelspace by get_a_page");
     }
@@ -206,7 +207,8 @@ void* get_a_page(enum pool_flags pf, uint32_t vaddr) {
     if (page_phyaddr == NULL) {
         return NULL;
     }
-    page_table_add((void*)vaddr, page_phyaddr); 
+
+    page_table_add((void*)vaddr, page_phyaddr);
     lock_release(&mem_pool->lock);
     return (void*)vaddr;
 }
