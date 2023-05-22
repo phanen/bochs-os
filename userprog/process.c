@@ -11,9 +11,6 @@
 
 extern void intr_exit(void);
 
-extern struct list thread_ready_list; // TASK_READY
-extern struct list thread_all_list; // all kind of task
-
 // process_execute
 //    -> get_kernel_pages
 //    -> init_tcb
