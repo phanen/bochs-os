@@ -1,36 +1,30 @@
 #include "print.h"
 #include "init.h"
-#include "debug.h"
-#include "memory.h"
+// #include "debug.h"
+// #include "memory.h"
 #include "thread.h"
 #include "interrupt.h"
 #include "console.h"
-#include "ioqueue.h"
-#include "keyboard.h"
-
-// void test_print();
+// #include "ioqueue.h"
+// #include "keyboard.h"
+#include "process.h"
 
 void k_thread_a(void*);
 void k_thread_b(void*);
+void u_prog_a(void);
+void u_prog_b(void);
+int bss_var_a = 0, bss_var_b = 0;
 
 int main() {
 
   put_str("you are in kernel now\n");
-
   init_all();
-
-  // // test intr, set eflags.IF = 1 to enable
-  // asm volatile("sti");
-  // ASSERT(1 == 2);
-
-  // // test malloc
-  // void* addr = get_kernel_pages(3);
-  // put_str("\n get_kernel_pages start vaddr is ");
-  // put_int((uint32_t)addr);
-  // put_str("\n");
 
   thread_create("k_thread_a", 31, k_thread_a, "argA ");
   thread_create("k_thread_b", 31, k_thread_b, "argB ");
+
+  process_execute(u_prog_a, "user_prog_a");
+  process_execute(u_prog_b, "user_prog_b");
 
   intr_enable();
   while(1) {
@@ -47,26 +41,39 @@ void k_thread_a(void* arg) {
     // since you disable intr....
     // both the `console_put_str` and `ioq_getchar` don't need to be thread-safe
     // why bother you use them?
-    enum intr_status old_status = intr_disable();
-    if (!ioq_empty(&kbd_buf)) {
-      console_put_str(para);
-      char byte = ioq_getchar(&kbd_buf);
-      console_put_char(byte);
-    }
-    intr_set_status(old_status);
-  };
+
+    console_put_str(" v_a:0x");
+    console_put_int(bss_var_a);
+    console_put_str("\n");
+  }
 }
 
 void k_thread_b(void* arg) {
 
   char* para = arg;
   while (1) {
-    enum intr_status old_status = intr_disable();
-    if (!ioq_empty(&kbd_buf)) {
-      console_put_str(para);
-      char byte = ioq_getchar(&kbd_buf);
-      console_put_char(byte);
-    }
-    intr_set_status(old_status);
+    console_put_str(" v_b:0x");
+    console_put_int(bss_var_b);
+    console_put_str("\n");
+    // enum intr_status old_status = intr_disable();
+    // if (!ioq_empty(&kbd_buf)) {
+    //   console_put_str(para);
+    //   char byte = ioq_getchar(&kbd_buf);
+    //   console_put_char(byte);
+    // }
+    // intr_set_status(old_status);
   };
+}
+
+void u_prog_a(void) {
+  while(1) {
+    bss_var_a++;
+  }
+
+}
+
+void u_prog_b(void) {
+  while(1) {
+    bss_var_b++;
+  }
 }
