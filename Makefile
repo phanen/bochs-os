@@ -22,6 +22,7 @@ OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o \
 	   $(BUILD_DIR)/memory.o $(BUILD_DIR)/thread.o $(BUILD_DIR)/list.o \
 	   $(BUILD_DIR)/switch.o $(BUILD_DIR)/sync.o $(BUILD_DIR)/console.o \
 	   $(BUILD_DIR)/keyboard.o $(BUILD_DIR)/ioqueue.o $(BUILD_DIR)/tss.o \
+	   $(BUILD_DIR)/process.o
 
 bochs: disk
 	bochs -q -f bochs.conf
@@ -90,6 +91,9 @@ $(BUILD_DIR)/ioqueue.o: device/ioqueue.c device/ioqueue.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/tss.o: userprog/tss.c userprog/tss.h
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/process.o: userprog/process.c userprog/process.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 empty-disk:
