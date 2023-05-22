@@ -7,10 +7,6 @@
 #include "debug.h"
 #include "print.h"
 
-#define NULL ((void*)0)
-
-#define PG_SIZE 4096
-
 struct task_struct* main_thread; // TCB for main thread (take `main()` as a thread)
 struct list thread_ready_list; // TASK_READY
 struct list thread_all_list; // all kind of task

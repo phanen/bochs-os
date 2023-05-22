@@ -6,10 +6,6 @@
 #include "string.h"
 #include "sync.h"
 
-#define NULL  ((void *) 0)
-
-#define PG_SIZE 4096 // bytes
-
 #define MEM_BITMAP_BASE 0xc009a000
 // at most 512M
 // 0xc009f000 = stack top of kernel main thread

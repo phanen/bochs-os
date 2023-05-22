@@ -3,8 +3,6 @@
 #include "global.h"
 #include "debug.h"
 
-#define NULL ((void*)0)
-
 // however, the implement is meaningless...
 
 void ioqueue_init(struct ioqueue* ioq) {

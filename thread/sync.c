@@ -4,8 +4,6 @@
 #include "debug.h"
 #include "interrupt.h"
 
-#define NULL ((void*)0)
-
 void sema_init(struct semaphore* psema, uint8_t value) { // alloc outside
     psema->value = value;
     list_init(&psema->waiters);
