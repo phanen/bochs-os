@@ -3,6 +3,7 @@
 
 #include "stdint.h"
 #include "list.h"
+#include "memory.h"
 
 // template function type for thread
 typedef void thread_func(void*);
@@ -69,7 +70,7 @@ struct thread_stack {
     void* func_arg;
 };
 
-// PCB (or TCB?)
+// pcb or tcb
 struct task_struct {
     uint32_t* self_kstack; // each kernel thread has its own kernel stack
 
@@ -85,6 +86,7 @@ struct task_struct {
     struct list_elem all_list_tag; // `tag` to denote the thread in all_list?
 
     uint32_t* pgdir; // used by proc, NULL for thread
+    struct virtual_addr userprog_vaddr; // pool for ring3
 
     uint32_t stack_magic; // guard to check stack overflow (some intrs may do tons of push)
 };
