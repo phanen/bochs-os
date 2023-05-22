@@ -29,8 +29,8 @@ int main() {
   // put_int((uint32_t)addr);
   // put_str("\n");
 
-  thread_start("k_thread_a", 31, k_thread_a, "argA ");
-  thread_start("k_thread_b", 31, k_thread_b, "argB ");
+  thread_create("k_thread_a", 31, k_thread_a, "argA ");
+  thread_create("k_thread_b", 31, k_thread_b, "argB ");
 
   intr_enable();
   while(1) {
