@@ -50,6 +50,7 @@ struct thread_stack {
 
     // according to ABI (protect for caller)
     //	    these reg should always be saved?
+    //	    seems meaningless...
     uint32_t ebp;
     uint32_t ebx;
     uint32_t edi;

@@ -144,7 +144,7 @@ void schedule() {
   thread_tag = NULL; // necessary? good habit?
   thread_tag = list_pop(&thread_ready_list);
 
-  // to get the addr of TCB from a TCB field (why bother a new way? because we can)
+  // get TCB addr from its list tag (why bother a new way? because we can)
   struct task_struct* next = elem2entry(struct task_struct, general_tag, thread_tag);
   next->status = TASK_RUNNING;
 

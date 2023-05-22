@@ -16,5 +16,5 @@ void init_all() {
    timer_init(); // init PIT
    console_init(); // define console as a public resource
    keyboard_init(); // register keyboard event handler
-   tss_init();
+   tss_init(); // update tss desc and ring3 desc
 }
