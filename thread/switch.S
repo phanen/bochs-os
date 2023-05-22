@@ -8,16 +8,15 @@ switch_to:
     push ebx
     push ebp
 
-    mov eax, [esp + 20] ; get arg: cur
+    ; context switch
+    mov eax, [esp + 20] ; cur
     mov [eax], esp ; save esp into cur->kstack
-
-    ; to a new context
-    mov eax, [esp + 24] ; get arg: next
+    mov eax, [esp + 24] ; next
     mov esp, [eax] ; load esp from next->kstack
 
-    ; pop from new context (not same as the beginning push)
+    ; pop from new context
     pop ebp
     pop ebx
     pop edi
     pop esi
-    ret
+    ret ; goto eip of next thread
