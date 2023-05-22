@@ -2,8 +2,6 @@
 #include "global.h"
 #include "debug.h"
 
-#define NULL  ((void *) 0)
-
 void memset(void* dst_, uint8_t value, uint32_t size) {
   ASSERT(dst_ != NULL);
   uint8_t* dst = (uint8_t*)dst_;
