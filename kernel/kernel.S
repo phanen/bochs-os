@@ -12,11 +12,11 @@ global intr_entry_table
 intr_entry_table:
 
 ; a helper to contruct interrupt handler
-  ; 2 args: iv number + hook
+  ; 2 args: vec no + hook
 %macro VECTOR 2
 section .text
   intr%1entry:
-  %2 ; push a dummy or not, depend on if error code exixt
+  %2 ; push a dummy (if no error code)
   push ds
   push es
   push fs
@@ -28,7 +28,7 @@ section .text
   out 0xa0, al ; to master chip
   out 0x20, al ; to slave chip
 
-  push %1 ; push intr num, we need it to debug anyway
+  push %1 ; push vec_no (helpful for debug anyway)
   call [idt_table + %1 * 4]
   jmp intr_exit
 
@@ -42,7 +42,7 @@ section .data
 section .text
 global intr_exit
 intr_exit:
-  add esp, 4 ; drop arg: intr num
+  add esp, 4 ; vec no
   popad
   pop gs
   pop fs
