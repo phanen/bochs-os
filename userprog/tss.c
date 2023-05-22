@@ -39,7 +39,7 @@ struct tss {
 
 static struct tss tss;
 
-// change tss->esp0, to stack top of kernel thread
+// get ring0 stack from tcb
 void update_tss_esp(struct task_struct* pthread) {
   tss.esp0 = (uint32_t*)((uint32_t)pthread + PG_SIZE);
 }
