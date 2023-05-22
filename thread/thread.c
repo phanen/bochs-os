@@ -6,6 +6,7 @@
 #include "interrupt.h"
 #include "debug.h"
 #include "print.h"
+#include "process.h"
 
 struct task_struct* main_thread; // TCB for main thread (take `main()` as a thread)
 struct list thread_ready_list; // TASK_READY
@@ -144,6 +145,7 @@ void schedule() {
   struct task_struct* next = elem2entry(struct task_struct, general_tag, thread_tag);
   next->status = TASK_RUNNING;
 
+  process_activate(next);
   switch_to(cur, next);
 }
 
