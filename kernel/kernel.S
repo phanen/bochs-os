@@ -51,6 +51,31 @@ intr_exit:
   add esp, 4 ; error code
   iretd ; ?
 
+[bits 32]
+extern syscall_table
+section .text
+global syscall_handler
+syscall_handler:
+  push 0 ; to reuse `intr_exit` (dummy error code)
+  push ds
+  push es
+  push fs
+  push gs
+  pushad
+  push 0x80 ; to reuse `intr_exit` (dummy vec no)
+
+  ; args for syscall
+  push edx
+  push ecx
+  push ebx
+
+  ; goto body
+  call [syscall_table + eax * 4]
+  add esp, 12 ; pop
+  ; return eax to context
+  mov [esp + 8 * 4], eax
+  jmp intr_exit
+
   ; define 33 interrupt handler
   ; 0-19  is built-in for CPU
   ; 20-31 is reserved by intel
