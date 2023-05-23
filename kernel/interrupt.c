@@ -24,15 +24,15 @@ struct gate_desc {
   uint16_t    func_offset_high_word;
 };
 
-// static mem for idt
-static struct gate_desc idt[IDT_DESC_CNT];
-// get the addr of handler (only as entry)
-extern intr_handler intr_entry_table[IDT_DESC_CNT];
-
 static void make_idt_desc(struct gate_desc* p_gdesc, uint8_t attr, intr_handler function);
 
-char *intr_name[IDT_DESC_CNT]; // for debug ...
+// static mem for idt
+static struct gate_desc idt[IDT_DESC_CNT];
+// handler: asm entry
+extern intr_handler intr_entry_table[IDT_DESC_CNT];
+// handler: c body
 intr_handler idt_table[IDT_DESC_CNT]; // use c to define body of handler
+char *intr_name[IDT_DESC_CNT]; // for debug ...
 
 // init 8259A
 static void pic_init(void) {
@@ -68,7 +68,7 @@ static void make_idt_desc(struct gate_desc* p_gdesc, uint8_t attr, intr_handler 
   p_gdesc->func_offset_high_word = ((uint32_t)function & 0xFFFF0000) >> 16;
 }
 
-// init
+// init all desc
 static void idt_desc_init(void) {
   int i;
   for (i = 0; i < IDT_DESC_CNT; i++) {
@@ -141,19 +141,6 @@ void register_handler(uint8_t vector_no, intr_handler function) {
   idt_table[vector_no] = function;
 }
 
-// main procedure to do init
-void idt_init() {
-  put_str("idt_init start\n");
-  idt_desc_init();
-  exception_init(); // assign exception name, register handler
-  pic_init();
-
-  // why uint32_t?
-  uint64_t idt_operand = ((sizeof(idt) - 1) | ((uint64_t)((uint32_t)idt << 16)));
-  asm volatile("lidt %0" : : "m" (idt_operand));
-  put_str("idt_init done\n");
-}
-
 // enable intr and return old status
 enum intr_status intr_enable() {
   enum intr_status old_status;
@@ -188,4 +175,17 @@ enum intr_status intr_get_status() {
   uint32_t eflags = 0;
   GET_EFLAGS(eflags);
   return (EFLAGS_IF & eflags) ? INTR_ON : INTR_OFF;
+}
+
+// main procedure to do init
+void idt_init() {
+  put_str("idt_init start\n");
+  idt_desc_init();
+  exception_init(); // assign exception name, register handler
+  pic_init();
+
+  // why uint32_t?
+  uint64_t idt_operand = ((sizeof(idt) - 1) | ((uint64_t)((uint32_t)idt << 16)));
+  asm volatile("lidt %0" : : "m" (idt_operand));
+  put_str("idt_init done\n");
 }
