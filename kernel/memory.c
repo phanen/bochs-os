@@ -30,8 +30,21 @@ struct pool {
     struct lock lock;
 };
 
+// meta info for mem block
+struct arena {
+    struct mem_block_desc* desc;
+    uint32_t cnt;
+    //  for large:      frame num
+    //  for non-large:  free mem_block
+    bool large;
+};
+
+
 struct pool kernel_pool, user_pool; // paddr pool ofr kernel and user
 struct virtual_addr kernel_vaddr; // vaddr pool for kernel
+
+// kernel mem block desc
+struct mem_block_desc k_block_descs[DESC_CNT];
 
 // request `pg_cnt` pages from vaddr pool
 static void* vaddr_get(enum pool_flags pf, uint32_t pg_cnt) {
@@ -299,9 +312,23 @@ static void mem_pool_init(uint32_t all_mem) {
     put_str("   mem_pool_init done\n");
 }
 
+// init a mem bock desc array
+void block_desc_init(struct mem_block_desc* desc_array) {
+
+    uint16_t block_size = 16;
+
+    for (uint16_t i = 0; i < DESC_CNT; i++) {
+        desc_array[i].block_size = block_size;
+        desc_array[i].blocks_per_arena = (PG_SIZE - sizeof(struct arena)) / block_size;
+        list_init(&desc_array[i].free_list);
+        block_size <<= 1;
+    }
+}
+
 void mem_init() {
     put_str("mem_init start\n");
     uint32_t mem_bytes_total = (*(uint32_t*)(0xb00)); // from total_mem_bytes
     mem_pool_init(mem_bytes_total);
+    block_desc_init(k_block_descs);
     put_str("mem_init done\n");
 }

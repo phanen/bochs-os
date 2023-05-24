@@ -3,6 +3,7 @@
 
 #include "stdint.h"
 #include "bitmap.h"
+#include "list.h"
 
 // which pool to use
 enum pool_flags {
@@ -17,10 +18,23 @@ enum pool_flags {
 #define	 PG_US_S  0	// system
 #define	 PG_US_U  4	// user
 
+// block size: 16, 32, 64, 128, 256, 512, 1024
+#define DESC_CNT  7	// num of mem desc
+
 // alright... vaddr also need to be alloced
 struct virtual_addr {
    struct bitmap vaddr_bitmap;
    uint32_t vaddr_start;
+};
+
+struct mem_block {
+   struct list_elem free_elem;
+};
+
+struct mem_block_desc {
+   uint32_t block_size;
+   uint32_t blocks_per_arena; // num
+   struct list free_list; // free list of mem_block
 };
 
 extern struct pool kernel_pool, user_pool;
