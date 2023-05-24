@@ -101,7 +101,7 @@ void create_user_vaddr_bitmap(struct task_struct* user_prog) {
 void process_execute(void* userprog, char* name) {
 
   struct task_struct* thread = get_kernel_pages(1);
-  init_tcb(thread, name, default_prio);
+  init_task(thread, name, default_prio);
   create_user_vaddr_bitmap(thread);
   thread_stack_init(thread, start_process, userprog); // start_process(userprog)
   thread->pgdir = create_page_dir();

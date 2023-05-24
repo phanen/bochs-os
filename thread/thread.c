@@ -51,9 +51,9 @@ void thread_stack_init(struct task_struct* pthread, thread_func function, void* 
 }
 
 // init basic info of pcb
-void init_tcb(struct task_struct* pthread, char* name, int prio) {
+void init_task(struct task_struct* pthread, char* name, int prio) {
 
-  // the tcb should be valid
+  // the pcb/tcb should be valid
   ASSERT(pthread != NULL);
 
   memset(pthread, 0, sizeof(*pthread));
@@ -86,7 +86,7 @@ struct task_struct* thread_create(char* name, int prio, thread_func function, vo
   // (because we implement kernel-level thread?)
   struct task_struct* thread = get_kernel_pages(1); 
 
-  init_tcb(thread, name, prio);
+  init_task(thread, name, prio);
 
   thread_stack_init(thread, function, func_arg);
 
@@ -111,7 +111,7 @@ static void make_main_thread() {
   main_thread = running_thread();
   //
   // then init_pcb will know main is running
-  init_tcb(main_thread, "main", 31);
+  init_task(main_thread, "main", 31);
 
   // no need to set TCB (esp at the top)
 

@@ -96,7 +96,7 @@ extern struct list thread_all_list;
 
 void thread_stack_init(struct task_struct* pthread, thread_func function, void* func_arg);
 
-void init_tcb(struct task_struct* pthread, char* name, int prio);
+void init_task(struct task_struct* pthread, char* name, int prio);
 
 struct task_struct* thread_create(char* name, int prio, thread_func function, void* func_arg);
 
