@@ -8,6 +8,8 @@
 // template function type for thread
 typedef void thread_func(void*);
 
+typedef uint16_t pid_t;
+
 // status for task
 enum task_status {
     TASK_RUNNING,
@@ -73,6 +75,8 @@ struct thread_stack {
 // pcb or tcb
 struct task_struct {
     uint32_t* self_kstack; // each kernel thread has its own kernel stack
+
+    pid_t pid;
 
     enum task_status status;
     char name[16];
