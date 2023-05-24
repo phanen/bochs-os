@@ -91,6 +91,7 @@ struct task_struct {
 
     uint32_t* pgdir; // used by proc, NULL for thread
     struct virtual_addr userprog_vaddr; // pool for ring3
+    struct mem_block_desc u_block_desc[DESC_CNT]; // mem block descs local to user
 
     uint32_t stack_magic; // guard to check stack overflow (some intrs may do tons of push)
 };

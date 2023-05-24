@@ -51,4 +51,6 @@ uint32_t* pte_ptr(uint32_t vaddr);
 uint32_t* pde_ptr(uint32_t vaddr);
 uint32_t addr_v2p(uint32_t vaddr);
 
+void block_desc_init(struct mem_block_desc* desc_array);
+
 #endif
