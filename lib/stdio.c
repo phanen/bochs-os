@@ -6,11 +6,7 @@
 #include "print.h"
 #include "debug.h"
 
-// init the arg list head
-#define va_start(ap, last)   ap = (va_list)&last
-// read content as `type` and update ap
-#define va_arg(ap, type)     *((type*)(ap += 4))
-#define va_end(ap)           ap = NULL
+#include "stdarg.h"
 
 // integer to ascii (LE)
 static void itoa(uint32_t value, char** buf_ptr_addr, uint8_t base) {
