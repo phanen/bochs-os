@@ -8,7 +8,9 @@ CC = clang
 LD = ld
 
 ASINCS = -I boot/include
-INCS = -I lib/kernel/ -I lib/ -I kernel/ -I device/ -I thread/ -I userprog/
+INCS = -I lib/kernel/ -I lib/ -I kernel/ \
+	   -I device/ -I thread/ \
+	   -I userprog/ -I lib/user/
 
 ASFLAGS = -f elf
 CFLAGS = -m32 -static -fno-builtin -nostdlib -fno-stack-protector \
@@ -22,7 +24,7 @@ OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o \
 	   $(BUILD_DIR)/memory.o $(BUILD_DIR)/thread.o $(BUILD_DIR)/list.o \
 	   $(BUILD_DIR)/switch.o $(BUILD_DIR)/sync.o $(BUILD_DIR)/console.o \
 	   $(BUILD_DIR)/keyboard.o $(BUILD_DIR)/ioqueue.o $(BUILD_DIR)/tss.o \
-	   $(BUILD_DIR)/process.o
+	   $(BUILD_DIR)/process.o $(BUILD_DIR)/syscall.o $(BUILD_DIR)/syscall-init.o \
 
 bochs: disk
 	bochs -q -f bochs.conf
@@ -94,6 +96,12 @@ $(BUILD_DIR)/tss.o: userprog/tss.c userprog/tss.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/process.o: userprog/process.c userprog/process.h
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/syscall.o: lib/user/syscall.c lib/user/syscall.h
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/syscall-init.o: lib/user/syscall-init.c lib/user/syscall-init.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 empty-disk:
