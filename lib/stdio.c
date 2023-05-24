@@ -44,13 +44,29 @@ uint32_t vsprintf(char* str, const char* format, va_list ap) {
     // the placeholder char
     cur_char = *(++fp);
     switch(cur_char) {
-      case 'x':
+      case 'x': // hex
         // read the content as int
         arg_int = va_arg(ap, int);
-        // convert int to ascii
+        // int to hex ascii
         itoa(arg_int, &bp, 16);
         cur_char = *(++fp);
         break;
+
+      case 'c': // char
+        *(bp++) = va_arg(ap, char);
+        cur_char = *(++fp);
+        break;
+
+      case 'd': // oct
+        arg_int = va_arg(ap, int);
+        if (arg_int < 0) {
+          arg_int = 0 - arg_int;
+          *bp++ = '-';
+        }
+        itoa(arg_int, &bp, 10); 
+        cur_char = *(++fp);
+        break;
+
       default:
         PANIC("no such format");
     }
