@@ -9,6 +9,6 @@ enum SYSCALL_NR {
 };
 
 uint32_t getpid();
-uint32_t write();
+uint32_t write(char* str);
 
 #endif
