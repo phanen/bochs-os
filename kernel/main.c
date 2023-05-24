@@ -11,6 +11,7 @@
 #include "syscall-init.h"
 
 #include "stdio.h"
+#include "stdio-kernel.h"
 #include "memory.h"
 
 void k_thread_a(void*);
@@ -36,11 +37,12 @@ int main() {
   // console_put_int(sys_getpid());
   // console_put_char('\n');
 
+  printk("");
+
   void* addr = sys_malloc(33);
-  printf("%s, pid:%d addr:0x%x %c", "main", sys_getpid(), (int)addr, '\n');
+  printk("%s, pid:%d addr:0x%x %c", "main", sys_getpid(), (int)addr, '\n');
 
   while(1) {
-    // console_put_str("Main ");
   }
   return 0;
 }
@@ -48,7 +50,7 @@ int main() {
 void k_thread_a(void* arg) {
   char* para = arg;
   void* addr = sys_malloc(33);
-  printf("%s, pid:%d addr:0x%x %c", para, sys_getpid(), (int)addr, '\n');
+  printk("%s, pid:%d addr:0x%x %c", para, sys_getpid(), (int)addr, '\n');
   while (1) {
   }
 }
@@ -57,7 +59,7 @@ void k_thread_b(void* arg) {
 
   char* para = arg;
   void* addr = sys_malloc(63);
-  printf("%s, pid:%d addr:0x%x %c", para, sys_getpid(), (int)addr, '\n');
+  printk("%s, pid:%d addr:0x%x %c", para, sys_getpid(), (int)addr, '\n');
   while (1) {
   }
 }
