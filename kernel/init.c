@@ -7,6 +7,7 @@
 #include "console.h"
 #include "keyboard.h"
 #include "tss.h"
+#include "syscall-init.h"
 
 void init_all() {
    put_str("init_all\n");
@@ -17,4 +18,5 @@ void init_all() {
    console_init(); // define console as a public resource
    keyboard_init(); // register keyboard event handler
    tss_init(); // update tss desc and ring3 desc
+   syscall_init(); // make syscall_table
 }
