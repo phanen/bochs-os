@@ -47,6 +47,19 @@ struct virtual_addr kernel_vaddr; // vaddr pool for kernel
 // kernel mem block desc
 struct mem_block_desc k_block_descs[DESC_CNT];
 
+// init a mem bock desc array
+void block_desc_init(struct mem_block_desc* desc_array) {
+
+    uint16_t block_size = 16;
+
+    for (uint16_t i = 0; i < DESC_CNT; i++) {
+        desc_array[i].block_size = block_size;
+        desc_array[i].blocks_per_arena = (PG_SIZE - sizeof(struct arena)) / block_size;
+        list_init(&desc_array[i].free_list);
+        block_size <<= 1;
+    }
+}
+
 // request `pg_cnt` pages from vaddr pool
 static void* vaddr_get(enum pool_flags pf, uint32_t pg_cnt) {
     int vaddr_start = 0, bit_idx_start = -1;
@@ -171,14 +184,13 @@ void* malloc_page(enum pool_flags pf, uint32_t pg_cnt) {
     return vaddr_start;
 }
 
-// kernel malloc by pages
 void* get_kernel_pages(uint32_t pg_cnt) {
     lock_acquire(&kernel_pool.lock);
     void* vaddr =  malloc_page(PF_KERNEL, pg_cnt);
-    if (vaddr != NULL) { // clean the page frame
+    if (vaddr != NULL) {
         memset(vaddr, 0, pg_cnt * PG_SIZE);
     }
-    lock_acquire(&kernel_pool.lock);
+    lock_release(&kernel_pool.lock);
     return vaddr;
 }
 
@@ -313,18 +325,6 @@ static void mem_pool_init(uint32_t all_mem) {
     put_str("   mem_pool_init done\n");
 }
 
-// init a mem bock desc array
-void block_desc_init(struct mem_block_desc* desc_array) {
-
-    uint16_t block_size = 16;
-
-    for (uint16_t i = 0; i < DESC_CNT; i++) {
-        desc_array[i].block_size = block_size;
-        desc_array[i].blocks_per_arena = (PG_SIZE - sizeof(struct arena)) / block_size;
-        list_init(&desc_array[i].free_list);
-        block_size <<= 1;
-    }
-}
 
 // idx-th block in arena
 static struct mem_block* arena2block(struct arena* a, uint32_t idx) {
