@@ -36,8 +36,6 @@ char *intr_name[IDT_DESC_CNT]; // for debug ...
 
 // intr handler for syscall: asm entry
 extern uint32_t syscall_handler(void);
-// intr handler for syscall: c body
-intr_handler syscall_table[IDT_DESC_CNT];
 
 // init 8259A
 static void pic_init(void) {
