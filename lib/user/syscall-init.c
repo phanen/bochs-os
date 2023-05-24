@@ -1,10 +1,10 @@
-#include "syscall-init.h" // ring0
-#include "syscall.h" // ring3
+#include "syscall-init.h"
+#include "syscall.h"
 #include "stdint.h"
 #include "print.h"
 #include "thread.h"
-#include "string.h"
 #include "console.h"
+#include "string.h"
 
 #define syscall_nr 32
 typedef void* syscall;
@@ -22,6 +22,6 @@ uint32_t sys_write(char* str) {
 void syscall_init() {
   put_str("syscall_init start\n");
   syscall_table[SYS_GETPID] = sys_getpid;
-  syscall_table[SYS_GETPID] = sys_write;
+  syscall_table[SYS_WRITE] = sys_write;
   put_str("syscall_init done\n");
 }
