@@ -1,7 +1,6 @@
 #include "print.h"
 #include "init.h"
 // #include "debug.h"
-// #include "memory.h"
 #include "thread.h"
 #include "interrupt.h"
 #include "console.h"
@@ -12,6 +11,7 @@
 #include "syscall-init.h"
 
 #include "stdio.h"
+#include "memory.h"
 
 void k_thread_a(void*);
 void k_thread_b(void*);
@@ -32,9 +32,12 @@ int main() {
   thread_create("k_thread_a", 31, k_thread_a, "thread_a");
   thread_create("k_thread_b", 31, k_thread_b, "thread_b");
 
-  console_put_str(" main_pid:0x");
-  console_put_int(sys_getpid());
-  console_put_char('\n');
+  // console_put_str(" main_pid:0x");
+  // console_put_int(sys_getpid());
+  // console_put_char('\n');
+
+  void* addr = sys_malloc(33);
+  printf("%s, pid:%d addr:0x%x %c", "main", sys_getpid(), (int)addr, '\n');
 
   while(1) {
     // console_put_str("Main ");
@@ -43,10 +46,9 @@ int main() {
 }
 
 void k_thread_a(void* arg) {
-
   char* para = arg;
-  printf("%s, pid:%d %c", para, sys_getpid(),'\n');
-
+  void* addr = sys_malloc(33);
+  printf("%s, pid:%d addr:0x%x %c", para, sys_getpid(), (int)addr, '\n');
   while (1) {
   }
 }
@@ -54,7 +56,8 @@ void k_thread_a(void* arg) {
 void k_thread_b(void* arg) {
 
   char* para = arg;
-  printf("%s, pid:%d %c", para, sys_getpid(),'\n');
+  void* addr = sys_malloc(63);
+  printf("%s, pid:%d addr:0x%x %c", para, sys_getpid(), (int)addr, '\n');
   while (1) {
   }
 }
