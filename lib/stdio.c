@@ -33,7 +33,9 @@ uint32_t vsprintf(char* str, const char* format, va_list ap) {
   char* bp = str;
   const char* fp = format;
   char cur_char = *fp;
+
   int32_t arg_int;
+  char* arg_str;
 
   while(cur_char) {
     if (cur_char != '%') {
@@ -52,11 +54,6 @@ uint32_t vsprintf(char* str, const char* format, va_list ap) {
         cur_char = *(++fp);
         break;
 
-      case 'c': // char
-        *(bp++) = va_arg(ap, char);
-        cur_char = *(++fp);
-        break;
-
       case 'd': // oct
         arg_int = va_arg(ap, int);
         if (arg_int < 0) {
@@ -66,6 +63,19 @@ uint32_t vsprintf(char* str, const char* format, va_list ap) {
         itoa(arg_int, &bp, 10); 
         cur_char = *(++fp);
         break;
+
+      case 'c': // char
+        *(bp++) = va_arg(ap, char);
+        cur_char = *(++fp);
+        break;
+
+      case 's': // string
+        arg_str = va_arg(ap, char*);
+        strcpy(bp, arg_str);
+        bp += strlen(arg_str);
+        cur_char = *(++fp);
+        break;
+
 
       default:
         PANIC("no such format");
