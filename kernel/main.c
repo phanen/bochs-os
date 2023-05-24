@@ -11,8 +11,6 @@
 #include "syscall.h"
 #include "syscall-init.h"
 
-#include "stdio.h"
-
 void k_thread_a(void*);
 void k_thread_b(void*);
 void u_prog_a(void);
@@ -32,7 +30,9 @@ int main() {
   thread_create("k_thread_a", 31, k_thread_a, "argA ");
   thread_create("k_thread_b", 31, k_thread_b, "argB ");
 
-  printf("  main_pid: 0x%x \n", sys_getpid());
+  console_put_str(" main_pid:0x");
+  console_put_int(sys_getpid());
+  console_put_char('\n');
 
   while(1) {
     // console_put_str("Main ");
@@ -41,29 +41,41 @@ int main() {
 }
 
 void k_thread_a(void* arg) {
+
   char* para = arg;
   while (1) {
-    printf("  thread_a_pid:  0x%x \n", sys_getpid());
-    printf("  proc_a_pid:    0x%x \n", bss_var_a);  
+    console_put_str(" thread_a_pid:0x");
+    console_put_int(sys_getpid());
+    console_put_char('\n');
+
+    console_put_str(" proc_a_pid:0x");
+    console_put_int(bss_var_a);
+    console_put_char('\n');
   }
 }
 
 void k_thread_b(void* arg) {
+
   char* para = arg;
   while (1) {
-    printf("  thread_b_pid:  0x%x \n", sys_getpid());
-    printf("  proc_b_pid:    0x%x \n", bss_var_b);  
+    console_put_str(" thread_b_pid:0x");
+    console_put_int(sys_getpid());
+    console_put_char('\n');
+
+    console_put_str(" proc_b_pid:0x");
+    console_put_int(bss_var_b);
+    console_put_char('\n');
   }
 }
 
-void u_prog_a() {
+void u_prog_a(void) {
   while(1) {
     bss_var_a = getpid();
   }
 
 }
 
-void u_prog_b() {
+void u_prog_b(void) {
   while(1) {
     bss_var_b = getpid();
   }
