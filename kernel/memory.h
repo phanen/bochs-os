@@ -31,6 +31,9 @@ struct mem_block {
    struct list_elem free_elem;
 };
 
+// common meta info (mutiplex)
+//    we'll build a list with:
+//    block size: 16, 32, 64, 128, 256, 512, 1024
 struct mem_block_desc {
    uint32_t block_size;
    uint32_t blocks_per_arena; // num
@@ -52,5 +55,6 @@ uint32_t* pde_ptr(uint32_t vaddr);
 uint32_t addr_v2p(uint32_t vaddr);
 
 void block_desc_init(struct mem_block_desc* desc_array);
+void* sys_malloc(uint32_t size);
 
 #endif

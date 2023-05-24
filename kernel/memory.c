@@ -6,6 +6,7 @@
 #include "print.h"
 #include "string.h"
 #include "sync.h"
+#include "interrupt.h"
 
 #define MEM_BITMAP_BASE 0xc009a000
 // at most 512M
@@ -322,6 +323,127 @@ void block_desc_init(struct mem_block_desc* desc_array) {
         desc_array[i].blocks_per_arena = (PG_SIZE - sizeof(struct arena)) / block_size;
         list_init(&desc_array[i].free_list);
         block_size <<= 1;
+    }
+}
+
+// idx-th block in arena
+static struct mem_block* arena2block(struct arena* a, uint32_t idx) {
+    return (struct mem_block*)((uint32_t)a + sizeof(struct arena) + idx * a->desc->block_size);
+}
+
+// inversely
+static struct arena* block2arena(struct mem_block* b) {
+    return (struct arena*)((uint32_t)b & 0xfffff000);
+}
+
+// god-like
+void* sys_malloc(uint32_t size) {
+
+    struct mem_block_desc* descs;
+
+    enum pool_flags PF;
+    struct pool* mem_pool;
+    uint32_t pool_size;
+
+    struct task_struct* cur_thread = running_thread();
+
+    // kernel or user
+    if (cur_thread->pgdir == NULL) {
+        PF = PF_KERNEL;
+        pool_size = kernel_pool.pool_size;
+        mem_pool = &kernel_pool;
+        descs = k_block_descs;
+    }
+    else {
+        PF = PF_USER;
+        pool_size = user_pool.pool_size;
+        mem_pool = &user_pool;
+        descs = cur_thread->u_block_desc;
+    }
+
+    // invalid size
+    if (!(size > 0 && size < pool_size)) {
+        return NULL;
+    }
+
+    struct arena* a;
+    struct mem_block* b;
+
+    lock_acquire(&mem_pool->lock);
+
+    // large block -> whole page
+    if (size > 1024) {
+        uint32_t page_cnt = DIV_ROUND_UP(size + sizeof(struct arena), PG_SIZE);
+
+        a = malloc_page(PF, page_cnt);
+
+        if (a != NULL) {
+            memset(a, 0, page_cnt * PG_SIZE); // TODO: or not?
+
+            // the header
+            a->desc = NULL;
+            a->cnt = page_cnt;
+            a->large = true;
+
+            lock_release(&mem_pool->lock);
+            return (void*)(a + 1); // after header
+        }
+        else {
+            lock_release(&mem_pool->lock);
+            return NULL;
+        }
+    }
+    // small block -> adaptive 
+    else {
+        uint8_t desc_i;
+
+        // find the first 2^k > size
+        for (desc_i = 0; desc_i < DESC_CNT; desc_i++) {
+            if (size <= descs[desc_i].block_size) {
+                break;
+            }
+        }
+
+        // create new arena mem_block
+        // no free block
+        if (list_empty(&descs[desc_i].free_list)) {
+
+            a = malloc_page(PF, 1); // new arena
+            if (a == NULL) {
+                lock_release(&mem_pool->lock);
+                return NULL;
+            }
+            memset(a, 0, PG_SIZE);
+
+            a->desc = &descs[desc_i]; // common desc
+            a->large = false;
+            a->cnt = descs[desc_i].blocks_per_arena;
+
+            uint32_t block_i;
+
+            enum intr_status old_status = intr_disable();
+
+            // divided arena into small blocks
+            // update free_list
+            for (block_i = 0; block_i < descs[desc_i].blocks_per_arena; block_i++) {
+                b = arena2block(a, block_i);
+                ASSERT(!elem_find(&a->desc->free_list, &b->free_elem));
+                list_append(&a->desc->free_list, &b->free_elem);
+            }
+
+            intr_set_status(old_status);
+        }
+
+        // time to alloc
+        //      alloc: list_tag -> block
+        b = elem2entry(struct mem_block, free_elem, list_pop(&(descs[desc_i].free_list))); // type -> namae -> target
+        memset(b, 0, descs[desc_i].block_size);
+        //      update the arena header: block -> arena
+        a = block2arena(b);
+        a->cnt--;
+
+        lock_release(&mem_pool->lock);
+        return (void*)b;
     }
 }
 
