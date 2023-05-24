@@ -6,6 +6,7 @@
 enum SYSCALL_NR {
   SYS_GETPID
 };
+
 uint32_t getpid(void);
 
 #endif
