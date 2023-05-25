@@ -498,7 +498,7 @@ void* sys_malloc(uint32_t size) {
         }
 
         // if no free block in current arena
-        //      create a new arena mem_block 
+        //      create a new arena mem_block
         if (list_empty(&descs[desc_i].free_list)) {
 
             a = malloc_page(PF, 1); // new arena
@@ -550,14 +550,14 @@ void sys_free(void* ptr) {
         // kernel thread or user process
         if (running_thread()->pgdir == NULL) {
             ASSERT((uint32_t)ptr >= K_HEAP_START);
-            PF = PF_KERNEL; 
+            PF = PF_KERNEL;
             mem_pool = &kernel_pool;
         } else {
             PF = PF_USER;
             mem_pool = &user_pool;
         }
 
-        lock_acquire(&mem_pool->lock);   
+        lock_acquire(&mem_pool->lock);
 
         struct mem_block* b = ptr;
         // get the meta info of blk
@@ -566,7 +566,7 @@ void sys_free(void* ptr) {
 
         // large blk
         if (a->desc == NULL && a->large == true) {
-            mfree_page(PF, a, a->cnt); 
+            mfree_page(PF, a, a->cnt);
         }
         // small blk
         else {
@@ -584,10 +584,10 @@ void sys_free(void* ptr) {
                     ASSERT(elem_find(&a->desc->free_list, &b->free_elem));
                     list_remove(&b->free_elem);
                 }
-                mfree_page(PF, a, 1); 
-            } 
-        }   
-        lock_release(&mem_pool->lock); 
+                mfree_page(PF, a, 1);
+            }
+        }
+        lock_release(&mem_pool->lock);
     }
 }
 
