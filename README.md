@@ -44,4 +44,4 @@ dep:
 	$(MAKE) -C bochs-2.6.2 install
 ```
 
-> other distro can be install in similarly way
+> other distro can install in similarly way
