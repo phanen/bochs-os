@@ -1,0 +1,13 @@
+label: dos
+label-id: 0x9fa5ad85
+device: hd80M.img
+unit: sectors
+sector-size: 512
+
+hd80M.img1 : start=        2048, size=       30208, type=83
+hd80M.img4 : start=       32256, size=      131040, type=5
+hd80M.img5 : start=       34304, size=       16096, type=66
+hd80M.img6 : start=       52448, size=       23152, type=66
+hd80M.img7 : start=       77648, size=       13072, type=66
+hd80M.img8 : start=       93744, size=       27216, type=66
+hd80M.img9 : start=      123984, size=       39312, type=66
