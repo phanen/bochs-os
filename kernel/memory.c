@@ -497,8 +497,8 @@ void* sys_malloc(uint32_t size) {
             }
         }
 
-        // create new arena mem_block
-        // no free block
+        // if no free block in current arena
+        //      create a new arena mem_block 
         if (list_empty(&descs[desc_i].free_list)) {
 
             a = malloc_page(PF, 1); // new arena
@@ -517,7 +517,7 @@ void* sys_malloc(uint32_t size) {
             enum intr_status old_status = intr_disable();
 
             // divided arena into small blocks
-            // update free_list
+            // update free_list (must iterate to fill the free_list... seems dummy)
             for (block_i = 0; block_i < descs[desc_i].blocks_per_arena; block_i++) {
                 b = arena2block(a, block_i);
                 ASSERT(!elem_find(&a->desc->free_list, &b->free_elem));
@@ -537,6 +537,57 @@ void* sys_malloc(uint32_t size) {
 
         lock_release(&mem_pool->lock);
         return (void*)b;
+    }
+}
+
+void sys_free(void* ptr) {
+    ASSERT(ptr != NULL);
+
+    if (ptr != NULL) {
+        enum pool_flags PF;
+        struct pool* mem_pool;
+
+        // kernel thread or user process
+        if (running_thread()->pgdir == NULL) {
+            ASSERT((uint32_t)ptr >= K_HEAP_START);
+            PF = PF_KERNEL; 
+            mem_pool = &kernel_pool;
+        } else {
+            PF = PF_USER;
+            mem_pool = &user_pool;
+        }
+
+        lock_acquire(&mem_pool->lock);   
+
+        struct mem_block* b = ptr;
+        // get the meta info of blk
+        struct arena* a = block2arena(b);
+        ASSERT(a->large == 0 || a->large == 1);
+
+        // large blk
+        if (a->desc == NULL && a->large == true) {
+            mfree_page(PF, a, a->cnt); 
+        }
+        // small blk
+        else {
+            // free list
+            list_append(&a->desc->free_list, &b->free_elem);
+
+            // arena has been empty?
+            // clean the free_list (seems a little dummy...)
+            //      if alloc a new blk, we remove free_list
+            //      if free the arena, we also remove free_list
+            if (++a->cnt == a->desc->blocks_per_arena) {
+                uint32_t block_i;
+                for (block_i = 0; block_i < a->desc->blocks_per_arena; block_i++) {
+                    struct mem_block*  b = arena2block(a, block_i);
+                    ASSERT(elem_find(&a->desc->free_list, &b->free_elem));
+                    list_remove(&b->free_elem);
+                }
+                mfree_page(PF, a, 1); 
+            } 
+        }   
+        lock_release(&mem_pool->lock); 
     }
 }
 
