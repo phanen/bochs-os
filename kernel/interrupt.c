@@ -51,13 +51,10 @@ static void pic_init(void) {
   outb (PIC_S_DATA, 0x02);	// ICW3: slave -> IR[2]
   outb (PIC_S_DATA, 0x01);	// ICW4: uPM=1, AEOI=0
 
-  // // block all intrrupt except clock intrrupt
-  // outb (PIC_M_DATA, 0xfe);  // OCW1: IMR, only IR0 (clock intr)
-  // outb (PIC_S_DATA, 0xff);  // OCW1: IMR, all masked
-
-  // enable both keyboard and clock intr
-  outb (PIC_M_DATA, 0xfc);  // OCW1: IMR 11111100
-  outb (PIC_S_DATA, 0xff);
+  // enable slave(irq2), keyboard(irq1), clock(irq0)
+  outb (PIC_M_DATA, 0xfc);  // OCW1: IMR 11111000
+  // enable disk(irq14)
+  outb (PIC_S_DATA, 0xbf);  // OCW1: IMR 10111111
 
   put_str("   pic_init done\n"); // manual tab, emm...
 }
