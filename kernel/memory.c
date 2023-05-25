@@ -114,6 +114,7 @@ uint32_t* pde_ptr(uint32_t vaddr) {
 }
 
 // alloc a phy page
+// NOTE: when only pvaddr appear, it must be pure calculation
 static void* palloc(struct pool* m_pool) {
     int bit_idx = bitmap_scan(&m_pool->pool_bitmap, 1); // atom?
     if (bit_idx == -1 ) {
@@ -245,16 +246,108 @@ uint32_t addr_v2p(uint32_t vaddr) {
     return ((*pte & 0xfffff000) + (vaddr & 0x00000fff));
 }
 
+// change bitmap
+// pmem is maintained by kernel
+void pfree(uint32_t pg_phy_addr) {
+    struct pool* mem_pool;
+    uint32_t bit_idx = 0;
+    if (pg_phy_addr >= user_pool.phy_addr_start) {
+        mem_pool = &user_pool;
+        bit_idx = (pg_phy_addr - user_pool.phy_addr_start) / PG_SIZE;
+    }
+    else {
+        mem_pool = &kernel_pool;
+        bit_idx = (pg_phy_addr - kernel_pool.phy_addr_start) / PG_SIZE;
+    }
+    bitmap_set(&mem_pool->pool_bitmap, bit_idx, 0);
+}
+
+// rm pte only (pde is not easy to trace)
+static void page_table_pte_remove(uint32_t vaddr) {
+    uint32_t* pte = pte_ptr(vaddr);
+    *pte &= ~PG_P_1;
+    asm volatile ("invlpg %0"::"m" (vaddr):"memory"); // flush tlb
+}
+
+// free vpages like what `vaddr_get` alloc
+//      vmem is maintained by pcb
+static void vaddr_remove(enum pool_flags pf, void* _vaddr, uint32_t pg_cnt) {
+    uint32_t bit_idx_start = 0, vaddr = (uint32_t)_vaddr, cnt = 0;
+
+    if (pf == PF_KERNEL) {
+        bit_idx_start = (vaddr - kernel_vaddr.vaddr_start) / PG_SIZE;
+        while(cnt < pg_cnt) {
+            bitmap_set(&kernel_vaddr.vaddr_bitmap, bit_idx_start + cnt++, 0);
+        }
+    }
+    else {
+        struct task_struct* cur_thread = running_thread();
+        bit_idx_start = (vaddr - cur_thread->userprog_vaddr.vaddr_start) / PG_SIZE;
+        while(cnt < pg_cnt) {
+            bitmap_set(&cur_thread->userprog_vaddr.vaddr_bitmap, bit_idx_start + cnt++, 0);
+        }
+    }
+}
+
+// free `pg_cnt` pages
+// pfree -> page_table_pte_remove -> vaddr_remove
+// malloc_page: vaddr_get -> palloc -> page_table_add
+void mfree_page(enum pool_flags pf, void* _vaddr, uint32_t pg_cnt) {
+
+    uint32_t pg_phy_addr;
+    uint32_t vaddr = (int32_t)_vaddr, page_cnt = 0;
+
+    // vaddr align
+    ASSERT(pg_cnt >=1 && vaddr % PG_SIZE == 0);
+    pg_phy_addr = addr_v2p(vaddr);
+
+    // paddr of PT align and based after 1M + (1k PD) + (1k PT for kernel)
+    ASSERT((pg_phy_addr % PG_SIZE) == 0 && pg_phy_addr >= 0x102000);
+
+    // kernel or user
+    if (pg_phy_addr >= user_pool.phy_addr_start) {
+        vaddr -= PG_SIZE;
+        while (page_cnt < pg_cnt) {
+            vaddr += PG_SIZE;
+            pg_phy_addr = addr_v2p(vaddr);
+            ASSERT((pg_phy_addr % PG_SIZE) == 0 && pg_phy_addr >= user_pool.phy_addr_start);
+
+            pfree(pg_phy_addr);
+            page_table_pte_remove(vaddr);
+            page_cnt++;
+        }
+        vaddr_remove(pf, _vaddr, pg_cnt);
+
+    }
+    else {
+        vaddr -= PG_SIZE;
+        while (page_cnt < pg_cnt) {
+            vaddr += PG_SIZE;
+            pg_phy_addr = addr_v2p(vaddr);
+            ASSERT((pg_phy_addr % PG_SIZE) == 0 && \
+                   pg_phy_addr >= kernel_pool.phy_addr_start && \
+                   pg_phy_addr < user_pool.phy_addr_start);
+
+            pfree(pg_phy_addr);
+            page_table_pte_remove(vaddr);
+
+            page_cnt++;
+        }
+        vaddr_remove(pf, _vaddr, pg_cnt);
+    }
+}
+
 // init
 static void mem_pool_init(uint32_t all_mem) {
 
     put_str("   mem_pool_init start\n");
 
     // calc free phy mem, pages, used phy mem
-    uint32_t page_table_size = PG_SIZE * 256; // 256 -> num of page table: PD + 1PT(by PDE 0, 768) + 254PT(by PDE 769~1022)
+    //      256 -> num of page table: PD + 1PT(by PDE 0, 768) + 254PT(by PDE 769~1022)
+    uint32_t page_table_size = PG_SIZE * 256;
     uint32_t used_mem = 0x100000 + page_table_size; // all mem used for now
     uint32_t free_mem = all_mem - used_mem;
-    uint16_t all_free_pages = free_mem / PG_SIZE; // may not devidable, just ignore it
+    uint16_t all_free_pages = free_mem / PG_SIZE; // not devidable -> ignore it
 
     // divide phy mem into two parts
     uint16_t kernel_free_pages = all_free_pages / 2;
@@ -393,7 +486,7 @@ void* sys_malloc(uint32_t size) {
             return NULL;
         }
     }
-    // small block -> adaptive 
+        // small block -> adaptive
     else {
         uint8_t desc_i;
 
