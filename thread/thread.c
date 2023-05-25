@@ -212,7 +212,7 @@ void thread_yield(void) {
 }
 
 // a dummy thread never exit
-static void idle(void* arg) {
+static void idle(void* arg UNUSED) {
   while(1) {
     thread_block(TASK_BLOCKED);     
     // ensure enable intr before hlt
