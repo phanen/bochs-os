@@ -148,12 +148,17 @@ void schedule() {
     list_append(&thread_ready_list, &cur->general_tag);
     cur->ticks = cur->priority;
     cur->status = TASK_READY;
-  } else {
+  }
+  else {
     // due to waiting event (e.g. block by IO, sync...)
   }
 
+  // if no remaining ready thread, then using idle to hlt
+  if (list_empty(&thread_ready_list)) {
+    thread_unblock(idle_thread);
+  }
+
   // pop ready thread from rdy list (converted from a list elem tag)
-  ASSERT(!list_empty(&thread_ready_list)); // no idle now...
   thread_tag = NULL; // necessary? good habit?
   thread_tag = list_pop(&thread_ready_list);
 
@@ -173,6 +178,7 @@ void thread_block(enum task_status stat) {
 
   struct task_struct* cur_thread = running_thread();
   cur_thread->status = stat;
+
   schedule(); // schedule will actually have a look on status
   // so it will not append block thread into rdy list
 
@@ -214,7 +220,7 @@ void thread_yield(void) {
 // a dummy thread never exit
 static void idle(void* arg UNUSED) {
   while(1) {
-    thread_block(TASK_BLOCKED);     
+    thread_block(TASK_BLOCKED);
     // ensure enable intr before hlt
     //    hlt not exploit the cpu
     asm volatile ("sti; hlt" : : : "memory");
