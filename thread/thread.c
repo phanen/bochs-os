@@ -56,9 +56,9 @@ void thread_stack_init(struct task_struct* pthread, thread_func function, void* 
   kthread_stack->eip = kernel_thread; // make the thread bootstrap to `kernel_thread`
   kthread_stack->function = function;
   kthread_stack->func_arg = func_arg;
-  kthread_stack->ebp = 0; 
-  kthread_stack->ebx = 0; 
-  kthread_stack->esi = 0; 
+  kthread_stack->ebp = 0;
+  kthread_stack->ebx = 0;
+  kthread_stack->esi = 0;
   kthread_stack->edi = 0;
 }
 
@@ -75,7 +75,7 @@ void init_task(struct task_struct* pthread, char* name, int prio) {
 
   if (pthread == main_thread) {
     pthread -> status = TASK_RUNNING;
-  } 
+  }
   else {
     pthread->status = TASK_READY;
   }
@@ -98,7 +98,7 @@ struct task_struct* thread_create(char* name, int prio, thread_func function, vo
 
   // all TCBs (include user TCBs) are in kernel space
   // (because we implement kernel-level thread?)
-  struct task_struct* thread = get_kernel_pages(1); 
+  struct task_struct* thread = get_kernel_pages(1);
 
   init_task(thread, name, prio);
 
@@ -194,6 +194,19 @@ void thread_unblock(struct task_struct* pthread) {
   }
 
   intr_set_status(old_status);
+}
+
+// yield not block (running -> ready)
+void thread_yield(void) {
+   struct task_struct* cur = running_thread();
+   enum intr_status old_status = intr_disable();
+
+   ASSERT(!elem_find(&thread_ready_list, &cur->general_tag));
+   list_append(&thread_ready_list, &cur->general_tag);
+   cur->status = TASK_READY;
+   schedule();
+
+   intr_set_status(old_status);
 }
 
 // init thread (thread lists and main thread)
