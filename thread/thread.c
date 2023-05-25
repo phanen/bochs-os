@@ -9,12 +9,14 @@
 #include "process.h"
 #include "sync.h"
 
-struct task_struct* main_thread; // TCB for main thread (take `main()` as a thread)
-struct list thread_ready_list; // TASK_READY
-struct list thread_all_list; // all kind of task
+static struct task_struct* main_thread;    // TCB for main thread (take `main()` as a thread)
+static struct task_struct* idle_thread;    // a dummy never exit
+
+struct list thread_ready_list;  // TASK_READY task
+struct list thread_all_list;    // all tasks
 
 static struct list_elem* thread_tag; // just a buffer
-//  but... why not use local var?
+//  TODO: why not use local var?
 
 struct lock pid_lock;
 
@@ -22,11 +24,11 @@ extern void switch_to(struct task_struct* cur, struct task_struct* next);
 
 // alloc pid for proc
 static pid_t allocate_pid() {
-   static pid_t next_pid = 0;
-   lock_acquire(&pid_lock);
-   next_pid++;
-   lock_release(&pid_lock);
-   return next_pid;
+  static pid_t next_pid = 0;
+  lock_acquire(&pid_lock);
+  next_pid++;
+  lock_release(&pid_lock);
+  return next_pid;
 }
 
 // get the TCB of running thread
@@ -198,16 +200,27 @@ void thread_unblock(struct task_struct* pthread) {
 
 // yield not block (running -> ready)
 void thread_yield(void) {
-   struct task_struct* cur = running_thread();
-   enum intr_status old_status = intr_disable();
+  struct task_struct* cur = running_thread();
+  enum intr_status old_status = intr_disable();
 
-   ASSERT(!elem_find(&thread_ready_list, &cur->general_tag));
-   list_append(&thread_ready_list, &cur->general_tag);
-   cur->status = TASK_READY;
-   schedule();
+  ASSERT(!elem_find(&thread_ready_list, &cur->general_tag));
+  list_append(&thread_ready_list, &cur->general_tag);
+  cur->status = TASK_READY;
+  schedule();
 
-   intr_set_status(old_status);
+  intr_set_status(old_status);
 }
+
+// a dummy thread never exit
+static void idle(void* arg) {
+  while(1) {
+    thread_block(TASK_BLOCKED);     
+    // ensure enable intr before hlt
+    //    hlt not exploit the cpu
+    asm volatile ("sti; hlt" : : : "memory");
+  }
+}
+
 
 // init thread (thread lists and main thread)
 void thread_init(void) {
@@ -216,6 +229,7 @@ void thread_init(void) {
   list_init(&thread_all_list);
   lock_init(&pid_lock);
   make_main_thread();
+  idle_thread =  thread_create("idle", 10, idle, NULL);
   put_str("thread_init done\n");
 }
 
