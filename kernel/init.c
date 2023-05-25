@@ -8,6 +8,7 @@
 #include "keyboard.h"
 #include "tss.h"
 #include "syscall-init.h"
+#include "ide.h"
 
 void init_all() {
    put_str("init_all\n");
@@ -19,4 +20,5 @@ void init_all() {
    keyboard_init(); // register keyboard event handler
    tss_init(); // update tss desc and ring3 desc
    syscall_init(); // make syscall_table
+   ide_init();  // init the channels, disks, partitions
 }
