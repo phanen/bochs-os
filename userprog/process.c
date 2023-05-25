@@ -61,6 +61,8 @@ void page_dir_activate(struct task_struct* p_thread) {
 }
 
 // page activate and update tss->esp0
+//    only effective for proc
+//    for thread, it run like nothing happend
 void process_activate(struct task_struct* p_thread) {
   ASSERT(p_thread != NULL);
   page_dir_activate(p_thread);
