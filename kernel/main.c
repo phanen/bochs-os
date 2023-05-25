@@ -18,8 +18,12 @@ void k_thread_a(void*);
 void k_thread_b(void*);
 void k_thread_c(void*);
 void k_thread_d(void*);
+
 void u_prog_a(void);
 void u_prog_b(void);
+void u_prog_c(void);
+void u_prog_d(void);
+
 int bss_var_a = 0, bss_var_b = 0;
 
 int main() {
@@ -29,6 +33,9 @@ int main() {
 
   // process_execute(u_prog_a, "user_prog_a");
   // process_execute(u_prog_b, "user_prog_b");
+
+  process_execute(u_prog_c, "user_prog_c");
+  process_execute(u_prog_d, "user_prog_d");
 
   intr_enable();
 
@@ -178,4 +185,32 @@ void u_prog_b(void) {
   while(1) {
     bss_var_b = getpid();
   }
+}
+
+void u_prog_c(void) {
+   void* addr1 = malloc(256);
+   void* addr2 = malloc(255);
+   void* addr3 = malloc(254);
+   printf(" prog_a malloc addr:0x%x,0x%x,0x%x\n", (int)addr1, (int)addr2, (int)addr3);
+
+   int cpu_delay = 1000;
+   while(cpu_delay-- > 0);
+   free(addr1);
+   free(addr2);
+   free(addr3);
+   while(1);
+}
+
+void u_prog_d(void) {
+   void* addr1 = malloc(256);
+   void* addr2 = malloc(255);
+   void* addr3 = malloc(254);
+   printf(" prog_b malloc addr:0x%x,0x%x,0x%x\n", (int)addr1, (int)addr2, (int)addr3);
+
+   int cpu_delay = 1000;
+   while(cpu_delay-- > 0);
+   free(addr1);
+   free(addr2);
+   free(addr3);
+   while(1);
 }
