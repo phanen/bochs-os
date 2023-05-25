@@ -6,11 +6,11 @@
 #include "bitmap.h"
 
 struct partition {
-  uint32_t start_lba;
+  uint32_t start_lba; // absolute in `struct disk`, but relative in disk
   uint32_t sec_cnt;
 
   struct disk* my_disk;	         // from which disk
-  struct list_elem part_tag;	 // ?
+  struct list_elem part_tag;	 // to index the partition in a list
   char name[8];
 
   struct super_block* sb;
@@ -39,7 +39,7 @@ struct ide_channel {
   struct disk devices[2];       // master + slave
 };
 
-extern uint8_t channel_cnt;
+extern uint8_t chan_cnt;
 extern struct ide_channel channels[];
 
 void ide_init(void);
