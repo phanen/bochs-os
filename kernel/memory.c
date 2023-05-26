@@ -552,7 +552,8 @@ void sys_free(void* ptr) {
             ASSERT((uint32_t)ptr >= K_HEAP_START);
             PF = PF_KERNEL;
             mem_pool = &kernel_pool;
-        } else {
+        }
+        else {
             PF = PF_USER;
             mem_pool = &user_pool;
         }
