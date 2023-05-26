@@ -13,7 +13,7 @@ struct partition {
   struct list_elem part_tag;	 // to index the partition in a list
   char name[8];
 
-  struct super_block* sb;
+  struct super_block* sb;	  // interesting: we don't define it before
 
   struct bitmap block_bitmap;
   struct bitmap inode_bitmap;
