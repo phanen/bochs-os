@@ -362,9 +362,13 @@ void intr_hd_handler(uint8_t irq_no) {
 void ide_init() {
    printk("ide_init start\n");
 
-   uint8_t hd_cnt = *((uint8_t*)(0x475)); // disk cnt
+   // disk cnt
+   uint8_t hd_cnt = *((uint8_t*)(0x475));
+   printk("   ide_init hd_cnt:%d\n",hd_cnt);
    ASSERT(hd_cnt > 0);
-   chan_cnt = DIV_ROUND_UP(hd_cnt, 2); // ide cnt
+
+   // channel cnt from disk count
+   chan_cnt = DIV_ROUND_UP(hd_cnt, 2);
    struct ide_channel* channel;
 
 
