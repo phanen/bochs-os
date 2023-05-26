@@ -371,6 +371,8 @@ void ide_init() {
    chan_cnt = DIV_ROUND_UP(hd_cnt, 2);
    struct ide_channel* channel;
 
+   // init the list to collect the partition
+   list_init(&partition_list);
 
    // init each channel
    for (uint8_t chan_no = 0; chan_no < chan_cnt; chan_no++) {
