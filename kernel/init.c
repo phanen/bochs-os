@@ -9,6 +9,7 @@
 #include "tss.h"
 #include "syscall-init.h"
 #include "ide.h"
+#include "fs.h"
 
 void init_all() {
    put_str("init_all\n");
@@ -21,4 +22,5 @@ void init_all() {
    tss_init(); // update tss desc and ring3 desc
    syscall_init(); // make syscall_table
    ide_init();  // init the channels, disks, partitions
+   fs_init(); // scan or install fs
 }
