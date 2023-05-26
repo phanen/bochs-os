@@ -129,6 +129,9 @@ boot-disk: $(BUILD_DIR)/mbr.bin $(BUILD_DIR)/loader.bin $(BUILD_DIR)/kernel.bin 
 	# strip -R .got.plt kernel.bin -R .note.gnu.property -R .eh_frame kernel.bin
 	dd if=$(BUILD_DIR)/kernel.bin of=hd60M.img bs=512B count=200 seek=9 conv=notrunc # dd is smart enough
 
+partition-slave: raw-slave-disk
+	cat disk-slave-partition.sfdisk | sfdisk hd80M.img
+
 loader-disasm: loader.bin
 	objdump -D -b binary -mi386 -Mintel,i8086 loader.bin
 
