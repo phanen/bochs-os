@@ -52,7 +52,7 @@ static void pic_init(void) {
   outb (PIC_S_DATA, 0x01);	// ICW4: uPM=1, AEOI=0
 
   // enable slave(irq2), keyboard(irq1), clock(irq0)
-  outb (PIC_M_DATA, 0xfc);  // OCW1: IMR 11111000
+  outb (PIC_M_DATA, 0xf8);  // OCW1: IMR 11111000
   // enable disk(irq14)
   outb (PIC_S_DATA, 0xbf);  // OCW1: IMR 10111111
 
