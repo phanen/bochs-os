@@ -10,12 +10,14 @@ LD = ld
 ASINCS = -I boot/include
 INCS = -I lib/kernel/ -I lib/ -I kernel/ \
 	   -I device/ -I thread/ \
-	   -I userprog/ -I lib/user/
+	   -I userprog/ -I lib/user/ \
+	   -I fs/
 
 ASFLAGS = -f elf
 CFLAGS = -m32 -static -fno-builtin -nostdlib -fno-stack-protector \
-		-mno-sse
+		 -mno-sse
 		 # -W -Wstrict-prototypes -Wmissing-prototypes
+
 LDFLAGS = -e main -static -Ttext $(ENTRY_POINT) -m elf_i386
 
 OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o \
@@ -25,8 +27,9 @@ OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o \
 	   $(BUILD_DIR)/switch.o $(BUILD_DIR)/sync.o $(BUILD_DIR)/console.o \
 	   $(BUILD_DIR)/keyboard.o $(BUILD_DIR)/ioqueue.o $(BUILD_DIR)/tss.o \
 	   $(BUILD_DIR)/process.o $(BUILD_DIR)/syscall.o $(BUILD_DIR)/syscall-init.o \
-	   $(BUILD_DIR)/stdio.o  $(BUILD_DIR)/stdio-kernel.o \
-	   $(BUILD_DIR)/ide.o
+	   $(BUILD_DIR)/stdio.o  $(BUILD_DIR)/stdio-kernel.o $(BUILD_DIR)/ide.o \
+	   $(BUILD_DIR)/fs.o
+
 
 bochs: boot-disk
 	bochs -q -f bochs.conf
@@ -113,6 +116,9 @@ $(BUILD_DIR)/stdio-kernel.o: lib/kernel/stdio-kernel.c lib/kernel/stdio-kernel.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/ide.o: device/ide.c device/ide.h
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/fs.o: fs/fs.c fs/fs.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 raw-boot-disk:
