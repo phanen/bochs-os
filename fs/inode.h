@@ -5,6 +5,10 @@
 #include "list.h"
 #include "ide.h"
 
+#define DIRECT_PTRS    12
+#define INDIRE_PTRS    1
+#define TOTAL_PTRS     DIRECT_PTRS + INDIRE_PTRS
+
 struct inode {
    uint32_t i_no; // self-reference
    uint32_t i_size; // file size
@@ -13,7 +17,7 @@ struct inode {
    bool write_deny;	   // one writer only
 
    // i_sectors[0-11] direct, i_sectors[12] indirect
-   uint32_t i_sectors[13];
+   uint32_t i_sectors[TOTAL_PTRS];
    struct list_elem inode_tag;
 };
 
