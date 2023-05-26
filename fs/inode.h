@@ -6,10 +6,9 @@
 
 struct inode {
    uint32_t i_no;
-
-   // for file: size
-   // for dir:  sum of entry size
    uint32_t i_size;
+   //	 for file: size
+   //	 for dir:  sum of entry size
 
    uint32_t i_open_cnts;   // cur file open counters
    bool write_deny;	   // one writer only
