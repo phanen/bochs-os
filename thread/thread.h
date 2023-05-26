@@ -5,6 +5,8 @@
 #include "list.h"
 #include "memory.h"
 
+#define MAX_FILES_OPEN_PER_PROC 8
+
 // template function type for thread
 typedef void thread_func(void*);
 
@@ -84,6 +86,8 @@ struct task_struct {
 
     uint8_t ticks; // time slice (-1 each clock intr)
     uint32_t elapsed_ticks; // total tick counter (since execution)
+
+    int32_t fd_table[MAX_FILES_OPEN_PER_PROC];
 
     // used with the help of macro `offset`, macro `elem2entry`
     struct list_elem general_tag; // `tag` to denote the thread in ready_list?

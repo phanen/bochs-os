@@ -92,6 +92,15 @@ void init_task(struct task_struct* pthread, char* name, int prio) {
 
   pthread->pgdir = NULL;
 
+  // open fd for std IO
+  pthread->fd_table[0] = 0;
+  pthread->fd_table[1] = 1;
+  pthread->fd_table[2] = 2;
+  // close other fds
+  for (uint8_t fd_i = 3; fd_i < MAX_FILES_OPEN_PER_PROC; fd_i++) {
+    pthread->fd_table[fd_i] = -1;
+  }
+
   pthread->stack_magic = 0x20021225; // magic number
 }
 
