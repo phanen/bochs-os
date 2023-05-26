@@ -5,10 +5,9 @@
 #include "list.h"
 
 struct inode {
-   uint32_t i_no;
-   uint32_t i_size;
-   //	 for file: size
-   //	 for dir:  sum of entry size
+
+   uint32_t i_no; // self-reference
+   uint32_t i_size; // file size
 
    uint32_t i_open_cnts;   // cur file open counters
    bool write_deny;	   // one writer only
