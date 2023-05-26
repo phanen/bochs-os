@@ -34,23 +34,23 @@ int main() {
   // process_execute(u_prog_a, "user_prog_a");
   // process_execute(u_prog_b, "user_prog_b");
 
-  process_execute(u_prog_c, "user_prog_c");
-  process_execute(u_prog_d, "user_prog_d");
+  // process_execute(u_prog_c, "user_prog_c");
+  // process_execute(u_prog_d, "user_prog_d");
 
   intr_enable();
 
   // thread_create("k_thread_a", 31, k_thread_a, "thread_a");
   // thread_create("k_thread_b", 31, k_thread_b, "thread_b");
 
-  thread_create("k_thread_c", 31, k_thread_c, "thread_c");
-  thread_create("k_thread_d", 31, k_thread_d, "thread_d");
+  // thread_create("k_thread_c", 31, k_thread_c, "thread_c");
+  // thread_create("k_thread_d", 31, k_thread_d, "thread_d");
 
   // console_put_str(" main_pid:0x");
   // console_put_int(sys_getpid());
   // console_put_char('\n');
 
-  void* addr = sys_malloc(33);
-  printk("%s, pid:%d addr:0x%x %c", "main", sys_getpid(), (int)addr, '\n');
+  // void* addr = sys_malloc(33);
+  // printk("%s, pid:%d addr:0x%x %c", "main", sys_getpid(), (int)addr, '\n');
 
   while(1) {
   }

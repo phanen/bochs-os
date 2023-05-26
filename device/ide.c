@@ -48,7 +48,7 @@ struct ide_channel channels[2]; // god know
 // updated by partition_scan
 int32_t ext_lba_base = 0;
 
-// TDDO: maybe better to use local static
+// NOTE: used by recursive func
 uint8_t p_cnt = 0; // primary partition cnt
 uint8_t l_cnt = 0; // logic partition cnt
 
@@ -164,7 +164,7 @@ void ide_read(struct disk* hd, uint32_t lba, void* buf, uint32_t sec_cnt) {
    ASSERT(lba <= max_lba);
    ASSERT(sec_cnt > 0);
 
-   // note: block the whole channel?
+   // NOTE: block the whole channel?
    //       so another disk is also block
    lock_acquire (&hd->my_channel->lock);
 
