@@ -37,9 +37,11 @@ static void inode_locate(struct partition* part, uint32_t inode_no, struct inode
     inode_pos->off_size = off_size_in_sec;
 }
 
-// sync inode to disk partition
-//      why called sync: read -> embed -> write
-//      (inode changes: i_no, i_size, i_sectors)
+// sync inode to disk partition (inode changes: i_no, i_size, i_sectors)
+//      why called `sync`:
+//          read -> embed -> write
+//      why we provide a io_buf before?
+//          avoid fail in function (fail outside maybe easier to debug)
 void inode_sync(struct partition* part, struct inode* inode, void* io_buf) {
     uint8_t inode_no = inode->i_no;
     struct inode_position inode_pos;
