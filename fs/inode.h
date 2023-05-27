@@ -4,10 +4,15 @@
 #include "stdint.h"
 #include "list.h"
 #include "ide.h"
+#include "fs.h"
 
 #define DIRECT_PTRS    12
 #define INDIRE_PTRS    1
-#define TOTAL_PTRS     DIRECT_PTRS + INDIRE_PTRS
+#define TOTAL_PTRS     (DIRECT_PTRS + INDIRE_PTRS)
+
+// num of blk ptrs 12+128
+#define TWO_PTRS       (INDIRE_PTRS * SECTOR_SIZE / sizeof(uint32_t))
+#define FLATTEN_PTRS   DIRECT_PTRS + TWO_PTRS
 
 struct inode {
    uint32_t i_no; // self-reference
