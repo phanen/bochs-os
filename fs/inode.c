@@ -94,11 +94,11 @@ struct inode* inode_open(struct partition* part, uint32_t inode_no) {
 
     char* inode_buf;
     if (inode_pos.two_sec) {
-        inode_buf = (char*)sys_malloc(1024);
+        inode_buf = (char*)sys_malloc(SECTOR_SIZE * 2);
         ide_read(part->my_disk, inode_pos.sec_lba, inode_buf, 2);
     }
     else {
-        inode_buf = (char*)sys_malloc(512);
+        inode_buf = (char*)sys_malloc(SECTOR_SIZE);
         ide_read(part->my_disk, inode_pos.sec_lba, inode_buf, 1);
     }
     memcpy(inode_found, inode_buf + inode_pos.off_size, sizeof(struct inode));
@@ -138,7 +138,7 @@ void inode_init(uint32_t inode_no, struct inode* new_inode) {
     new_inode->write_deny = false;
 
     // init i_sector
-    for (uint8_t i = 0; i < 13; i++) {
+    for (uint8_t i = 0; i < TOTAL_PTRS; i++) {
         new_inode->i_sectors[i] = 0;
     }
 }
