@@ -140,6 +140,51 @@ static void partition_format(struct partition* part) {
     sys_free(buf);
 }
 
+// get the top name
+// return next subpathname
+static char* path_parse(char* pathname, char* name_store) {
+    if (pathname[0] == '/') {
+        // for ///a
+        while(*(++pathname) == '/');
+    }
+
+    // read to null or next /
+    while (*pathname != '/' && *pathname != 0) {
+        *name_store++ = *pathname++;
+    }
+
+    // end with null -> pathname has no more content
+    if (pathname[0] == 0) {
+        return NULL;
+    }
+
+    // else, return ptr to the next start point of parsing
+    return pathname;
+}
+
+// get depth of the path
+//	 / -> 0, /a -> 1, /a/ -> 1
+// i.e. count name split by pattern `/+`
+int32_t path_depth_cnt(char* pathname) {
+    ASSERT(pathname != NULL);
+
+    char* p = pathname;
+    char name[MAX_FILE_NAME_LEN];
+    uint32_t depth = 0;
+
+    // count the time name is not empty
+    p = path_parse(p, name);
+    while (name[0]) {
+        depth++;
+        memset(name, 0, MAX_FILE_NAME_LEN);
+        if (p) {
+            p  = path_parse(p, name);
+        }
+    }
+    return depth;
+}
+
+
 // scan fs(super_block) in each partition
 // if none fs on it, then install default fs
 void fs_init() {

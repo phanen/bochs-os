@@ -16,4 +16,5 @@ enum file_types {
 };
 void fs_init(void);
 
+int32_t path_depth_cnt(char* pathname);
 #endif
