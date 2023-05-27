@@ -39,6 +39,7 @@ void dir_close(struct dir* dir) {
 }
 
 // filename dir -> dir entry
+//    `dir_e` should be alloc before
 bool search_dir_entry(struct partition* part, struct dir* pdir, \
 		      const char* name, struct dir_entry* dir_e) {
    // buf to get all flatten ptrs
@@ -97,7 +98,9 @@ void create_dir_entry(char* filename, uint32_t inode_no, uint8_t file_type, stru
    p_de->f_type = file_type;
 }
 
-// write p_de entry into parent_dir(inode)
+// write p_de entry into parent_dir
+//    sync the block its inode point to
+//    but not sync the inode
 bool sync_dir_entry(struct dir* parent_dir, struct dir_entry* p_de, void* io_buf) {
 
    // FIXME: no cur_part
@@ -117,7 +120,7 @@ bool sync_dir_entry(struct dir* parent_dir, struct dir_entry* p_de, void* io_buf
    }
    struct dir_entry* dir_e = (struct dir_entry*)io_buf;
 
-   // find free slot
+   // find free dir_entry slot
    for (uint8_t blk_i = 0; blk_i < FLATTEN_PTRS; blk_i++) {
       int32_t blk_bm_i = -1;
 
