@@ -41,6 +41,7 @@ struct ide_channel {
 
 extern uint8_t chan_cnt;
 extern struct ide_channel channels[];
+extern struct list partition_list; // mount by fs
 
 void ide_init(void);
 
