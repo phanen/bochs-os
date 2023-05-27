@@ -10,6 +10,56 @@
 #include "global.h"
 #include "debug.h"
 #include "memory.h"
+#include "file.h"
+
+struct partition* cur_part;
+
+// find a part named `part_name` in `partition_list`
+//  then init `cur_part`
+static bool mount_partition(struct list_elem* pelem, int arg) {
+
+    char* part_name = (char*)arg;
+    struct partition* part = elem2entry(struct partition, part_tag, pelem);
+
+    if (!strcmp(part->name, part_name)) {
+        cur_part = part;
+        struct disk* hd = cur_part->my_disk;
+
+        // read super_block form disk to mem
+        //  frist to sb_buf
+        //  then to cur_part->sb
+        struct super_block* sb_buf = (struct super_block*)sys_malloc(SECTOR_SIZE);
+        cur_part->sb = (struct super_block*)sys_malloc(sizeof(struct super_block));
+        if (cur_part->sb == NULL) {
+            PANIC("alloc memory failed!");
+        }
+        memset(sb_buf, 0, SECTOR_SIZE);
+        ide_read(hd, cur_part->start_lba + 1, sb_buf, 1);
+        memcpy(cur_part->sb, sb_buf, sizeof(struct super_block));
+
+        // load disk block bitmap to mem
+        cur_part->block_bitmap.bits = (uint8_t*)sys_malloc(sb_buf->block_bitmap_sects * SECTOR_SIZE);
+        if (cur_part->block_bitmap.bits == NULL) {
+            PANIC("alloc memory failed!");
+        }
+        cur_part->block_bitmap.btmp_bytes_len = sb_buf->block_bitmap_sects * SECTOR_SIZE;
+        ide_read(hd, sb_buf->block_bitmap_lba, cur_part->block_bitmap.bits, sb_buf->block_bitmap_sects);
+
+        // load disk inode bitmap to mem
+        cur_part->inode_bitmap.bits = (uint8_t*)sys_malloc(sb_buf->inode_bitmap_sects * SECTOR_SIZE);
+        if (cur_part->inode_bitmap.bits == NULL) {
+            PANIC("alloc memory failed!");
+        }
+        cur_part->inode_bitmap.btmp_bytes_len = sb_buf->inode_bitmap_sects * SECTOR_SIZE;
+        ide_read(hd, sb_buf->inode_bitmap_lba, cur_part->inode_bitmap.bits, sb_buf->inode_bitmap_sects);
+
+        list_init(&cur_part->open_inodes);
+        printk("mount %s done!\n", part->name);
+
+        return true; // stop list_traversal
+    }
+    return false; // list_traversal next
+}
 
 // init the fs meta info in partition (install fs)
 static void partition_format(struct partition* part) {
@@ -292,7 +342,7 @@ void fs_init() {
                     }
                     else {  // recognize no other type
                         printk("formatting %s`s partition %s......\n", hd->name, part->name);
-                        partition_format(part); // format to what we know
+                        partition_format(part); // install the format what we know on it
                     }
                 }
             } // part
@@ -300,4 +350,13 @@ void fs_init() {
     } // channel
 
     sys_free(sb_buf);
+
+    // mount a partition on fs
+    char default_part[8] = "sdb1";
+    list_traversal(&partition_list, mount_partition, (int)default_part);
+    open_root_dir(cur_part);
+    uint32_t fd_idx = 0;
+    while (fd_idx < MAX_FILE_OPEN) { // init: no open file
+        file_table[fd_idx++].fd_inode = NULL;
+    }
 }
