@@ -297,6 +297,74 @@ static int search_file(const char* pathname, struct path_search_record* searched
     return dir_e.i_no;
 }
 
+// open file, return fd
+//      support file only, for dir -> use `dir_open`
+int32_t sys_open(const char* pathname, uint8_t flags) {
+
+    // is dir (by name)
+    if (pathname[strlen(pathname) - 1] == '/') {
+        printk("can`t open a directory %s\n",pathname);
+        return -1;
+    }
+
+    ASSERT(flags <= 7);
+    int32_t fd = -1;
+
+    struct path_search_record searched_record;
+    memset(&searched_record, 0, sizeof(struct path_search_record));
+
+    uint32_t pathname_depth = path_depth_cnt((char*)pathname);
+
+    // search it
+    int inode_no = search_file(pathname, &searched_record);
+    // found (but maybe incorrect)
+    bool found = inode_no != -1 ? true : false;
+
+    // is dir (by dir_e)
+    if (searched_record.file_type == FT_DIRECTORY) {
+        printk("can`t open a direcotry with open(), use opendir() to instead\n");
+        dir_close(searched_record.parent_dir);
+        return -1;
+    }
+
+    uint32_t path_searched_depth = path_depth_cnt(searched_record.searched_path);
+
+    // fail to search full path (requrie `/a/b/c`, but give `/a/b`)
+    if (pathname_depth != path_searched_depth) {
+        printk("cannot access %s: Not a directory, subpath %s is`t exist\n", \
+               pathname, searched_record.searched_path);
+        dir_close(searched_record.parent_dir);
+        return -1;
+    }
+
+    // not found in last dir, and not creat
+    if (!found && !(flags & O_CREAT)) {
+        printk("in path %s, file %s is't exist\n", \
+               searched_record.searched_path, \
+               (strrchr(searched_record.searched_path, '/') + 1));
+        dir_close(searched_record.parent_dir);
+        return -1;
+    } 
+    // found in last dir, but create
+    else if (found && (flags & O_CREAT)) {
+        printk("%s has already exist!\n", pathname);
+        dir_close(searched_record.parent_dir);
+        return -1;
+    }
+
+    // (not found + create flag) or (found + no create flag)
+    switch (flags & O_CREAT) {
+        case O_CREAT:
+            printk("creating file\n");
+            fd = file_create(searched_record.parent_dir, (strrchr(pathname, '/') + 1), flags);
+            dir_close(searched_record.parent_dir);
+        // otherwise, should be other flag (r/w)
+    }
+
+    // local fd (index of `pcb->fd_table`)
+    return fd;
+}
+
 // scan fs(super_block) in each partition
 // if none fs on it, then install default fs
 void fs_init() {
