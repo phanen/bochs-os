@@ -28,8 +28,7 @@ OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o \
 	   $(BUILD_DIR)/keyboard.o $(BUILD_DIR)/ioqueue.o $(BUILD_DIR)/tss.o \
 	   $(BUILD_DIR)/process.o $(BUILD_DIR)/syscall.o $(BUILD_DIR)/syscall-init.o \
 	   $(BUILD_DIR)/stdio.o  $(BUILD_DIR)/stdio-kernel.o $(BUILD_DIR)/ide.o \
-	   $(BUILD_DIR)/fs.o
-
+	   $(BUILD_DIR)/fs.o $(BUILD_DIR)/dir.o $(BUILD_DIR)/file.o
 
 bochs: boot-disk
 	bochs -q -f bochs.conf
@@ -121,10 +120,15 @@ $(BUILD_DIR)/ide.o: device/ide.c device/ide.h
 $(BUILD_DIR)/fs.o: fs/fs.c fs/fs.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
+$(BUILD_DIR)/dir.o: fs/dir.c fs/dir.h
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/file.o: fs/file.c fs/file.h
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
+
 raw-boot-disk:
 	bximage -q -hd -mode="flat" -size=60 hd60M.img
-	# TODO
-	# dd if=/dev/zero of=hd60M.img bs=4K count=15360
+	# TODO: dd if=/dev/zero of=hd60M.img bs=4K count=15360
 
 raw-slave-disk:
 	bximage -q -hd -mode="flat" -size=80 hd80M.img
