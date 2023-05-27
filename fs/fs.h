@@ -23,6 +23,13 @@ struct path_search_record {
    enum file_types file_type;
 };
 
+// file open flags
+enum oflags {
+   O_RDONLY,	  // read only
+   O_WRONLY,	  // write only
+   O_RDWR,	  // read/write
+   O_CREAT = 4	  // create
+};
 void fs_init(void);
 
 int32_t path_depth_cnt(char* pathname);
