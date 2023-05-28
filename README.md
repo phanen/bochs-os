@@ -56,6 +56,11 @@ make boot-master
 make bochs
 ```
 
+Trick: `make` use timestamp-based build by default, to force rebuilding a target with no dependencies, you can use `-B`:
+```
+make -B slave-hd80.img
+```
+
 ## everything
 
 > Keep in mind, that, there's no magic in a computer system.
