@@ -1,4 +1,12 @@
-.PHONY = bochs gdb raw-boot-disk raw-slave-disk boot-disk clean-disk dep clean mbr-disasm loader-disasm
+.PHONY = bochs \
+	gdb \
+	boot-master \
+	clean-disk \
+	boot-master \
+	dep \
+	clean \
+	mbr-disasm \
+	loader-disasm
 
 BUILD_DIR = ./build
 ENTRY_POINT = 0xc0001500
@@ -31,10 +39,10 @@ OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o \
 	   $(BUILD_DIR)/fs.o $(BUILD_DIR)/dir.o $(BUILD_DIR)/file.o \
 	   $(BUILD_DIR)/inode.o \
 
-bochs: boot-disk
+bochs: boot-master slave-hd80M.img
 	bochs -q -f bochs.conf
 
-gdb: mbr.bin loader.bin kernel.bin
+gdb: boot-master partition-slave
 	BXSHARE=/usr/local/share/bochs bochs-gdb -q -f bochs-gdb.conf
 
 $(BUILD_DIR)/mbr.bin: boot/mbr.S
@@ -130,33 +138,32 @@ $(BUILD_DIR)/file.o: fs/file.c fs/file.h
 $(BUILD_DIR)/inode.o: fs/inode.c fs/inode.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
-raw-boot-disk:
-	bximage -q -hd -mode="flat" -size=60 hd60M.img
+# TODO: https://stackoverflow.com/questions/816370/how-do-you-force-a-makefile-to-rebuild-a-target
+master-hd60M.img:
+	rm -rf $@ && bximage -q -hd -mode="flat" -size=60 $@
 	# TODO: dd if=/dev/zero of=hd60M.img bs=4K count=15360
 
-raw-slave-disk:
-	bximage -q -hd -mode="flat" -size=80 hd80M.img
+slave-hd80M.img:
+	rm -rf $@ && bximage -q -hd -mode="flat" -size=80 $@
+	cat partition-slave.sfdisk | sfdisk $@
 
-boot-disk: $(BUILD_DIR)/mbr.bin $(BUILD_DIR)/loader.bin $(BUILD_DIR)/kernel.bin #raw-boot-disk
-	dd if=$(BUILD_DIR)/mbr.bin of=hd60M.img bs=512B count=1 conv=notrunc
-	dd if=$(BUILD_DIR)/loader.bin of=hd60M.img bs=512B count=4 seek=2 conv=notrunc
+boot-master: master-hd60M.img $(BUILD_DIR)/mbr.bin $(BUILD_DIR)/loader.bin $(BUILD_DIR)/kernel.bin
+	dd if=$(BUILD_DIR)/mbr.bin of=$< bs=512B count=1 conv=notrunc
+	dd if=$(BUILD_DIR)/loader.bin of=$< bs=512B count=4 seek=2 conv=notrunc
 	# strip -R .got.plt kernel.bin -R .note.gnu.property -R .eh_frame kernel.bin
-	dd if=$(BUILD_DIR)/kernel.bin of=hd60M.img bs=512B count=200 seek=9 conv=notrunc # dd is smart enough
+	dd if=$(BUILD_DIR)/kernel.bin of=$< bs=512B count=200 seek=9 conv=notrunc # dd is smart enough
 
-partition-slave: raw-slave-disk
-	cat disk-slave-partition.sfdisk | sfdisk hd80M.img
+clean-disk:
+	rm master-hd60M.img slave-hd80M.img -rf
 
 loader-disasm: loader.bin
-	objdump -D -b binary -mi386 -Mintel,i8086 loader.bin
+	objdump -D -b binary -mi386 -Mintel,i8086 $<
 
 mbr-disasm: mbr.bin
-	objdump -D -b binary -mi386 -Mintel,i8086 mbr.bin
+	objdump -D -b binary -mi386 -Mintel,i8086 $<
 	# AT&T
 	# objdump -D -b binary -mi386 -Maddr16,data16 mbr.bin
 	# ndisasm -b16 -o7c00h -a -s7c3eh mbr.bin
-
-clean-disk:
-	rm hd60M.img hd80M.img -rf
 
 clean:
 	rm *.{bin,o,out} -rf
