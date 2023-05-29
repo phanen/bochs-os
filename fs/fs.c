@@ -11,6 +11,7 @@
 #include "debug.h"
 #include "memory.h"
 #include "file.h"
+#include "console.h"
 
 struct partition* cur_part;
 
@@ -385,6 +386,35 @@ int32_t sys_close(int32_t fd) {
         running_thread()->fd_table[fd] = -1;
     }
     return ret;
+}
+
+int32_t sys_write(int32_t fd, const void* buf, uint32_t count) {
+    if (fd < 0) {
+        printk("sys_write: fd error\n");
+        return -1;
+    }
+
+    // write to stdout: count < 1024
+    //      warn: end 0!!!
+    if (fd == stdout_no) {
+        char tmp_buf[1024] = {0};
+        memcpy(tmp_buf, buf, count);
+        console_put_str(tmp_buf);
+        return count;
+    }
+
+    uint32_t _fd = fd_local2global(fd);
+    struct file* wr_file = &file_table[_fd];
+
+    // write flag
+    if (wr_file->fd_flag & O_WRONLY || wr_file->fd_flag & O_RDWR) {
+        uint32_t bytes_written  = file_write(wr_file, buf, count);
+        return bytes_written;
+    } 
+    else {
+        console_put_str("sys_write: not allowed to write file without flag O_RDWR or O_WRONLY\n");
+        return -1;
+    }
 }
 
 // scan fs(super_block) in each partition

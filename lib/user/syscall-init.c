@@ -7,6 +7,7 @@
 #include "string.h"
 
 #include "memory.h"
+#include "fs.h"
 
 #define syscall_nr 32
 typedef void* syscall;
@@ -16,11 +17,11 @@ uint32_t sys_getpid() {
   return running_thread()->pid;
 }
 
-uint32_t sys_write(char* str) {
-  console_put_str(str);
-  return strlen(str);
-}
-
+// uint32_t sys_write(char* str) {
+//   console_put_str(str);
+//   return strlen(str);
+// }
+//
 void syscall_init() {
   put_str("syscall_init start\n");
   syscall_table[SYS_GETPID] = sys_getpid;
