@@ -366,6 +366,24 @@ int32_t sys_open(const char* pathname, uint8_t flags) {
     return fd;
 }
 
+static uint32_t fd_local2global(uint32_t local_fd) {
+    int32_t global_fd = running_thread()->fd_table[local_fd];
+    ASSERT(global_fd >= 0 && global_fd < MAX_FILE_OPEN);
+    return (uint32_t)global_fd;
+}
+
+// close by local fd
+int32_t sys_close(int32_t fd) {
+    int32_t ret = -1;
+    if (fd > 2) { //
+        uint32_t _fd = fd_local2global(fd);
+        ret = file_close(&file_table[_fd]);
+        // free the slot in local tab
+        running_thread()->fd_table[fd] = -1;
+    }
+    return ret;
+}
+
 // scan fs(super_block) in each partition
 // if none fs on it, then install default fs
 void fs_init() {
@@ -428,22 +446,4 @@ void fs_init() {
     while (fd_idx < MAX_FILE_OPEN) { // init: no open file
         file_table[fd_idx++].fd_inode = NULL;
     }
-}
-
-static uint32_t fd_local2global(uint32_t local_fd) {
-    int32_t global_fd = running_thread()->fd_table[local_fd];
-    ASSERT(global_fd >= 0 && global_fd < MAX_FILE_OPEN);
-    return (uint32_t)global_fd;
-}
-
-// close by local fd
-int32_t sys_close(int32_t fd) {
-    int32_t ret = -1;
-    if (fd > 2) { //
-        uint32_t _fd = fd_local2global(fd);
-        ret = file_close(&file_table[_fd]);
-        // free the slot in local tab
-        running_thread()->fd_table[fd] = -1;
-    }
-    return ret;
 }
