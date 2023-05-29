@@ -359,8 +359,9 @@ int32_t sys_open(const char* pathname, uint8_t flags) {
             fd = file_create(searched_record.parent_dir, (strrchr(pathname, '/') + 1), flags);
             dir_close(searched_record.parent_dir);
         // otherwise, should be other flag (r/w)
+        default: // O_WRONLY O_RDWR O_RDONLY
+            fd = file_open(inode_no, flags);
     }
-
     // local fd (index of `pcb->fd_table`)
     return fd;
 }
