@@ -32,6 +32,7 @@ int32_t get_free_slot_in_global(void) {
 int32_t pcb_fd_install(int32_t globa_fd) {
    struct task_struct* cur = running_thread();
    uint8_t local_fd = 3;
+   // find a free slot, then map it
    for (; local_fd < MAX_FILES_OPEN_PER_PROC; local_fd++) {
       if (cur->fd_table[local_fd] == -1) {   //  -1 -> free
 	 cur->fd_table[local_fd] = globa_fd;
@@ -98,7 +99,7 @@ int32_t file_create(struct dir* parent_dir, char* filename, uint8_t flag) {
 
    uint8_t rollback_step = 0;
 
-   // alloc inode 
+   // alloc inode
    //	 alloc inode no -> alloc inode -> associate them
    int32_t inode_no = inode_bitmap_alloc(cur_part);
    if (inode_no == -1) {
@@ -115,16 +116,16 @@ int32_t file_create(struct dir* parent_dir, char* filename, uint8_t flag) {
 
    // alloc global fd in file_table
    // then associate global fd with inode
-   int fd_idx = get_free_slot_in_global();
-   if (fd_idx == -1) {
+   int fd_i = get_free_slot_in_global();
+   if (fd_i == -1) {
       printk("exceed max open files\n");
       rollback_step = 2;
       goto rollback;
    }
-   file_table[fd_idx].fd_inode = new_file_inode;
-   file_table[fd_idx].fd_pos = 0;
-   file_table[fd_idx].fd_flag = flag;
-   file_table[fd_idx].fd_inode->write_deny = false;
+   file_table[fd_i].fd_inode = new_file_inode;
+   file_table[fd_i].fd_pos = 0;
+   file_table[fd_i].fd_flag = flag;
+   file_table[fd_i].fd_inode->write_deny = false;
 
    // alloc dir entry
    struct dir_entry new_dir_entry;
@@ -155,13 +156,13 @@ int32_t file_create(struct dir* parent_dir, char* filename, uint8_t flag) {
    new_file_inode->i_open_cnts = 1;
 
    sys_free(io_buf);
-   return pcb_fd_install(fd_idx);
+   return pcb_fd_install(fd_i);
 
    // powerful paradigm
 rollback:
    switch (rollback_step) {
       case 3: // free the ft entry
-	 memset(&file_table[fd_idx], 0, sizeof(struct file));
+	 memset(&file_table[fd_i], 0, sizeof(struct file));
       case 2: // free the file inode
 	 sys_free(new_file_inode);
       case 1: // free the bit
@@ -170,4 +171,48 @@ rollback:
    }
    sys_free(io_buf);
    return -1;
+}
+
+// inode_no -> inode, fd
+int32_t file_open(uint32_t inode_no, uint8_t flag) {
+   // alloc a new global fd
+   //	 1 file -> 1 inode -> (possible) n ft entry
+   //	 1 global ft entry -> 1 local ft entry
+   int fd_i = get_free_slot_in_global();
+   if (fd_i == -1) {
+      printk("exceed max open files\n");
+      return -1;
+   }
+   file_table[fd_i].fd_inode = inode_open(cur_part, inode_no);
+   file_table[fd_i].fd_pos = 0;	 // no keep pos
+   file_table[fd_i].fd_flag = flag;
+   bool* write_deny = &file_table[fd_i].fd_inode->write_deny;
+
+   // if write, try access exclusively
+   if (flag & O_WRONLY || flag & O_RDWR) {
+      enum intr_status old_status = intr_disable(); // poor lock
+      if (!(*write_deny)) { // no other proc
+	 *write_deny = true;
+	 intr_set_status(old_status);
+      }
+      else { // access by another proc
+	 intr_set_status(old_status);
+	 printk("file can`t be write now, try again later\n");
+	 return -1;
+      }
+   }
+   // no write flag (read only or create file)
+   // just install global fd into local fd table
+   return pcb_fd_install(fd_i);
+}
+
+// close file: free its inode and free exclusive lock
+int32_t file_close(struct file* file) {
+   if (file == NULL) {
+      return -1;
+   }
+   file->fd_inode->write_deny = false;
+   inode_close(file->fd_inode);
+   file->fd_inode = NULL;
+   return 0;
 }

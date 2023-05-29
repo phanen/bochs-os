@@ -79,17 +79,17 @@ struct inode* inode_open(struct partition* part, uint32_t inode_no) {
     }
 
     // not found in cache list(not open?)
-    // read inode from disk
+    // read inode from disk to mem
     //      first get its disk pos
     struct inode_position inode_pos;
     inode_locate(part, inode_no, &inode_pos);
 
-    // malloc for inode
+    //      malloc for inode
     struct task_struct* cur = running_thread();
     uint32_t* cur_pagedir_bak = cur->pgdir;
-    //      to share inode among procs
-    //      we need load inode to kernel space
-    //      here we hack to use kernel pgdir
+    //          to share inode among procs
+    //          we need load inode to kernel space
+    //          here we hack to use kernel pgdir
     cur->pgdir = NULL;
     inode_found = (struct inode*)sys_malloc(sizeof(struct inode));
     cur->pgdir = cur_pagedir_bak;
@@ -125,6 +125,7 @@ void inode_close(struct inode* inode) {
         list_remove(&inode->inode_tag);
         struct task_struct* cur = running_thread();
         uint32_t* cur_pagedir_bak = cur->pgdir;
+        // switch to kernel mem pool (always create inode in kernel space)
         cur->pgdir = NULL;
         sys_free(inode);
         cur->pgdir = cur_pagedir_bak;
