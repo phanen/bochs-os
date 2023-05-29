@@ -229,10 +229,19 @@ void thread_yield(void) {
 // a dummy thread never exit
 static void idle(void* arg UNUSED) {
   while(1) {
+    // at the first time no other thread,
+    //  the scheduler wakes idle up
     thread_block(TASK_BLOCKED);
+
     // ensure enable intr before hlt
-    //    hlt not exploit the cpu
+    //    hlt not exploit the cpu (hang util intr)
     asm volatile ("sti; hlt" : : : "memory");
+
+    // at the second time no other rdy thread
+    //  idle either block or rdy
+    //    if block: the scheduler wake it up again
+    //    if rdy: block then wake (emm...)
+    //  anyway, no panic will happend
   }
 }
 
