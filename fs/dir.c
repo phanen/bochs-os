@@ -99,11 +99,10 @@ void create_dir_entry(char* filename, uint32_t inode_no, uint8_t file_type, stru
 }
 
 // write p_de entry into parent_dir
-//    sync the block its inode point to
-//    but not sync the inode
+//    sync the block (and inode, if alloc new bloc)
+// FIXME: this implement is buggy
 bool sync_dir_entry(struct dir* parent_dir, struct dir_entry* p_de, void* io_buf) {
 
-   // FIXME: no cur_part
    struct inode* dir_inode = parent_dir->inode;
    uint32_t dir_size = dir_inode->i_size;
    uint32_t dir_entry_size = cur_part->sb->dir_entry_size;
@@ -113,7 +112,7 @@ bool sync_dir_entry(struct dir* parent_dir, struct dir_entry* p_de, void* io_buf
    uint32_t dir_entrys_per_sec = (SECTOR_SIZE / dir_entry_size);
    int32_t blk_lba = -1;
 
-   // flatten ptrs
+   // flatten ptrs (140 * 4 < PAGE_SIZE though...)
    uint32_t all_blocks[FLATTEN_PTRS] = {0};
    for (uint8_t blk_i = 0; blk_i < DIRECT_PTRS; blk_i++) {
       all_blocks[blk_i] = dir_inode->i_sectors[blk_i];
@@ -149,8 +148,11 @@ bool sync_dir_entry(struct dir* parent_dir, struct dir_entry* p_de, void* io_buf
 	 }
 	 // for free indirect ptr
 	 else if (blk_i == DIRECT_PTRS) {
+	    // we use pre-alloc block as indirect tab
 	    dir_inode->i_sectors[DIRECT_PTRS] = blk_lba;
-	    // blk_lba = -1;
+
+	    // then alloc a new block
+	    blk_lba = -1;
 	    blk_lba = block_bitmap_alloc(cur_part);
 	    if (blk_lba == -1) { // rollback
 	       // free the indirect block
@@ -164,11 +166,9 @@ bool sync_dir_entry(struct dir* parent_dir, struct dir_entry* p_de, void* io_buf
 	    ASSERT(blk_bm_i != -1);
 	    bitmap_sync(cur_part, blk_bm_i, BLOCK_BITMAP);
 	    
-	    // assign the flat ptr
+	    // build a indirect tab in mem in-place
+	    // then update the indirect tab into disk
 	    all_blocks[DIRECT_PTRS] = blk_lba;
-
-	    // write indirect tab to disk
-	    //	     all_blocks + DIRECT_PTRS is the base of tab
 	    ide_write(cur_part->my_disk, dir_inode->i_sectors[DIRECT_PTRS],
 	       all_blocks + DIRECT_PTRS, 1);
 	 }
