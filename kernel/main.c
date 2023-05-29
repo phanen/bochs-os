@@ -58,6 +58,7 @@ int main() {
   // thread_create("k_thread_a", 31, k_thread_a, "I am thread_a");
   // thread_create("k_thread_b", 31, k_thread_b, "I am thread_b");
 
+  sys_open("/file1", O_CREAT);
   uint32_t fd = sys_open("/file1", O_RDONLY);
   printf("fd:%d\n", fd);
   sys_close(fd);

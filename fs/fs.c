@@ -355,11 +355,14 @@ int32_t sys_open(const char* pathname, uint8_t flags) {
     // (not found + create flag) or (found + no create flag)
     switch (flags & O_CREAT) {
         case O_CREAT:
+            ASSERT(!found); // inode_no == -1
             printk("creating file\n");
             fd = file_create(searched_record.parent_dir, (strrchr(pathname, '/') + 1), flags);
             dir_close(searched_record.parent_dir);
+            break;
         // otherwise, should be other flag (r/w)
         default: // O_WRONLY O_RDWR O_RDONLY
+            ASSERT(found);
             fd = file_open(inode_no, flags);
     }
     // local fd (index of `pcb->fd_table`)
