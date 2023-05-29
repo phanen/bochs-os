@@ -134,6 +134,7 @@ void inode_close(struct inode* inode) {
 }
 
 // init new_inode
+//      without attached block...
 void inode_init(uint32_t inode_no, struct inode* new_inode) {
     new_inode->i_no = inode_no;
     new_inode->i_size = 0;
