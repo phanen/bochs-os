@@ -120,7 +120,9 @@ bool sync_dir_entry(struct dir* parent_dir, struct dir_entry* p_de, void* io_buf
    struct dir_entry* dir_e = (struct dir_entry*)io_buf;
 
    // find free dir_entry slot
-   for (uint8_t blk_i = 0; blk_i < FLATTEN_PTRS; blk_i++) {
+   uint8_t blk_i = 0;
+   bool has_flatten = false;
+   while (blk_i < FLATTEN_PTRS) {
       int32_t blk_bm_i = -1;
 
       // find a free block ptr
@@ -147,7 +149,7 @@ bool sync_dir_entry(struct dir* parent_dir, struct dir_entry* p_de, void* io_buf
 	    all_blocks[blk_i] = blk_lba;
 	 }
 	 // for free indirect ptr
-	 else if (blk_i == DIRECT_PTRS) {
+	 else if (blk_i == DIRECT_PTRS && !has_flatten) {
 	    // we use pre-alloc block as indirect tab
 	    dir_inode->i_sectors[DIRECT_PTRS] = blk_lba;
 
@@ -165,7 +167,7 @@ bool sync_dir_entry(struct dir* parent_dir, struct dir_entry* p_de, void* io_buf
 	    blk_bm_i = blk_lba - cur_part->sb->data_start_lba;
 	    ASSERT(blk_bm_i != -1);
 	    bitmap_sync(cur_part, blk_bm_i, BLOCK_BITMAP);
-	    
+
 	    // build a indirect tab in mem in-place
 	    // then update the indirect tab into disk
 	    all_blocks[DIRECT_PTRS] = blk_lba;
@@ -186,6 +188,15 @@ bool sync_dir_entry(struct dir* parent_dir, struct dir_entry* p_de, void* io_buf
 	 return true;
       }
 
+      // no-free direct block and the indirec block has been alloc
+      // then load indirect block
+      if (blk_i == DIRECT_PTRS) {
+	 ide_read(cur_part->my_disk, dir_inode->i_sectors[DIRECT_PTRS],
+	   all_blocks + DIRECT_PTRS, 1);
+	 has_flatten = true;
+	 continue;
+      }
+
       // find a non-free block ptr (try to find empty entry in it)
       ide_read(cur_part->my_disk, all_blocks[blk_i], io_buf, 1);
       for (uint8_t dir_entry_i = 0; dir_entry_i < dir_entrys_per_sec; dir_entry_i++) {
@@ -194,8 +205,9 @@ bool sync_dir_entry(struct dir* parent_dir, struct dir_entry* p_de, void* io_buf
 	    ide_write(cur_part->my_disk, all_blocks[blk_i], io_buf, 1);
 	    dir_inode->i_size += dir_entry_size;
 	    return true;
-	 } 
+	 }
       }
+      blk_i++;
    }
    // no free entry
    printk("directory is full!\n");
