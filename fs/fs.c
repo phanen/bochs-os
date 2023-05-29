@@ -344,8 +344,8 @@ int32_t sys_open(const char* pathname, uint8_t flags) {
                (strrchr(searched_record.searched_path, '/') + 1));
         dir_close(searched_record.parent_dir);
         return -1;
-    } 
-    // found in last dir, but create
+    }
+        // found in last dir, but create
     else if (found && (flags & O_CREAT)) {
         printk("%s has already exist!\n", pathname);
         dir_close(searched_record.parent_dir);
@@ -402,7 +402,7 @@ void fs_init() {
                     memset(sb_buf, 0, SECTOR_SIZE);
 
                     // read the supoer block and check type (magic_num)
-                    // super_block is the 2rd block from data area读出分区的超级块,根据魔数是否正确来判断是否存在文件系统 */
+                    // super_block is the 2rd block from data area
                     ide_read(hd, part->start_lba + 1, sb_buf, 1);
 
                     if (sb_buf->magic == 0x19491001) {
@@ -427,4 +427,22 @@ void fs_init() {
     while (fd_idx < MAX_FILE_OPEN) { // init: no open file
         file_table[fd_idx++].fd_inode = NULL;
     }
+}
+
+static uint32_t fd_local2global(uint32_t local_fd) {
+    int32_t global_fd = running_thread()->fd_table[local_fd];
+    ASSERT(global_fd >= 0 && global_fd < MAX_FILE_OPEN);
+    return (uint32_t)global_fd;
+}
+
+// close by local fd
+int32_t sys_close(int32_t fd) {
+    int32_t ret = -1;
+    if (fd > 2) { //
+        uint32_t _fd = fd_local2global(fd);
+        ret = file_close(&file_table[_fd]);
+        // free the slot in local tab
+        running_thread()->fd_table[fd] = -1;
+    }
+    return ret;
 }

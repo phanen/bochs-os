@@ -206,7 +206,9 @@ int32_t file_open(uint32_t inode_no, uint8_t flag) {
    return pcb_fd_install(fd_i);
 }
 
-// close file: free its inode and free exclusive lock
+// close file
+//    clean it from global file table
+//    free the inode if necessary
 int32_t file_close(struct file* file) {
    if (file == NULL) {
       return -1;
