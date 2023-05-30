@@ -11,10 +11,9 @@ enum SYSCALL_NR {
 };
 
 // write -> int 0x80
-//  -> idt (build in c)
-//  -> syscall_handler (build in asm)
-//  -> syscall_table (id = eax)
-//  -> sys_write
+//  -> idt (c) -> intrientry in intr_entry_table (asm)
+//  -> idt_table (asm) -> syscall_handler (asm)
+//  -> syscall_table (index = eax) -> sys_write
 
 uint32_t getpid();
 uint32_t write(char* str);

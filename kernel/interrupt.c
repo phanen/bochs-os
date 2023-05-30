@@ -81,6 +81,7 @@ static void idt_desc_init(void) {
 }
 
 // general-purpose or so_called `template` handler
+// support debug
 static void general_intr_handler(uint8_t vec_nr) {
   // IRQ7 or IRQ15 -> spurious interrupt
   if (vec_nr == 0x27 || vec_nr == 0x2f) return;
@@ -97,7 +98,7 @@ static void general_intr_handler(uint8_t vec_nr) {
   set_cursor(88); // 1:8
   put_str(intr_name[vec_nr]);
 
-  if (vec_nr == 14) { // page fault
+  if (vec_nr == 14) { // for page fault, we show more info here
     // print cr2 (the vaddr)
     int page_fault_vaddr = 0;
     asm ("movl %%cr2, %0" : "=r" (page_fault_vaddr));
@@ -107,7 +108,7 @@ static void general_intr_handler(uint8_t vec_nr) {
   while(1); // eflags.if = 0
 }
 
-// 完成一般中断处理函数注册及异常名称注册
+// init register and `intr_name`
 static void exception_init(void) {
   int i;
   for (i = 0; i < IDT_DESC_CNT; i++) {
