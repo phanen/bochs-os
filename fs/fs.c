@@ -620,7 +620,7 @@ int32_t sys_mkdir(const char* pathname) {
         rollback_step = 2;
         goto rollback;
     }
-    // sync pdir's inode (perhaps dont need, but do it anyway...)
+    // sync pdir's inode  (pdir->inode->i_size changed)
     memset(io_buf, 0, SECTOR_SIZE * 2);
     inode_sync(cur_part, parent_dir->inode, io_buf);
 

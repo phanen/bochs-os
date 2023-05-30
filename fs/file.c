@@ -139,8 +139,7 @@ int32_t file_create(struct dir* parent_dir, char* filename, uint8_t flag) {
       rollback_step = 3;
       goto rollback;
    }
-
-   //	 sync dir inode
+   //	 sync pdir's inode (`pid->inode->i_size` changed)
    memset(io_buf, 0, 1024);
    inode_sync(cur_part, parent_dir->inode, io_buf);
 

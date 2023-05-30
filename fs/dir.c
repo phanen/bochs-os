@@ -100,8 +100,11 @@ void create_dir_entry(char* filename, uint32_t inode_no, uint8_t file_type, stru
 }
 
 // write p_de entry into parent_dir
-//    sync the block (and inode, if alloc new bloc)
-// FIXME: this implement is buggy
+//    NOTE:
+//	 this API sync the block only
+//    	 but pdir->inode->i_size will always be changed?
+//    	 this so API is used with `inode_sync`
+// FIXED: previous implement is buggy?
 bool sync_dir_entry(struct dir* parent_dir, struct dir_entry* p_de, void* io_buf) {
 
    struct inode* dir_inode = parent_dir->inode;
@@ -341,7 +344,7 @@ bool delete_dir_entry(struct partition* part, struct dir* pdir, uint32_t inode_n
       inode_sync(part, dir_inode, io_buf);
       return true;
    }
-   // no such inode(file), 
+   // no such inode(file),
    //	 you may need check usage of `search_file`
    return false;
 }
