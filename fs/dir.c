@@ -417,3 +417,34 @@ struct dir_entry* dir_read(struct dir* dir) {
    }
    return NULL;
 }
+
+// i.e. only . and ..
+bool dir_is_empty(struct dir* dir) {
+   struct inode* dir_inode = dir->inode;
+   return (dir_inode->i_size == cur_part->sb->dir_entry_size * 2);
+}
+
+// remove a empty dir
+int32_t dir_remove(struct dir* parent_dir, struct dir* child_dir) {
+
+   struct inode* child_dir_inode  = child_dir->inode;
+
+   // dir is empty -> only one block
+   for (int32_t blk_i = 1; blk_i < TOTAL_PTRS; blk_i++) {
+      ASSERT(child_dir_inode->i_sectors[blk_i] == 0);
+   }
+
+   void* io_buf = sys_malloc(SECTOR_SIZE * 2);
+   if (io_buf == NULL) {
+      printk("dir_remove: malloc for io_buf failed\n");
+      return -1;
+   }
+
+   // delete entry
+   delete_dir_entry(cur_part, parent_dir, child_dir_inode->i_no, io_buf);
+   // delete inode
+   inode_release(cur_part, child_dir_inode->i_no);
+
+   sys_free(io_buf);
+   return 0;
+}
