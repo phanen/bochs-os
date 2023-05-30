@@ -30,6 +30,7 @@ int bss_var_a = 0, bss_var_b = 0;
 
 void test_file();
 void test_dir();
+void test_openclosedir();
 
 int main() {
 
@@ -56,7 +57,9 @@ int main() {
   // thread_create("k_thread_a", 31, k_thread_a, "I am thread_a");
   // thread_create("k_thread_b", 31, k_thread_b, "I am thread_b");
 
-  test_dir();
+  // test_dir();
+  test_openclosedir();
+
   while(1);
   return 0;
 }
@@ -87,6 +90,23 @@ void test_dir() {
   }
   while(1);
 
+}
+
+void test_openclosedir() {
+  struct dir* p_dir = sys_opendir("/dir1/subdir1");
+
+  if (p_dir) {
+    printf("/dir1/subdir1 open done!\n");
+    if (sys_closedir(p_dir) == 0) {
+      printf("/dir1/subdir1 close done!\n");
+    } 
+    else {
+      printf("/dir1/subdir1 close fail!\n");
+    }
+  } 
+  else {
+    printf("/dir1/subdir1 open fail!\n");
+  }
 }
 
 void test_file() {
@@ -176,7 +196,6 @@ void k_thread_c(void* arg) {
   console_put_str(" thread_a end\n");
   while(1);
 }
-
 
 void k_thread_d(void* arg) {
   char* para = arg;
