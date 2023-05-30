@@ -16,7 +16,8 @@
 struct partition* cur_part;
 
 // find a part named `part_name` in `partition_list`
-//  then init `cur_part`
+//  then init `cur_part` (using current info in `cur_part` to get more info)
+//      read out super block/block bitmap/inode bitmap
 static bool mount_partition(struct list_elem* pelem, int arg) {
 
     char* part_name = (char*)arg;
@@ -27,8 +28,7 @@ static bool mount_partition(struct list_elem* pelem, int arg) {
         struct disk* hd = cur_part->my_disk;
 
         // read super_block form disk to mem
-        //  frist to sb_buf
-        //  then to cur_part->sb
+        //  frist to sb_buf, then to cur_part->sb
         struct super_block* sb_buf = (struct super_block*)sys_malloc(SECTOR_SIZE);
         cur_part->sb = (struct super_block*)sys_malloc(sizeof(struct super_block));
         if (cur_part->sb == NULL) {
