@@ -49,8 +49,8 @@ uint32_t getpid() {
 }
 
 // naive write (only write to console)
-uint32_t write(char* str) {
-   return _syscall1(SYS_WRITE, str);
+uint32_t write(int32_t fd, const void* buf, uint32_t count) {
+   return _syscall3(SYS_WRITE, fd, buf, count);
 }
 
 void* malloc(uint32_t size) {

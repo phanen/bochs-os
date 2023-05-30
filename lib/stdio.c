@@ -1,4 +1,5 @@
 #include "stdio.h"
+#include "file.h"
 #include "interrupt.h"
 #include "global.h"
 #include "string.h"
@@ -56,7 +57,7 @@ uint32_t vsprintf(char* str, const char* format, va_list ap) {
           arg_int = 0 - arg_int;
           *bp++ = '-';
         }
-        itoa(arg_int, &bp, 10); 
+        itoa(arg_int, &bp, 10);
         cur_char = *(++fp);
         break;
 
@@ -100,5 +101,5 @@ uint32_t printf(const char* format, ...) {
   vsprintf(buf, format, args);
   va_end(args);
 
-  return write(buf); 
+  return write(stdout_no, buf, strlen(buf));
 }
