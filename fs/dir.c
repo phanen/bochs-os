@@ -348,3 +348,72 @@ bool delete_dir_entry(struct partition* part, struct dir* pdir, uint32_t inode_n
    //	 you may need check usage of `search_file`
    return false;
 }
+
+
+// return only one dir_entry
+// simple but powerful, together with:
+//	 dir->dir_pos record how large entries has read
+//	 search from the start from `dir_pos`
+//	 dir->dir_buf? we don't need specially alloc io_buf again for dir
+// FIXME:
+//    wait, what if the dir update when you maintain a dir_pos
+//    I guess: this api must be used continously(to iterate the dir)
+//
+//    another problem is: why we don't implement it before `search_dir_entry`
+//	       since it's really useful...
+struct dir_entry* dir_read(struct dir* dir) {
+
+   struct dir_entry* dir_e = (struct dir_entry*)dir->dir_buf;
+   struct inode* dir_inode = dir->inode;
+   uint32_t all_blocks[FLATTEN_PTRS] = {0}, block_cnt = DIRECT_PTRS;
+
+   uint32_t blk_i = 0, dir_entry_idx = 0;
+
+   while (blk_i < DIRECT_PTRS) {
+      all_blocks[blk_i] = dir_inode->i_sectors[blk_i];
+      blk_i++;
+   }
+   if (dir_inode->i_sectors[DIRECT_PTRS] != 0) {
+      ide_read(cur_part->my_disk,
+	       dir_inode->i_sectors[DIRECT_PTRS], all_blocks + DIRECT_PTRS, 1);
+      block_cnt = FLATTEN_PTRS;
+   }
+
+   uint32_t cur_dir_entry_pos = 0;
+   uint32_t dir_entry_size = cur_part->sb->dir_entry_size;
+   uint32_t dir_entrys_per_sec = SECTOR_SIZE / dir_entry_size;
+
+   // all blk, then all possible entry
+   for (blk_i = 0; blk_i < block_cnt; blk_i++) {
+      // read over
+      if (dir->dir_pos >= dir_inode->i_size) {
+	 return NULL;
+      }
+      if (all_blocks[blk_i] == 0) {
+	 blk_i++;
+	 continue;
+      }
+
+      memset(dir_e, 0, SECTOR_SIZE);
+      ide_read(cur_part->my_disk, all_blocks[blk_i], dir_e, 1);
+
+      dir_entry_idx = 0; // idx of block frame
+      while (dir_entry_idx < dir_entrys_per_sec) {
+
+	 // find a entry
+	 if ((dir_e + dir_entry_idx)->f_type) {
+	    // if newer? (newer must append?)
+	    if (cur_dir_entry_pos < dir->dir_pos) {
+	       cur_dir_entry_pos += dir_entry_size;
+	       dir_entry_idx++;
+	       continue;
+	    }
+	    ASSERT(cur_dir_entry_pos == dir->dir_pos);
+	    dir->dir_pos += dir_entry_size; // next start point
+	    return dir_e + dir_entry_idx;
+	 }
+	 dir_entry_idx++;
+      }
+   }
+   return NULL;
+}
