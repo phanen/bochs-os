@@ -31,4 +31,7 @@ void inode_close(struct inode* inode);
 void inode_sync(struct partition* part, struct inode* inode, void* io_buf);
 void inode_init(uint32_t inode_no, struct inode* new_inode);
 
+// erase bitmap (inode's and its blocks')
+void inode_release(struct partition* part, uint32_t inode_no);
+
 #endif
