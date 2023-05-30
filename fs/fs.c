@@ -687,6 +687,18 @@ int32_t sys_closedir(struct dir* dir) {
     return ret;
 }
 
+// read one entry, and update dir->dir_pos
+//      ok, return the entry (which is in dir->dir_buf)
+//      fail, return NULL
+struct dir_entry* sys_readdir(struct dir* dir) {
+   ASSERT(dir != NULL);
+   return dir_read(dir);
+}
+
+void sys_rewinddir(struct dir* dir) {
+   dir->dir_pos = 0;
+}
+
 // scan fs(super_block) in each partition
 // if none fs on it, then install default fs
 void fs_init() {
