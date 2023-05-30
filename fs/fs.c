@@ -427,6 +427,36 @@ int32_t sys_read(int32_t fd, void* buf, uint32_t count) {
     return file_read(&file_table[_fd], buf, count);
 }
 
+// change fd_pos (file table entry)
+int32_t sys_lseek(int32_t fd, int32_t offset, uint8_t whence) {
+    if (fd < 0) {
+        printk("sys_lseek: fd error\n");
+        return -1;
+    }
+    ASSERT(whence > 0 && whence < 4);
+    uint32_t _fd = fd_local2global(fd);
+    struct file* pf = &file_table[_fd];
+
+    int32_t new_pos = 0;
+    int32_t file_size = (int32_t)pf->fd_inode->i_size;
+    switch (whence) {
+        case SEEK_SET: // + only
+            new_pos = offset;
+        break;
+
+        case SEEK_CUR:	// +/-
+            new_pos = (int32_t)pf->fd_pos + offset;
+        break;
+        case SEEK_END:	// -only
+            new_pos = file_size + offset;
+    }
+    // merge
+    if (new_pos < 0 || new_pos > (file_size - 1)) {
+        return -1;
+    }
+    pf->fd_pos = new_pos;
+    return pf->fd_pos;
+}
 // scan fs(super_block) in each partition
 // if none fs on it, then install default fs
 void fs_init() {
