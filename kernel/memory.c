@@ -240,6 +240,24 @@ void* get_a_page(enum pool_flags pf, uint32_t vaddr) {
     return (void*)vaddr;
 }
 
+// yet another `get_a_page` (for fork)
+//      do not need bitmap manipulation
+//      because we can copy bitmap?
+void* get_a_page_without_opvaddrbitmap(enum pool_flags pf, uint32_t vaddr) {
+   struct pool* mem_pool = pf & PF_KERNEL ? &kernel_pool : &user_pool;
+
+   lock_acquire(&mem_pool->lock);
+   void* page_phyaddr = palloc(mem_pool);
+   if (page_phyaddr == NULL) {
+      lock_release(&mem_pool->lock);
+      return NULL;
+   }
+   page_table_add((void*)vaddr, page_phyaddr);
+
+   lock_release(&mem_pool->lock);
+   return (void*)vaddr;
+}
+
 // vaddr to paddr (get its pte, then read the pte)
 uint32_t addr_v2p(uint32_t vaddr) {
     uint32_t* pte = pte_ptr(vaddr);
