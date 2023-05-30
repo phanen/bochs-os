@@ -98,11 +98,15 @@ struct task_struct {
     struct mem_block_desc u_block_desc[DESC_CNT]; // mem block descs local to user
 
     uint32_t cwd_inode_nr; // each proc has a cwd (use its inode no here)
+    uint32_t parent_pid; // impl `fork`
+
     uint32_t stack_magic; // guard to check stack overflow (some intrs may do tons of push)
 };
 
 extern struct list thread_ready_list;
 extern struct list thread_all_list;
+
+pid_t fork_pid();
 
 void thread_stack_init(struct task_struct* pthread, thread_func function, void* func_arg);
 

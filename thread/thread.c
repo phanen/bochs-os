@@ -31,6 +31,11 @@ static pid_t allocate_pid() {
   return next_pid;
 }
 
+// a patch, backward compatible
+pid_t fork_pid() {
+  return allocate_pid();
+}
+
 // get the TCB of running thread
 struct task_struct* running_thread() {
   uint32_t esp;
@@ -102,6 +107,8 @@ void init_task(struct task_struct* pthread, char* name, int prio) {
   }
 
   pthread->cwd_inode_nr = 0; // default, rootdir
+  pthread->parent_pid = -1; // no father (init from scrach)
+
   pthread->stack_magic = 0x20021225; // magic number
 }
 
