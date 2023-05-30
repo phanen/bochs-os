@@ -214,3 +214,134 @@ bool sync_dir_entry(struct dir* parent_dir, struct dir_entry* p_de, void* io_buf
    printk("directory is full!\n");
    return false;
 }
+
+// delete entry in pdir with inode_no
+bool delete_dir_entry(struct partition* part, struct dir* pdir, uint32_t inode_no, void* io_buf) {
+
+   struct inode* dir_inode = pdir->inode;
+
+   // paradigm: build a flatten ptrs array
+   uint32_t blk_i = 0, all_blocks[FLATTEN_PTRS] = {0};
+   while (blk_i < DIRECT_PTRS) {
+      all_blocks[blk_i] = dir_inode->i_sectors[blk_i];
+      blk_i++;
+   }
+   if (dir_inode->i_sectors[DIRECT_PTRS]) {
+      ide_read(part->my_disk,
+	       dir_inode->i_sectors[DIRECT_PTRS], all_blocks + DIRECT_PTRS, 1);
+   }
+
+   // dir_e will not cross secs
+   uint32_t dir_entry_size = part->sb->dir_entry_size;
+   uint32_t dir_entrys_per_sec = (SECTOR_SIZE / dir_entry_size);
+   struct dir_entry* dir_e = (struct dir_entry*)io_buf; // dir buf
+   struct dir_entry* dir_entry_found = NULL;
+
+   uint8_t dir_entry_idx, dir_entry_cnt;
+   // cnt tell us if we can delete the block
+
+   bool is_dir_first_block = false;
+
+   blk_i = 0;
+   while (blk_i < FLATTEN_PTRS) {
+      is_dir_first_block = false;
+      if (all_blocks[blk_i] == 0) {
+	 blk_i++;
+	 continue;
+      }
+
+      memset(io_buf, 0, SECTOR_SIZE);
+      ide_read(part->my_disk, all_blocks[blk_i], io_buf, 1);
+
+      dir_entry_idx = dir_entry_cnt = 0;
+      // foreach entry
+      while (dir_entry_idx < dir_entrys_per_sec) {
+	 // exist
+	 if ((dir_e + dir_entry_idx)->f_type != FT_UNKNOWN) {
+	    if (!strcmp((dir_e + dir_entry_idx)->filename, ".")) {
+	       // this dir contain '.', then it must be the first blk of entry
+	       // emm... why not use blk_i == 0 ?
+	       is_dir_first_block = true;
+	    }
+	    else if (strcmp((dir_e + dir_entry_idx)->filename, ".") &&
+		  strcmp((dir_e + dir_entry_idx)->filename, "..")) {
+	       dir_entry_cnt++;
+	       if ((dir_e + dir_entry_idx)->i_no == inode_no) {
+		  // never twice found
+		  ASSERT(dir_entry_found == NULL);
+		  dir_entry_found = dir_e + dir_entry_idx;
+		  // gono, to get `cnt`
+	       }
+	    }
+	 }
+	 dir_entry_idx++;
+      }
+
+      if (dir_entry_found == NULL) {
+	 blk_i++;
+	 continue;
+      }
+
+      // found
+      ASSERT(dir_entry_cnt >= 1);
+
+
+      // delete the block
+      //    if it's the first block(contain '.' '..'),
+      //    we can not delete it even if it's empty
+      if (dir_entry_cnt == 1 && !is_dir_first_block) {
+	 // erase this block (bitmap)
+	 uint32_t block_bitmap_idx = all_blocks[blk_i] - part->sb->data_start_lba;
+	 bitmap_set(&part->block_bitmap, block_bitmap_idx, 0);
+	 bitmap_sync(cur_part, block_bitmap_idx, BLOCK_BITMAP);
+
+	 // direct blk
+	 if (blk_i < DIRECT_PTRS) {
+	    dir_inode->i_sectors[blk_i] = 0;
+	 }
+	    // indirect blk
+	 else {
+	    // num of indirect blks
+	    uint32_t indirect_blocks = 0;
+	    uint32_t indirect_block_idx = DIRECT_PTRS;
+	    while (indirect_block_idx < FLATTEN_PTRS) {
+	       if (all_blocks[indirect_block_idx] != 0) {
+		  indirect_blocks++;
+	       }
+	    }
+	    // at lease cur blk
+	    ASSERT(indirect_blocks >= 1);
+
+	    // erase only this indirect ptr in tab
+	    if (indirect_blocks > 1) {
+	       all_blocks[blk_i] = 0;
+	       ide_write(part->my_disk,
+		  dir_inode->i_sectors[DIRECT_PTRS], all_blocks + DIRECT_PTRS, 1);
+	    }
+	    // erase the whole indirect tab
+	    else {
+	       block_bitmap_idx = dir_inode->i_sectors[DIRECT_PTRS] - part->sb->data_start_lba;
+	       bitmap_set(&part->block_bitmap, block_bitmap_idx, 0);
+	       bitmap_sync(cur_part, block_bitmap_idx, BLOCK_BITMAP);
+	       dir_inode->i_sectors[DIRECT_PTRS] = 0;
+	    }
+	 }
+      }
+	 // delete the entry
+      else {
+	 memset(dir_entry_found, 0, dir_entry_size);
+	 ide_write(part->my_disk, all_blocks[blk_i], io_buf, 1);
+      }
+
+      // udpate inode
+      ASSERT(dir_inode->i_size >= dir_entry_size);
+      dir_inode->i_size -= dir_entry_size;
+      memset(io_buf, 0, SECTOR_SIZE * 2);
+      // `inode_sync` may cross secs
+      inode_sync(part, dir_inode, io_buf);
+      return true;
+   }
+   // no such inode(file), 
+   //	 you may need check usage of `search_file`
+   return false;
+}
