@@ -68,4 +68,5 @@ void sys_rewinddir(struct dir* dir);
 
 int32_t sys_rmdir(const char* pathname);
 
+char* sys_getcwd(char* buf, uint32_t size);
 #endif

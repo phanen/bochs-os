@@ -792,6 +792,58 @@ static int get_child_dir_name(uint32_t p_inode_nr, uint32_t c_inode_nr, char* pa
     }
     return -1;
 }
+
+// write pwd to buf (with specific `size`)
+//      syscall wrapper: if buf is NULL, os will alloc
+char* sys_getcwd(char* buf, uint32_t size) {
+
+    //  so here buf must be safe
+    ASSERT(buf != NULL);
+
+    void* io_buf = sys_malloc(SECTOR_SIZE);
+    if (io_buf == NULL) {
+        return NULL;
+    }
+
+    struct task_struct* cur_thread = running_thread();
+    int32_t parent_inode_nr = 0;
+    int32_t child_inode_nr = cur_thread->cwd_inode_nr;
+    ASSERT(child_inode_nr >= 0 && child_inode_nr < MAX_FILES_PER_PART);
+
+    // rootdir
+    if (child_inode_nr == 0) {
+        buf[0] = '/';
+        buf[1] = 0;
+        return buf;
+    }
+
+    memset(buf, 0, size);
+    char full_path_reverse[MAX_PATH_LEN] = {0};	  // 用来做全路径缓冲区
+
+    // reversely find root (then will get a full path)
+    while (child_inode_nr) {
+        parent_inode_nr = get_parent_dir_inode_nr(child_inode_nr, io_buf);
+
+        if (get_child_dir_name(parent_inode_nr, child_inode_nr, full_path_reverse, io_buf) == -1) {
+            // not found cwd in current pdir?
+            sys_free(io_buf);
+            return NULL;
+        }
+        child_inode_nr = parent_inode_nr;
+    }
+    ASSERT(strlen(full_path_reverse) <= size);
+
+    // reversely copy the `full_path_reverse`
+    //  then we get correct absolute path
+    char* last_slash;
+    while ((last_slash = strrchr(full_path_reverse, '/'))) {
+        uint16_t len = strlen(buf);
+        strcpy(buf + len, last_slash);
+        *last_slash = 0;
+    }
+    sys_free(io_buf);
+    return buf;
+}
 // scan fs(super_block) in each partition
 // if none fs on it, then install default fs
 void fs_init() {
