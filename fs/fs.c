@@ -614,7 +614,7 @@ int32_t sys_mkdir(const char* pathname) {
     struct dir_entry new_dir_entry;
     memset(&new_dir_entry, 0, sizeof(struct dir_entry));
     create_dir_entry(dirname, inode_no, FT_DIRECTORY, &new_dir_entry);
-    memset(io_buf, 0, SECTOR_SIZE * 2);	
+    memset(io_buf, 0, SECTOR_SIZE * 2);
     if (!sync_dir_entry(parent_dir, &new_dir_entry, io_buf)) {
         printk("sys_mkdir: sync_dir_entry to disk failed!\n");
         rollback_step = 2;
@@ -646,6 +646,45 @@ rollback:
     }
     sys_free(io_buf);
     return -1;
+}
+
+// get dit ptr
+struct dir* sys_opendir(const char* name) {
+    ASSERT(strlen(name) < MAX_PATH_LEN);
+
+    if (name[0] == '/' && (name[1] == 0 || name[0] == '.')) {
+        return &root_dir;
+    }
+
+    struct path_search_record searched_record;
+    memset(&searched_record, 0, sizeof(struct path_search_record));
+    int inode_no = search_file(name, &searched_record);
+    struct dir* ret = NULL;
+
+    // no such dir
+    if (inode_no == -1) {
+        printk("In %s, sub path %s not exist\n", name, searched_record.searched_path);
+    }
+    // is regular file
+    else {
+        if (searched_record.file_type == FT_REGULAR) {
+            printk("%s is regular file!\n", name);
+        } else if (searched_record.file_type == FT_DIRECTORY) {
+            ret = dir_open(cur_part, inode_no);
+        }
+    }
+
+    dir_close(searched_record.parent_dir);
+    return ret;
+}
+
+int32_t sys_closedir(struct dir* dir) {
+    int32_t ret = -1;
+    if (dir != NULL) {
+        dir_close(dir);
+        ret = 0;
+    }
+    return ret;
 }
 
 // scan fs(super_block) in each partition
