@@ -88,11 +88,12 @@ int main() {
   read_bytes = sys_read(fd, buf, 6);
   printf("3_ read %d bytes:\n%s", read_bytes, buf);
 
-  printf("________  close file1 and reopen  ________\n");
-  sys_close(fd);
+  // reset fd_pos by close and reopen
+  // printf("________  close file1 and reopen  ________\n");
+  // sys_close(fd);
 
-  // reset fd_pos
-  fd = sys_open("/file1", O_RDWR);
+  // reset fd_pos by lseek
+  sys_lseek(fd, 0, SEEK_SET);
   memset(buf, 0, 64);
   read_bytes = sys_read(fd, buf, 24);
   printf("4_ read %d bytes:\n%s", read_bytes, buf);
@@ -103,7 +104,7 @@ int main() {
   return 0;
 }
 
-void k_thread_c(void* arg) {     
+void k_thread_c(void* arg) {
   char* para = arg;
   void* addr1;
   void* addr2;
@@ -116,19 +117,19 @@ void k_thread_c(void* arg) {
   int max = 10;
   while (max-- > 0) {
     int size = 128;
-    addr1 = sys_malloc(size); 
-    size *= 2; 
-    addr2 = sys_malloc(size); 
-    size *= 2; 
+    addr1 = sys_malloc(size);
+    size *= 2;
+    addr2 = sys_malloc(size);
+    size *= 2;
     addr3 = sys_malloc(size);
     sys_free(addr1);
     addr4 = sys_malloc(size);
-    size *= 2; size *= 2; size *= 2; size *= 2; 
-    size *= 2; size *= 2; size *= 2; 
+    size *= 2; size *= 2; size *= 2; size *= 2;
+    size *= 2; size *= 2; size *= 2;
     addr5 = sys_malloc(size);
     addr6 = sys_malloc(size);
     sys_free(addr5);
-    size *= 2; 
+    size *= 2;
     addr7 = sys_malloc(size);
     sys_free(addr6);
     sys_free(addr7);
@@ -141,7 +142,7 @@ void k_thread_c(void* arg) {
 }
 
 
-void k_thread_d(void* arg) {     
+void k_thread_d(void* arg) {
   char* para = arg;
   void* addr1;
   void* addr2;
@@ -157,9 +158,9 @@ void k_thread_d(void* arg) {
   while (max-- > 0) {
     int size = 9;
     addr1 = sys_malloc(size);
-    size *= 2; 
+    size *= 2;
     addr2 = sys_malloc(size);
-    size *= 2; 
+    size *= 2;
     sys_free(addr2);
     addr3 = sys_malloc(size);
     sys_free(addr1);
@@ -167,14 +168,14 @@ void k_thread_d(void* arg) {
     addr5 = sys_malloc(size);
     addr6 = sys_malloc(size);
     sys_free(addr5);
-    size *= 2; 
+    size *= 2;
     addr7 = sys_malloc(size);
     sys_free(addr6);
     sys_free(addr7);
     sys_free(addr3);
     sys_free(addr4);
 
-    size *= 2; size *= 2; size *= 2; 
+    size *= 2; size *= 2; size *= 2;
     addr1 = sys_malloc(size);
     addr2 = sys_malloc(size);
     addr3 = sys_malloc(size);
