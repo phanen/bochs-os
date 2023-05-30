@@ -39,6 +39,10 @@ OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o \
 	   $(BUILD_DIR)/fs.o $(BUILD_DIR)/dir.o $(BUILD_DIR)/file.o \
 	   $(BUILD_DIR)/inode.o \
 
+# FIXME: dependencies not complete, it may cause unexpected error
+#	for example:
+#		if you see error stack magic, it may not caused by stackoverflow,
+#		but you need to recomplie timer.c (due to change of task_struct)
 bochs: boot-master slave-hd80M.img
 	bochs -q -f bochs.conf
 
