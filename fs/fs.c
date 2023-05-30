@@ -510,6 +510,7 @@ int32_t sys_unlink(const char* pathname) {
     // not open
     ASSERT(file_i == MAX_FILE_OPEN);
 
+    //  may cross secs when sync inode in lower API
     void* io_buf = sys_malloc(SECTOR_SIZE + SECTOR_SIZE);
     if (io_buf == NULL) {
         dir_close(searched_record.parent_dir);
