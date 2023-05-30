@@ -15,6 +15,7 @@
 #include "memory.h"
 #include "fs.h"
 #include "string.h"
+#include "dir.h"
 
 void k_thread_a(void*);
 void k_thread_b(void*);
@@ -30,7 +31,7 @@ int bss_var_a = 0, bss_var_b = 0;
 
 void test_file();
 void test_dir();
-void test_openclosedir();
+void test_api_dir();
 
 int main() {
 
@@ -58,10 +59,36 @@ int main() {
   // thread_create("k_thread_b", 31, k_thread_b, "I am thread_b");
 
   // test_dir();
-  test_openclosedir();
+  // test_openclosedir();
+  test_api_dir();
 
   while(1);
   return 0;
+}
+
+void test_api_dir() {
+
+  struct dir* p_dir = sys_opendir("/dir1/subdir1");
+  if (p_dir) {
+    printf("/dir1/subdir1 open done!\ncontent:\n");
+    char* type = NULL;
+    struct dir_entry* dir_e = NULL;
+
+    while((dir_e = sys_readdir(p_dir))) {
+      printf("      %s   %s\n",
+             (dir_e->f_type == FT_REGULAR? "regular" : "directory"),
+             dir_e->filename);
+    }
+    if (sys_closedir(p_dir) == 0) {
+      printf("/dir1/subdir1 close done!\n");
+    }
+    else {
+      printf("/dir1/subdir1 close fail!\n");
+    }
+  }
+  else {
+    printf("/dir1/subdir1 open fail!\n");
+  }
 }
 
 void test_dir() {
@@ -82,7 +109,7 @@ void test_dir() {
 
     char buf[32] = {0};
 
-    sys_read(fd, buf, 21); 
+    sys_read(fd, buf, 21);
 
     printf("/dir1/subdir1/file2 says:\n%s", buf);
 
@@ -90,23 +117,6 @@ void test_dir() {
   }
   while(1);
 
-}
-
-void test_openclosedir() {
-  struct dir* p_dir = sys_opendir("/dir1/subdir1");
-
-  if (p_dir) {
-    printf("/dir1/subdir1 open done!\n");
-    if (sys_closedir(p_dir) == 0) {
-      printf("/dir1/subdir1 close done!\n");
-    } 
-    else {
-      printf("/dir1/subdir1 close fail!\n");
-    }
-  } 
-  else {
-    printf("/dir1/subdir1 open fail!\n");
-  }
 }
 
 void test_file() {
