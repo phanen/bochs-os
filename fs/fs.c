@@ -388,6 +388,7 @@ int32_t sys_close(int32_t fd) {
     return ret;
 }
 
+// always write by append (change fd_pos)
 int32_t sys_write(int32_t fd, const void* buf, uint32_t count) {
     if (fd < 0) {
         printk("sys_write: fd error\n");
@@ -417,6 +418,7 @@ int32_t sys_write(int32_t fd, const void* buf, uint32_t count) {
     }
 }
 
+// use fd_pos
 int32_t sys_read(int32_t fd, void* buf, uint32_t count) {
     if (fd < 0) {
         printk("sys_read: fd error\n");

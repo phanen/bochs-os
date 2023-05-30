@@ -219,7 +219,7 @@ int32_t file_close(struct file* file) {
    return 0;
 }
 
-// bytes will append to file
+// bytes will always append to file (no matter where the fd_pos is)
 // return bytes_written
 int32_t file_write(struct file* file, const void* buf, uint32_t count) {
 

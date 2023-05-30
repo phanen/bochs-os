@@ -46,6 +46,9 @@ int32_t path_depth_cnt(char* pathname);
 int32_t sys_open(const char* pathname, uint8_t flags);
 int32_t sys_close(int32_t fd);
 
+// r/w both change fd_pos, but
+//    write will start from end of file?
+//    read will start from fd_pos?
 int32_t sys_write(int32_t fd, const void* buf, uint32_t count);
 int32_t sys_read(int32_t fd, void* buf, uint32_t count);
 
