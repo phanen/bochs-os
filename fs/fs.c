@@ -665,7 +665,7 @@ struct dir* sys_opendir(const char* name) {
     if (inode_no == -1) {
         printk("In %s, sub path %s not exist\n", name, searched_record.searched_path);
     }
-    // is regular file
+        // is regular file
     else {
         if (searched_record.file_type == FT_REGULAR) {
             printk("%s is regular file!\n", name);
@@ -691,12 +691,50 @@ int32_t sys_closedir(struct dir* dir) {
 //      ok, return the entry (which is in dir->dir_buf)
 //      fail, return NULL
 struct dir_entry* sys_readdir(struct dir* dir) {
-   ASSERT(dir != NULL);
-   return dir_read(dir);
+    ASSERT(dir != NULL);
+    return dir_read(dir);
 }
 
 void sys_rewinddir(struct dir* dir) {
-   dir->dir_pos = 0;
+    dir->dir_pos = 0;
+}
+
+// rm an empty dir by name
+//      so we need to open it to know if empty
+int32_t sys_rmdir(const char* pathname) {
+
+    struct path_search_record searched_record;
+    memset(&searched_record, 0, sizeof(struct path_search_record));
+    int inode_no = search_file(pathname, &searched_record);
+
+    ASSERT(inode_no != 0);
+
+    int retval = -1;
+    if (inode_no == -1) {
+        printk("In %s, sub path %s not exist\n", pathname, searched_record.searched_path);
+        goto fail_before_dir_open;
+    }
+
+    if (searched_record.file_type == FT_REGULAR) {
+        printk("%s is regular file!\n", pathname);
+        goto fail_before_dir_open;
+    }
+
+    struct dir* dir = dir_open(cur_part, inode_no);
+    if (!dir_is_empty(dir)) {
+        printk("dir %s is not empty, it is not allowed to delete a nonempty directory!\n", pathname);
+        goto fail_after_dir_open;
+    }
+
+    if (!dir_remove(searched_record.parent_dir, dir)) {
+        retval = 0;
+    } // else fail to remove anyway
+
+fail_after_dir_open:
+    dir_close(dir);
+fail_before_dir_open:
+    dir_close(searched_record.parent_dir);
+    return retval;
 }
 
 // scan fs(super_block) in each partition
