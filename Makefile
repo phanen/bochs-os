@@ -114,7 +114,7 @@ $(BUILD_DIR)/process.o: userprog/process.c userprog/process.h
 $(BUILD_DIR)/syscall.o: lib/user/syscall.c lib/user/syscall.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/syscall-init.o: lib/user/syscall-init.c lib/user/syscall-init.h
+$(BUILD_DIR)/syscall-init.o: userprog/syscall-init.c userprog/syscall-init.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/stdio.o: lib/stdio.c lib/stdio.h
