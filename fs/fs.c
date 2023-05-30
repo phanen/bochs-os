@@ -737,6 +737,61 @@ fail_before_dir_open:
     return retval;
 }
 
+
+// get inode_no of parent_dir(..) from cur dir
+static uint32_t get_parent_dir_inode_nr(uint32_t child_inode_nr, void* io_buf) {
+
+    // get cur child dir's inode
+    struct inode* child_dir_inode = inode_open(cur_part, child_inode_nr);
+    uint32_t block_lba = child_dir_inode->i_sectors[0];
+    ASSERT(block_lba >= cur_part->sb->data_start_lba);
+    inode_close(child_dir_inode);
+
+    // get dir entry
+    ide_read(cur_part->my_disk, block_lba, io_buf, 1);
+    struct dir_entry* dir_e = (struct dir_entry*)io_buf;
+
+    // 0->".", 1->".."
+    ASSERT(dir_e[1].i_no < MAX_FILES_PER_PART && dir_e[1].f_type == FT_DIRECTORY);
+    return dir_e[1].i_no;
+}
+
+//  search `c_inode_nr`(dir) in in `p_inode_nr`(dir)
+//  ok, then write name to buf `path`
+static int get_child_dir_name(uint32_t p_inode_nr, uint32_t c_inode_nr, char* path, void* io_buf) {
+
+    struct inode* parent_dir_inode = inode_open(cur_part, p_inode_nr);
+
+    uint8_t blk_i = 0;
+    uint32_t all_blocks[FLATTEN_PTRS] = {0}, block_cnt = DIRECT_PTRS;
+    while (blk_i < DIRECT_PTRS) {
+        all_blocks[blk_i] = parent_dir_inode->i_sectors[blk_i];
+        blk_i++;
+    }
+    if (parent_dir_inode->i_sectors[DIRECT_PTRS]) {
+        ide_read(cur_part->my_disk, parent_dir_inode->i_sectors[DIRECT_PTRS], all_blocks + DIRECT_PTRS, 1);
+        block_cnt = FLATTEN_PTRS;
+    }
+    inode_close(parent_dir_inode);
+
+    struct dir_entry* dir_e = (struct dir_entry*)io_buf;
+    uint32_t dir_entry_size = cur_part->sb->dir_entry_size;
+    uint32_t dir_entrys_per_sec = (SECTOR_SIZE / dir_entry_size);
+
+    for (blk_i = 0; blk_i < block_cnt; blk_i++) {
+        if(all_blocks[blk_i]) {
+            ide_read(cur_part->my_disk, all_blocks[blk_i], io_buf, 1);
+            for (uint8_t dir_e_i = 0; dir_e_i < dir_entrys_per_sec; dir_e_i++) {
+                if ((dir_e + dir_e_i)->i_no == c_inode_nr) {
+                    strcat(path, "/");
+                    strcat(path, (dir_e + dir_e_i)->filename);
+                    return 0;
+                }
+            }
+        }
+    }
+    return -1;
+}
 // scan fs(super_block) in each partition
 // if none fs on it, then install default fs
 void fs_init() {
