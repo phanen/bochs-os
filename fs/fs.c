@@ -410,11 +410,21 @@ int32_t sys_write(int32_t fd, const void* buf, uint32_t count) {
     if (wr_file->fd_flag & O_WRONLY || wr_file->fd_flag & O_RDWR) {
         uint32_t bytes_written  = file_write(wr_file, buf, count);
         return bytes_written;
-    } 
+    }
     else {
         console_put_str("sys_write: not allowed to write file without flag O_RDWR or O_WRONLY\n");
         return -1;
     }
+}
+
+int32_t sys_read(int32_t fd, void* buf, uint32_t count) {
+    if (fd < 0) {
+        printk("sys_read: fd error\n");
+        return -1;
+    }
+    ASSERT(buf != NULL);
+    uint32_t _fd = fd_local2global(fd);
+    return file_read(&file_table[_fd], buf, count);
 }
 
 // scan fs(super_block) in each partition
