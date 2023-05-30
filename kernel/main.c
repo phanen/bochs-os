@@ -34,33 +34,28 @@ int main() {
 
   // process_execute(u_prog_a, "user_prog_a");
   // process_execute(u_prog_b, "user_prog_b");
-
   // process_execute(u_prog_c, "user_prog_c");
   // process_execute(u_prog_d, "user_prog_d");
-
-  intr_enable();
-
+  // intr_enable();
   // thread_create("k_thread_a", 31, k_thread_a, "thread_a");
   // thread_create("k_thread_b", 31, k_thread_b, "thread_b");
-
   // thread_create("k_thread_c", 31, k_thread_c, "thread_c");
   // thread_create("k_thread_d", 31, k_thread_d, "thread_d");
-
   // console_put_str(" main_pid:0x");
   // console_put_int(sys_getpid());
   // console_put_char('\n');
 
   // void* addr = sys_malloc(33);
   // printk("%s, pid:%d addr:0x%x %c", "main", sys_getpid(), (int)addr, '\n');
-
   // process_execute(u_prog_a, "u_prog_a");
   // process_execute(u_prog_b, "u_prog_b");
   // thread_create("k_thread_a", 31, k_thread_a, "I am thread_a");
   // thread_create("k_thread_b", 31, k_thread_b, "I am thread_b");
 
-  sys_open("/file1", O_CREAT);
-  uint32_t fd = sys_open("/file1", O_RDONLY);
+  // sys_open("/file1", O_CREAT);
+  uint32_t fd = sys_open("/file1", O_RDWR);
   printf("fd:%d\n", fd);
+  sys_write(fd, "hello,world\n", 12);
   sys_close(fd);
   printf("%d closed now\n", fd);  while(1);
   return 0;
@@ -104,7 +99,6 @@ void k_thread_c(void* arg) {
 }
 
 
-/* 在线程中运行的函数 */
 void k_thread_d(void* arg) {     
   char* para = arg;
   void* addr1;
