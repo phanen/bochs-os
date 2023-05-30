@@ -14,6 +14,7 @@
 #include "stdio-kernel.h"
 #include "memory.h"
 #include "fs.h"
+#include "string.h"
 
 void k_thread_a(void*);
 void k_thread_b(void*);
@@ -53,11 +54,52 @@ int main() {
   // thread_create("k_thread_b", 31, k_thread_b, "I am thread_b");
 
   // sys_open("/file1", O_CREAT);
-  uint32_t fd = sys_open("/file1", O_RDWR);
-  printf("fd:%d\n", fd);
+
+  // create
+  uint32_t fd = sys_open("/file1", O_CREAT);
+  printf("create fd:%d\n", fd);
+  sys_close(fd);
+
+  // write
+  fd = sys_open("/file1", O_RDWR);
+  printf("write fd:%d\n", fd);
+  sys_write(fd, "hello,world\n", 12);
   sys_write(fd, "hello,world\n", 12);
   sys_close(fd);
-  printf("%d closed now\n", fd);  while(1);
+  printf("%d closed now\n", fd);
+
+  // read
+  fd = sys_open("/file1", O_RDWR);
+  printf("read fd:%d\n", fd);
+  printf("open /file1, fd:%d\n", fd);
+
+  char buf[64] = {0};
+  int read_bytes = sys_read(fd, buf, 18);
+  // hello,world\nhello
+  printf("1_ read %d bytes:\n%s\n", read_bytes, buf);
+
+  memset(buf, 0, 64);
+  read_bytes = sys_read(fd, buf, 6);
+  // world\n
+  printf("2_ read %d bytes:\n%s", read_bytes, buf);
+
+  memset(buf, 0, 64);
+  // nothing
+  read_bytes = sys_read(fd, buf, 6);
+  printf("3_ read %d bytes:\n%s", read_bytes, buf);
+
+  printf("________  close file1 and reopen  ________\n");
+  sys_close(fd);
+
+  // reset fd_pos
+  fd = sys_open("/file1", O_RDWR);
+  memset(buf, 0, 64);
+  read_bytes = sys_read(fd, buf, 24);
+  printf("4_ read %d bytes:\n%s", read_bytes, buf);
+
+  sys_close(fd);
+
+  while(1);
   return 0;
 }
 
