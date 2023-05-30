@@ -38,7 +38,8 @@ void dir_close(struct dir* dir) {
    sys_free(dir);
 }
 
-// filename dir -> dir entry
+// find file(dir_e) by name in current dir
+//    return when first match name (no matter what file type)
 //    `dir_e` should be alloc before
 bool search_dir_entry(struct partition* part, struct dir* pdir, \
 		      const char* name, struct dir_entry* dir_e) {

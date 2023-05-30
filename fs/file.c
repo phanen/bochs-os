@@ -87,8 +87,8 @@ void bitmap_sync(struct partition* part, uint32_t bit_idx, uint8_t btmp_type) {
    ide_write(part->my_disk, sec_lba, bitmap_off, 1);
 }
 
-// create file in given path
-// return fd
+// create file in given path, return fd
+//    this API does't consider filename rep !!!
 //    create inode -> create fd -> create dir_e
 int32_t file_create(struct dir* parent_dir, char* filename, uint8_t flag) {
    void* io_buf = sys_malloc(1024);
