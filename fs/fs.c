@@ -266,7 +266,7 @@ static int search_file(const char* pathname, struct path_search_record* searched
         strcat(searched_record->searched_path, "/");
         strcat(searched_record->searched_path, name);
 
-        // find current path
+        // find in current path
         if (search_dir_entry(cur_part, parent_dir, name, &dir_e)) {
             // parse next layer
             memset(name, 0, MAX_FILE_NAME_LEN);
@@ -282,8 +282,11 @@ static int search_file(const char* pathname, struct path_search_record* searched
                 continue;
             }
             else if (FT_REGULAR == dir_e.f_type) {
+                // FIXME: ?want a dir but give regular file first
+                //          then stop here?
+                // or DESIGN: never allow create two files with the same name
                 searched_record->file_type = FT_REGULAR;
-                return dir_e.i_no; // FIXME: stop?
+                return dir_e.i_no;
             }
         }
         else {
@@ -338,7 +341,7 @@ int32_t sys_open(const char* pathname, uint8_t flags) {
         return -1;
     }
 
-    // not found in last dir, and not creat
+    // not found in last dir, and no creat flag
     if (!found && !(flags & O_CREAT)) {
         printk("in path %s, file %s is't exist\n", \
                searched_record.searched_path, \
@@ -346,7 +349,10 @@ int32_t sys_open(const char* pathname, uint8_t flags) {
         dir_close(searched_record.parent_dir);
         return -1;
     }
-        // found in last dir, but create
+        // found in last dir, but with create flag
+        // NOTE: two files with the same name is not allow!!!
+        //      so, search relevant API can simply stop when first match
+        //      we only need to deal with file type
     else if (found && (flags & O_CREAT)) {
         printk("%s has already exist!\n", pathname);
         dir_close(searched_record.parent_dir);
@@ -444,11 +450,11 @@ int32_t sys_lseek(int32_t fd, int32_t offset, uint8_t whence) {
     switch (whence) {
         case SEEK_SET: // + only
             new_pos = offset;
-        break;
+            break;
 
         case SEEK_CUR:	// +/-
             new_pos = (int32_t)pf->fd_pos + offset;
-        break;
+            break;
         case SEEK_END:	// -only
             new_pos = file_size + offset;
     }
@@ -459,6 +465,72 @@ int32_t sys_lseek(int32_t fd, int32_t offset, uint8_t whence) {
     pf->fd_pos = new_pos;
     return pf->fd_pos;
 }
+
+// delete file (not dir)
+//      abort if in use: in file table
+//      delete dir entry
+//      delete inode(bitmap, block)
+int32_t sys_unlink(const char* pathname) {
+    ASSERT(strlen(pathname) < MAX_PATH_LEN);
+
+    struct path_search_record searched_record;
+    memset(&searched_record, 0, sizeof(struct path_search_record));
+    int inode_no = search_file(pathname, &searched_record);
+    ASSERT(inode_no != 0);
+
+    // no file
+    if (inode_no == -1) {
+        printk("file %s not found!\n", pathname);
+        dir_close(searched_record.parent_dir);
+        return -1;
+    }
+    // is dir
+    if (searched_record.file_type == FT_DIRECTORY) {
+        printk("can`t delete a direcotry with unlink(), use rmdir() to instead\n");
+        dir_close(searched_record.parent_dir);
+        return -1;
+    }
+
+    // if open?
+    uint32_t file_i = 0;
+    while (file_i < MAX_FILE_OPEN) {
+        if (file_table[file_i].fd_inode != NULL && 
+            (uint32_t)inode_no == file_table[file_i].fd_inode->i_no) {
+            break;
+        }
+        file_i++;
+    }
+    // is open
+    if (file_i < MAX_FILE_OPEN) {
+        dir_close(searched_record.parent_dir);
+        printk("file %s is in use, not allow to delete!\n", pathname);
+        return -1;
+    }
+
+    // not open
+    ASSERT(file_i == MAX_FILE_OPEN);
+
+    void* io_buf = sys_malloc(SECTOR_SIZE + SECTOR_SIZE);
+    if (io_buf == NULL) {
+        dir_close(searched_record.parent_dir);
+        printk("sys_unlink: malloc for io_buf failed\n");
+        return -1;
+    }
+
+    struct dir* parent_dir = searched_record.parent_dir;
+
+    // delete in dir
+    delete_dir_entry(cur_part, parent_dir, inode_no, io_buf);
+
+    // delete inode
+    inode_release(cur_part, inode_no);
+
+    sys_free(io_buf);
+    dir_close(searched_record.parent_dir);
+
+    return 0;
+}
+
 // scan fs(super_block) in each partition
 // if none fs on it, then install default fs
 void fs_init() {
