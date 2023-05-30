@@ -101,6 +101,7 @@ void init_task(struct task_struct* pthread, char* name, int prio) {
     pthread->fd_table[fd_i] = -1;
   }
 
+  pthread->cwd_inode_nr = 0; // default, rootdir
   pthread->stack_magic = 0x20021225; // magic number
 }
 
