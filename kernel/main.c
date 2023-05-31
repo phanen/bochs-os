@@ -17,15 +17,20 @@
 #include "string.h"
 #include "dir.h"
 
+#include "shell.h"
+
 void init();
 
 int main() {
 
-  put_str("you are in kernel now\n");
-  init_all();
+   put_str("you are in kernel now\n");
+   init_all();
+   cls_screen();
 
-  while (1);
-  return 0;
+   console_put_str("[phanium@bochs /]$ ");
+   // shell_run();
+   while (1);
+   return 0;
 }
 
 
