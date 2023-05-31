@@ -64,6 +64,7 @@ OBJS = $(BUILD_DIR)/main.o \
 	   $(BUILD_DIR)/fork.o \
 	   $(BUILD_DIR)/assert.o \
 	   $(BUILD_DIR)/shell.o \
+	   $(BUILD_DIR)/builtin_cmd.o \
 
 # FIXME: dependencies not complete, it may cause unexpected error
 #	for example:
@@ -175,6 +176,9 @@ $(BUILD_DIR)/assert.o: lib/user/assert.c lib/user/assert.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/shell.o: shell/shell.c shell/shell.h
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/builtin_cmd.o: shell/builtin_cmd.c shell/builtin_cmd.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 # https://stackoverflow.com/questions/816370/how-do-you-force-a-makefile-to-rebuild-a-target
