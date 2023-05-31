@@ -42,6 +42,22 @@ static void readline(char* buf, int32_t count) {
         }
         break;
 
+        // c-l
+      case 'l' - 'a':
+        *pos = 0;
+        clear();
+        print_prompt();
+        printf("%s", buf);
+        break;
+
+        // c-u
+      case 'u' - 'a':
+        while (buf != pos) {
+          putchar('\b');
+          *(pos--) = 0;
+        }
+        break;
+
       default:
         putchar(*pos);
         pos++;
@@ -56,7 +72,7 @@ void shell_run() {
 
   while (1) {
 
-    print_prompt(); 
+    print_prompt();
 
     // read input
     memset(cmd_line, 0, CMD_LEN);
