@@ -11,5 +11,6 @@ void panic_spin(char* filename, int line, const char* func, const char* conditio
 #else
     // #CONDITION -> string format
     #define ASSERT(CONDITION) if (CONDITION) {} else { PANIC(#CONDITION); }
-    #endif // __NDEBUG
+#endif // __NDEBUG
+
 #endif // __KERNEL_DEBUG_H
