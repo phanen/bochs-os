@@ -30,7 +30,7 @@ int main() {
 
 
 void init(void) {
-   uint32_t ret_pid = fork();
+   pid_t ret_pid = fork();
    if(ret_pid) {
       printf("i am father, my pid is %d, child pid is %d\n", getpid(), ret_pid);
    } else {
