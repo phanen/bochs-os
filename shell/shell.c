@@ -125,7 +125,7 @@ static int32_t cmd_parse(char* cmd_str, char** argv, char split) {
 }
 
 
-void builtin_switch() {
+int32_t builtin_switch() {
 
   memset(final_path, 0, MAX_PATH_LEN);
 
@@ -158,9 +158,37 @@ void builtin_switch() {
   }
   else {
     printf("external command\n");
+    return -2;
   }
+  return 0;
 }
 
+void external_run() {
+
+  int32_t pid = fork();
+  if (pid) {
+    // force parent hang
+    //    otherwise, `final_path` is a global var in kernel
+    //    may be wiped out before child exec
+    while(1);
+  } 
+  else {
+    make_clear_abs_path(argv[0], final_path);
+    argv[0] = final_path;
+
+    struct stat file_stat;
+    memset(&file_stat, 0, sizeof(struct stat));
+    if (stat(argv[0], &file_stat) == -1) {
+      printf("external_run: cannot access %s: No such file or directory\n", argv[0]);
+      return;
+    } 
+    else {
+      execv(argv[0], argv);
+    }
+    // while(1);
+  }
+
+}
 
 void shell_run() {
 
@@ -187,7 +215,8 @@ void shell_run() {
       continue;
     }
 
-    builtin_switch();
+    if (-2 == builtin_switch())
+      external_run();
   }
   panic("shell_run: should not be here");
 }
