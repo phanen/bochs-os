@@ -242,7 +242,7 @@ void* get_a_page(enum pool_flags pf, uint32_t vaddr) {
 
 // yet another `get_a_page` (for fork)
 //      do not need bitmap manipulation
-//      because we can copy bitmap?
+//      if we copy bitmap before (in fork)
 void* get_a_page_without_opvaddrbitmap(enum pool_flags pf, uint32_t vaddr) {
    struct pool* mem_pool = pf & PF_KERNEL ? &kernel_pool : &user_pool;
 
