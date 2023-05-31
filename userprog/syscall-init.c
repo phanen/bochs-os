@@ -10,9 +10,12 @@
 #include "fs.h"
 #include "fork.h"
 
-#define syscall_nr 32
+#include "exec.h"
+
+#define SYSCALL_NR 32
+
 typedef void* syscall;
-syscall syscall_table[syscall_nr];
+syscall syscall_table[SYSCALL_NR];
 
 uint32_t sys_getpid() {
   return running_thread()->pid;
@@ -50,6 +53,7 @@ void syscall_init() {
   syscall_table[SYS_GETCWD]     = sys_getcwd;
   syscall_table[SYS_CHDIR]	= sys_chdir;
   syscall_table[SYS_PS]	        = sys_ps;
+  syscall_table[SYS_EXECV]      = sys_execv;
 
   put_str("syscall_init done\n");
 }

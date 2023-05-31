@@ -30,6 +30,7 @@ enum SYSCALL_NR {
   SYS_GETCWD,
   SYS_CHDIR,
   SYS_PS,
+  SYS_EXECV,
 };
 
 // write -> int 0x80
@@ -61,5 +62,7 @@ int32_t stat(const char* path, struct stat* buf);
 char* getcwd(char* buf, uint32_t size);
 int32_t chdir(const char* path);
 void ps(void);
+
+int execv(const char* pathname, char** argv);
 
 #endif
