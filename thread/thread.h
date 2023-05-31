@@ -5,6 +5,8 @@
 #include "list.h"
 #include "memory.h"
 
+#define TASK_NAME_LEN 16
+
 #define MAX_FILES_OPEN_PER_PROC 8
 
 // template function type for thread
@@ -81,7 +83,7 @@ struct task_struct {
     pid_t pid;
 
     enum task_status status;
-    char name[16];
+    char name[TASK_NAME_LEN];
     uint8_t priority;
 
     uint8_t ticks; // time slice (-1 each clock intr)
