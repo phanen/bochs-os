@@ -37,9 +37,9 @@ int main() {
 void init(void) {
    pid_t ret_pid = fork();
    if(ret_pid) {
-      printf("i am father, my pid is %d, child pid is %d\n", getpid(), ret_pid);
+      while (1);
    } else {
-      printf("i am child, my pid is %d, ret pid is %d\n", getpid(), ret_pid);
+      shell_run();
    }
    while(1);
 }
