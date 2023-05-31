@@ -20,6 +20,7 @@
 static char cmd_line[CMD_LEN] = {0};
 char cwd_cache[CWD_CACHE_LEN] = {0};
 
+// cache the full_path (for some builtin_cmd)
 char final_path[MAX_PATH_LEN] = {0};
 
 char* argv[MAX_ARG_NR];
@@ -83,10 +84,10 @@ static int32_t cmd_parse(char* cmd_str, char** argv, char split) {
 
   assert(cmd_str != NULL);
 
-  int32_t arg_idx = 0;
-  while (arg_idx < MAX_ARG_NR) {
-    argv[arg_idx] = NULL;
-    arg_idx++;
+  int32_t i = 0;
+  while (i < MAX_ARG_NR) {
+    argv[i] = NULL;
+    i++;
   }
 
   char* next = cmd_str;
@@ -123,6 +124,46 @@ static int32_t cmd_parse(char* cmd_str, char** argv, char split) {
   return argc;
 }
 
+
+void builtin_switch() {
+
+  memset(final_path, 0, MAX_PATH_LEN);
+
+  if (!strcmp("ls", argv[0])) {
+    builtin_ls(argc, argv);
+  }
+  else if (!strcmp("cd", argv[0])) {
+    if (!builtin_cd(argc, argv)) {
+      memset(cwd_cache, 0, MAX_PATH_LEN);
+      printf("%s\n", cwd_cache);
+      printf("%s\n", final_path);
+      strcpy(cwd_cache, final_path);
+    }
+  }
+  else if (!strcmp("pwd", argv[0])) {
+    builtin_pwd(argc, argv);
+  }
+  else if (!strcmp("ps", argv[0])) {
+    builtin_ps(argc, argv);
+  }
+  else if (!strcmp("clear", argv[0])) {
+    builtin_clear(argc, argv);
+  }
+  else if (!strcmp("mkdir", argv[0])) {
+    builtin_mkdir(argc, argv);
+  }
+  else if (!strcmp("rmdir", argv[0])) {
+    builtin_rmdir(argc, argv);
+  }
+  else if (!strcmp("rm", argv[0])) {
+    builtin_rm(argc, argv);
+  }
+  else {
+    printf("external command\n");
+  }
+}
+
+
 void shell_run() {
 
   cwd_cache[0] = '/';
@@ -131,9 +172,7 @@ void shell_run() {
 
     print_prompt();
 
-    memset(final_path, 0, MAX_PATH_LEN);
     memset(cmd_line, 0, CMD_LEN);
-
     // read one line input
     readline(cmd_line, CMD_LEN);
 
@@ -150,13 +189,7 @@ void shell_run() {
       continue;
     }
 
-    // foreach token
-    for (int32_t i = 0; i < argc; i++) {
-      make_clear_abs_path(argv[i], final_path);
-      printf("%s -> %s\n", argv[i], final_path);
-    }
-
-    // unimplement
+    builtin_switch();
   }
-  panic("my_shell: should not be here");
+  panic("shell_run: should not be here");
 }
