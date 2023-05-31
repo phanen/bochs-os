@@ -3,8 +3,6 @@
 
 #include "stdint.h"
 
-void make_clear_abs_path(char* path, char* wash_buf);
-
 void builtin_ls(uint32_t argc, char** argv);
 int32_t builtin_cd(uint32_t argc, char** argv);
 int32_t builtin_mkdir(uint32_t argc, char** argv);
