@@ -224,5 +224,34 @@ set_cursor:
    mov dx, 0x03d5
    mov al, bl
    out dx, al
+
+global cls_screen
+cls_screen:
+   pushad
+   mov ax, SELECTOR_VIDEO ;	ax?
+   mov gs, ax
+
+   mov ebx, 0
+   mov ecx, 80*25 ; all screen
+ .cls:
+   mov word [gs:ebx], 0x0720  ; 0x0720->space (black bg, white font)
+   add ebx, 2
+   loop .cls
+   mov ebx, 0
+
+ .set_cursor:
+   mov dx, 0x03d4
+   mov al, 0x0e
+   out dx, al
+   mov dx, 0x03d5
+   mov al, bh
+   out dx, al
+
+   mov dx, 0x03d4
+   mov al, 0x0f
+   out dx, al
+   mov dx, 0x03d5
+   mov al, bl
+   out dx, al
    popad
    ret

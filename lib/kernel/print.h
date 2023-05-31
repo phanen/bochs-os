@@ -7,5 +7,6 @@ void put_str(char* message);
 void put_int(uint32_t num);
 
 void set_cursor(uint32_t cursor_pos);
+void cls_screen();
 
 #endif // __LIB_KERNEL_PRINT_H
