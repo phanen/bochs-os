@@ -114,7 +114,7 @@ static char keymap[][2] = {
 //    put ascii
 //    change mod status
 static void intr_keyboard_handler(void) {
-   
+
    // not necessary a new var though...
    int ctrl_down_last = ctrl_status;
    int shift_down_last = shift_status;
@@ -149,7 +149,7 @@ static void intr_keyboard_handler(void) {
       } // caps_lock is different
       return;
    }
-   // for makecode include only: ralt, rctl, and those in array
+      // for makecode include only: ralt, rctl, and those in array
    else if ((scancode > 0x00 && scancode < 0x3b) || \
          (scancode == alt_r_make) || \
          (scancode == ctrl_r_make)) {
@@ -180,6 +180,12 @@ static void intr_keyboard_handler(void) {
       // only handler ascii != 0 
       // (or if put_char can ignore 0, that's better...)
       if (cur_char) {
+
+         // convert c-l c-u
+         if ((ctrl_down_last && cur_char == 'l') || (ctrl_down_last && cur_char == 'u')) {
+            cur_char -= 'a';
+         }
+
          // add cur to buf
          if (!ioq_full(&kbd_buf)) {
             put_char(cur_char);
