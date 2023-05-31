@@ -38,6 +38,8 @@ OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o \
 	   $(BUILD_DIR)/stdio.o  $(BUILD_DIR)/stdio-kernel.o $(BUILD_DIR)/ide.o \
 	   $(BUILD_DIR)/fs.o $(BUILD_DIR)/dir.o $(BUILD_DIR)/file.o  $(BUILD_DIR)/inode.o \
 	   $(BUILD_DIR)/fork.o \
+	   $(BUILD_DIR)/assert.o \
+	   $(BUILD_DIR)/shell.o \
 
 # FIXME: dependencies not complete, it may cause unexpected error
 #	for example:
@@ -143,6 +145,12 @@ $(BUILD_DIR)/inode.o: fs/inode.c fs/inode.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/fork.o: userprog/fork.c userprog/fork.h
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/assert.o: lib/user/assert.c lib/user/assert.h
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/shell.o: shell/shell.c shell/shell.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 # TODO: https://stackoverflow.com/questions/816370/how-do-you-force-a-makefile-to-rebuild-a-target
