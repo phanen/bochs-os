@@ -21,6 +21,9 @@ void init_all() {
    keyboard_init(); // register keyboard event handler
    tss_init(); // update tss desc and ring3 desc
    syscall_init(); // make syscall_table
+
+   intr_enable();    // enbale intr before
+
    ide_init();  // init the channels, disks, partitions
    fs_init(); // scan or install fs
 }

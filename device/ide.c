@@ -254,6 +254,7 @@ static void identify_disk(struct disk* hd) {
    char id_info[512];
    select_disk(hd);
    cmd_out(hd->my_channel, CMD_IDENTIFY);
+   // NOTE: we didn't intr here before, who weak it up?
    sema_down(&hd->my_channel->disk_done);
 
    if (!busy_wait(hd)) { // fail
