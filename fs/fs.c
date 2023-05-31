@@ -195,7 +195,7 @@ static void partition_format(struct partition* part) {
 
 // get the top name
 // return next subpathname
-static char* path_parse(char* pathname, char* name_store) {
+char* path_parse(char* pathname, char* name_store) {
     if (pathname[0] == '/') {
         // for ///a
         while(*(++pathname) == '/');
