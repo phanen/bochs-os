@@ -1,5 +1,3 @@
-#include "shell.h"
-#include "builtin_cmd.h"
 #include "stdint.h"
 #include "fs.h"
 #include "file.h"
@@ -8,6 +6,10 @@
 #include "global.h"
 #include "assert.h"
 #include "string.h"
+
+#include "shell.h"
+#include "builtin_cmd.h"
+#include "path_parse.h"
 
 // NOTE: this is a shell in userland
 //    we don't use any api begin with `FUC_`
