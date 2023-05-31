@@ -16,10 +16,15 @@ CC = clang
 LD = ld
 
 ASINCS = -I boot/include
-INCS = -I lib/kernel/ -I lib/ -I kernel/ \
-	   -I device/ -I thread/ \
-	   -I userprog/ -I lib/user/ \
-	   -I fs/
+INCS = -I lib/kernel/ \
+	   -I lib/ \
+	   -I kernel/ \
+	   -I device/ \
+	   -I thread/ \
+	   -I userprog/ \
+	   -I lib/user/ \
+	   -I fs/ \
+	   -I shell/ \
 
 ASFLAGS = -f elf
 CFLAGS = -m32 -static -fno-builtin -nostdlib -fno-stack-protector \
@@ -28,15 +33,34 @@ CFLAGS = -m32 -static -fno-builtin -nostdlib -fno-stack-protector \
 
 LDFLAGS = -e main -static -Ttext $(ENTRY_POINT) -m elf_i386
 
-OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/init.o $(BUILD_DIR)/interrupt.o \
-	   $(BUILD_DIR)/timer.o $(BUILD_DIR)/kernel.o $(BUILD_DIR)/print.o \
-	   $(BUILD_DIR)/debug.o $(BUILD_DIR)/string.o $(BUILD_DIR)/bitmap.o \
-	   $(BUILD_DIR)/memory.o $(BUILD_DIR)/thread.o $(BUILD_DIR)/list.o \
-	   $(BUILD_DIR)/switch.o $(BUILD_DIR)/sync.o $(BUILD_DIR)/console.o \
-	   $(BUILD_DIR)/keyboard.o $(BUILD_DIR)/ioqueue.o $(BUILD_DIR)/tss.o \
-	   $(BUILD_DIR)/process.o $(BUILD_DIR)/syscall.o $(BUILD_DIR)/syscall-init.o \
-	   $(BUILD_DIR)/stdio.o  $(BUILD_DIR)/stdio-kernel.o $(BUILD_DIR)/ide.o \
-	   $(BUILD_DIR)/fs.o $(BUILD_DIR)/dir.o $(BUILD_DIR)/file.o  $(BUILD_DIR)/inode.o \
+OBJS = $(BUILD_DIR)/main.o \
+	   $(BUILD_DIR)/init.o \
+	   $(BUILD_DIR)/interrupt.o \
+	   $(BUILD_DIR)/timer.o \
+	   $(BUILD_DIR)/kernel.o \
+	   $(BUILD_DIR)/print.o \
+	   $(BUILD_DIR)/debug.o \
+	   $(BUILD_DIR)/string.o \
+	   $(BUILD_DIR)/bitmap.o \
+	   $(BUILD_DIR)/memory.o \
+	   $(BUILD_DIR)/thread.o \
+	   $(BUILD_DIR)/list.o \
+	   $(BUILD_DIR)/switch.o \
+	   $(BUILD_DIR)/sync.o \
+	   $(BUILD_DIR)/console.o \
+	   $(BUILD_DIR)/keyboard.o \
+	   $(BUILD_DIR)/ioqueue.o \
+	   $(BUILD_DIR)/tss.o \
+	   $(BUILD_DIR)/process.o \
+	   $(BUILD_DIR)/syscall.o \
+	   $(BUILD_DIR)/syscall-init.o \
+	   $(BUILD_DIR)/stdio.o \
+	   $(BUILD_DIR)/stdio-kernel.o \
+	   $(BUILD_DIR)/ide.o \
+	   $(BUILD_DIR)/fs.o \
+	   $(BUILD_DIR)/dir.o \
+	   $(BUILD_DIR)/file.o \
+	   $(BUILD_DIR)/inode.o \
 	   $(BUILD_DIR)/fork.o \
 	   $(BUILD_DIR)/assert.o \
 	   $(BUILD_DIR)/shell.o \
@@ -153,7 +177,7 @@ $(BUILD_DIR)/assert.o: lib/user/assert.c lib/user/assert.h
 $(BUILD_DIR)/shell.o: shell/shell.c shell/shell.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
-# TODO: https://stackoverflow.com/questions/816370/how-do-you-force-a-makefile-to-rebuild-a-target
+# https://stackoverflow.com/questions/816370/how-do-you-force-a-makefile-to-rebuild-a-target
 master-hd60M.img:
 	rm -rf $@ && bximage -q -hd -mode="flat" -size=60 $@
 	# TODO: dd if=/dev/zero of=hd60M.img bs=4K count=15360
