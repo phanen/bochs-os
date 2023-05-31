@@ -65,6 +65,7 @@ OBJS = $(BUILD_DIR)/main.o \
 	   $(BUILD_DIR)/assert.o \
 	   $(BUILD_DIR)/shell.o \
 	   $(BUILD_DIR)/builtin_cmd.o \
+	   $(BUILD_DIR)/path_parse.o \
 	   $(BUILD_DIR)/exec.o \
 
 # FIXME: dependencies not complete, it may cause unexpected error
@@ -180,6 +181,9 @@ $(BUILD_DIR)/shell.o: shell/shell.c shell/shell.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/builtin_cmd.o: shell/builtin_cmd.c shell/builtin_cmd.h
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/path_parse.o: shell/path_parse.c shell/path_parse.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/exec.o: userprog/exec.c userprog/exec.h
