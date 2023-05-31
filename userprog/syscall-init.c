@@ -37,18 +37,18 @@ void syscall_init() {
   syscall_table[SYS_CLOSE]      = sys_close;
   syscall_table[SYS_WRITE]      = sys_write;
   syscall_table[SYS_READ]       = sys_read;
-  syscall_table[SYS_LSEEK]	    = sys_lseek;
-  syscall_table[SYS_UNLINK]	    = sys_unlink;
+  syscall_table[SYS_LSEEK]	= sys_lseek;
+  syscall_table[SYS_UNLINK]	= sys_unlink;
 
-  syscall_table[SYS_MKDIR]	    = sys_mkdir;
+  syscall_table[SYS_MKDIR]	= sys_mkdir;
   syscall_table[SYS_OPENDIR]	= sys_opendir;
   syscall_table[SYS_CLOSEDIR]   = sys_closedir;
-  syscall_table[SYS_RMDIR]	    = sys_rmdir;
+  syscall_table[SYS_RMDIR]	= sys_rmdir;
   syscall_table[SYS_READDIR]	= sys_readdir;
   syscall_table[SYS_REWINDDIR]	= sys_rewinddir;
-  syscall_table[SYS_STAT]	    = sys_stat;
+  syscall_table[SYS_STAT]	= sys_stat;
   syscall_table[SYS_GETCWD]     = sys_getcwd;
-  syscall_table[SYS_CHDIR]	    = sys_chdir;
+  syscall_table[SYS_CHDIR]	= sys_chdir;
   syscall_table[SYS_PS]	        = sys_ps;
 
   put_str("syscall_init done\n");

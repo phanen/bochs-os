@@ -107,6 +107,7 @@ extern struct list thread_ready_list;
 extern struct list thread_all_list;
 
 pid_t fork_pid();
+void sys_ps();
 
 void thread_stack_init(struct task_struct* pthread, thread_func function, void* func_arg);
 
@@ -124,5 +125,6 @@ void thread_block(enum task_status stat);
 void thread_unblock(struct task_struct* pthread);
 
 void thread_yield(void);
+
 
 #endif
