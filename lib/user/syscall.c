@@ -58,9 +58,13 @@ void* malloc(uint32_t size) {
 }
 
 void free(void* ptr) {
-   _syscall1(SYS_FREE, ptr);
+  _syscall1(SYS_FREE, ptr);
 }
 
 pid_t fork() {
-   return _syscall0(SYS_FORK);
+  return _syscall0(SYS_FORK);
+}
+
+int32_t read(int32_t fd, void* buf, uint32_t count) {
+  return _syscall3(SYS_READ, fd, buf, count);
 }

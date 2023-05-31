@@ -10,6 +10,7 @@ enum SYSCALL_NR {
   SYS_MALLOC,
   SYS_FREE,
   SYS_FORK,
+  SYS_READ,
 };
 
 // write -> int 0x80
@@ -22,5 +23,6 @@ uint32_t write(int32_t fd, const void* buf, uint32_t count);
 void* malloc(uint32_t size);
 void free(void* ptr);
 pid_t fork();
+int32_t read(int32_t fd, void* buf, uint32_t count);
 
 #endif
