@@ -443,6 +443,7 @@ int32_t sys_read(int32_t fd, void* buf, uint32_t count) {
             bytes_read++;
             buffer++;
         }
+        return (bytes_read == 0 ? -1 : (int32_t)bytes_read);
     }
 
     // read from file
