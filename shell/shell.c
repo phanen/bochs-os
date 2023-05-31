@@ -13,12 +13,10 @@
 //    we don't use any api begin with `FUC_`
 
 #define CMD_LEN           MAX_PATH_LEN
-#define CWD_CACHE_LEN     64
-
 #define MAX_ARG_NR        16
 
 static char cmd_line[CMD_LEN] = {0};
-char cwd_cache[CWD_CACHE_LEN] = {0};
+char cwd_cache[MAX_PATH_LEN] = {0};
 
 // cache the full_path (for some builtin_cmd)
 char final_path[MAX_PATH_LEN] = {0};
@@ -135,8 +133,6 @@ void builtin_switch() {
   else if (!strcmp("cd", argv[0])) {
     if (!builtin_cd(argc, argv)) {
       memset(cwd_cache, 0, MAX_PATH_LEN);
-      printf("%s\n", cwd_cache);
-      printf("%s\n", final_path);
       strcpy(cwd_cache, final_path);
     }
   }
