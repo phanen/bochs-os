@@ -9,6 +9,8 @@
 #include "process.h"
 #include "sync.h"
 
+extern void init(void);
+
 static struct task_struct* main_thread;    // TCB for main thread (take `main()` as a thread)
 static struct task_struct* idle_thread;    // a dummy never exit
 
@@ -260,6 +262,11 @@ void thread_init(void) {
   list_init(&thread_ready_list);
   list_init(&thread_all_list);
   lock_init(&pid_lock);
+
+  // init process has pid 1
+  //    early than kernel main
+  process_execute(init, "init");
+
   make_main_thread();
   idle_thread =  thread_create("idle", 10, idle, NULL);
   put_str("thread_init done\n");
