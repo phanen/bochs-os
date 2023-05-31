@@ -11,6 +11,8 @@ enum SYSCALL_NR {
   SYS_FREE,
   SYS_FORK,
   SYS_READ,
+  SYS_PUTCHAR,
+  SYS_CLEAR,
 };
 
 // write -> int 0x80
@@ -24,5 +26,7 @@ void* malloc(uint32_t size);
 void free(void* ptr);
 pid_t fork();
 int32_t read(int32_t fd, void* buf, uint32_t count);
+void putchar(char c);
+void clear();
 
 #endif
