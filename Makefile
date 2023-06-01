@@ -2,11 +2,11 @@
 	gdb \
 	boot-master \
 	clean-disk \
-	boot-master \
+	user \
 	dep \
 	clean \
 	mbr-disasm \
-	loader-disasm
+	loader-disasm \
 
 BUILD_DIR = ./build
 ENTRY_POINT = 0xc0001500
@@ -204,6 +204,9 @@ boot-master: master-hd60M.img $(BUILD_DIR)/mbr.bin $(BUILD_DIR)/loader.bin $(BUI
 	# strip -R .got.plt kernel.bin -R .note.gnu.property -R .eh_frame kernel.bin
 	dd if=$(BUILD_DIR)/kernel.bin of=$< bs=512B count=200 seek=9 conv=notrunc # dd is smart enough
 
+user:
+	$(MAKE) -C ./user
+
 clean-disk:
 	rm master-hd60M.img slave-hd80M.img -rf
 
@@ -217,8 +220,8 @@ mbr-disasm: mbr.bin
 	# ndisasm -b16 -o7c00h -a -s7c3eh mbr.bin
 
 clean:
-	rm *.{bin,o,out} -rf
-	rm build/* -rf
+	rm -rf -- *.{bin,o,out} -rf
+	rm -rf -- $(BUILD_DIR)/*
 
 dep:
 	sudo pacman -S nasm gtk-2 xorg
