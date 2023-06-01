@@ -428,6 +428,11 @@ int32_t sys_write(int32_t fd, const void* buf, uint32_t count) {
 
 // use fd_pos
 int32_t sys_read(int32_t fd, void* buf, uint32_t count) {
+    // if (buf == (void*)(0x08048000)) {
+    //     printk("hello");
+    //     while (1);
+    // }
+
     ASSERT(buf != NULL);
     if (fd < 0 || fd == stdout_no || fd == stderr_no) {
         printk("sys_read: fd error\n");

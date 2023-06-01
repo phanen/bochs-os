@@ -18,6 +18,7 @@
 #include "dir.h"
 
 #include "shell.h"
+#include "keyboard.h"
 
 void init();
 
@@ -29,7 +30,7 @@ int main() {
    init_all();
    cls_screen();
 
-   loadelf2fs(300, 13888, "/hello");
+   loadelf2fs(300, 13928, "/hello");
    loadelf2fs(400, 18028, "/fork-exec");
 
    console_put_str("[phanium@bochs /]$ ");
@@ -45,6 +46,11 @@ void loadelf2fs(uint32_t sec_base, uint32_t file_size, char* filename) {
 
    void* buf = sys_malloc(file_size);
    ide_read(sda, sec_base, buf, sec_cnt);
+
+   // for (int i = 0; i < sec_cnt; ++i) {
+      // sys_write(1, buf, 512);
+      // buf += 512;
+   // }
 
    int32_t fd = sys_open(filename, O_CREAT|O_RDWR);
    if (fd == -1) {

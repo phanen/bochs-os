@@ -157,7 +157,7 @@ int32_t builtin_switch() {
     builtin_rm(argc, argv);
   }
   else {
-    printf("external command\n");
+    // printf("external command\n");
     return -2;
   }
   return 0;
@@ -171,8 +171,9 @@ void external_run() {
     //    otherwise, `final_path` is a global var in kernel
     //    may be wiped out before child exec
     while(1);
-  } 
+  }
   else {
+
     make_clear_abs_path(argv[0], final_path);
     argv[0] = final_path;
 
@@ -181,9 +182,13 @@ void external_run() {
     if (stat(argv[0], &file_stat) == -1) {
       printf("external_run: cannot access %s: No such file or directory\n", argv[0]);
       return;
-    } 
+    }
     else {
+      for (char** p = argv; *p; ++p) {
+        printf(*p);
+      }
       execv(argv[0], argv);
+      printf("???\n");
     }
     // while(1);
   }

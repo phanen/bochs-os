@@ -395,7 +395,7 @@ int32_t file_write(struct file* file, const void* buf, uint32_t count) {
       }
       memcpy(io_buf + sec_off_bytes, src, chunk_size);
       ide_write(cur_part->my_disk, sec_lba, io_buf, 1);
-      printk("file write at lba 0x%x\n", sec_lba); // debug
+      // printk("file write at lba 0x%x\n", sec_lba); // debug
 
       // update
       src += chunk_size;   // remain pointer
