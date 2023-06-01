@@ -2,7 +2,7 @@
 #define __FS_FS_H
 
 #include "stdint.h"
-#include "ide.h"
+// #include "ide.h"
 
 #define MAX_FILES_PER_PART 4096	    // limit
 #define BITS_PER_SECTOR 4096

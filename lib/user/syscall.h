@@ -2,7 +2,7 @@
 #define __LIB_USER_SYSCALL_H
 
 #include "stdint.h"
-#include "thread.h"
+// #include "thread.h"
 #include "fs.h"
 
 enum SYSCALL_NR {
@@ -41,7 +41,8 @@ enum SYSCALL_NR {
 uint32_t getpid();
 void* malloc(uint32_t size);
 void free(void* ptr);
-pid_t fork();
+// pid_t fork();
+int16_t fork();
 void putchar(char c);
 void clear();
 
