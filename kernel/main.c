@@ -20,7 +20,8 @@
 #include "shell.h"
 
 void init();
-void loadelf2fs();
+
+void loadelf2fs(uint32_t sec_base, uint32_t file_size, char* filename);
 
 int main() {
 
@@ -28,7 +29,8 @@ int main() {
    init_all();
    cls_screen();
 
-   loadelf2fs();
+   loadelf2fs(300, 13888, "/hello");
+   loadelf2fs(400, 18028, "/fork-exec");
 
    console_put_str("[phanium@bochs /]$ ");
    // shell_run();
@@ -36,17 +38,15 @@ int main() {
    return 0;
 }
 
-void loadelf2fs() {
-   uint32_t sec_base = 300;
-   uint32_t file_size = 13888;
-   uint32_t sec_cnt = DIV_ROUND_UP(file_size, 512);
+void loadelf2fs(uint32_t sec_base, uint32_t file_size, char* filename) {
 
+   uint32_t sec_cnt = DIV_ROUND_UP(file_size, SECTOR_SIZE);
    struct disk* sda = &channels[0].devices[0];
 
    void* buf = sys_malloc(file_size);
    ide_read(sda, sec_base, buf, sec_cnt);
 
-   int32_t fd = sys_open("/hello", O_CREAT|O_RDWR);
+   int32_t fd = sys_open(filename, O_CREAT|O_RDWR);
    if (fd == -1) {
       printk("open error");
       return;
