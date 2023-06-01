@@ -2,7 +2,7 @@
 	gdb \
 	boot-master \
 	clean-disk \
-	user \
+	userelf \
 	dep \
 	clean \
 	mbr-disasm \
@@ -204,8 +204,9 @@ boot-master: master-hd60M.img $(BUILD_DIR)/mbr.bin $(BUILD_DIR)/loader.bin $(BUI
 	# strip -R .got.plt kernel.bin -R .note.gnu.property -R .eh_frame kernel.bin
 	dd if=$(BUILD_DIR)/kernel.bin of=$< bs=512B count=200 seek=9 conv=notrunc # dd is smart enough
 
-user:
+userelf:
 	$(MAKE) -C ./user
+	$(MAKE) -C ./user load
 
 clean-disk:
 	rm master-hd60M.img slave-hd80M.img -rf
@@ -222,6 +223,7 @@ mbr-disasm: mbr.bin
 clean:
 	rm -rf -- *.{bin,o,out} -rf
 	rm -rf -- $(BUILD_DIR)/*
+	$(MAKE) -C ./user clean
 
 dep:
 	sudo pacman -S nasm gtk-2 xorg
