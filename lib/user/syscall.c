@@ -56,7 +56,7 @@ void free(void* ptr) {
   _syscall1(SYS_FREE, ptr);
 }
 
-pid_t fork() {
+int16_t fork() {
   return _syscall0(SYS_FORK);
 }
 
