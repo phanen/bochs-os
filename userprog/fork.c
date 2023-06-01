@@ -6,6 +6,7 @@
 #include "thread.h"
 #include "string.h"
 #include "file.h"
+#include "stdio.h"
 
 extern void intr_exit(void);
 
@@ -34,9 +35,10 @@ static int32_t copy_pcb_vaddrbitmap_stack0(struct task_struct* child_thread, str
          child_thread->userprog_vaddr.vaddr_bitmap.bits, bitmap_pg_cnt * PG_SIZE);
   child_thread->userprog_vaddr.vaddr_bitmap.bits = vaddr_btmp;
 
-  // debug
-  ASSERT(strlen(child_thread->name) < 11);
-  strcat(child_thread->name,"_fork");
+  // // debug
+  // printf(child_thread->name);
+  // ASSERT(strlen(child_thread->name) < 11);
+  // strcat(child_thread->name,"_fork");
   return 0;
 }
 
