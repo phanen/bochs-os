@@ -5,7 +5,7 @@
 #include "string.h"
 #include "syscall.h"
 #include "print.h"
-#include "debug.h"
+#include "assert.h"
 
 #include "stdarg.h"
 
@@ -75,7 +75,7 @@ uint32_t vsprintf(char* str, const char* format, va_list ap) {
 
 
       default:
-        PANIC("no such format");
+        panic("no such format");
     }
   }
 
