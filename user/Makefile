@@ -20,18 +20,35 @@ CFLAGS = -m32 -static -fno-builtin -nostdlib -fno-stack-protector \
 
 LDFLAGS = -e main -static -m elf_i386
 
-LLIBS = $(LIB_DIR)/string.o \
-	   $(LIB_DIR)/syscall.o \
-	   $(LIB_DIR)/stdio.o \
-	   $(LIB_DIR)/assert.o \
+LLIBS = $(BUILD_DIR)/start.o \
+		$(LIB_DIR)/string.o \
+		$(LIB_DIR)/syscall.o \
+		$(LIB_DIR)/stdio.o \
+		$(LIB_DIR)/assert.o \
 
 # OBJS = $(BUILD_DIR)/main.o
+
+all: $(BUILD_DIR)/hello.o \
+	 $(BUILD_DIR)/hello.out \
+	 $(BUILD_DIR)/start.o \
+	 $(BUILD_DIR)/fork-exec.o \
+	 $(BUILD_DIR)/fork-exec.out \
+
+$(BUILD_DIR)/hello.o: hello.c
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/start.o: start.S
+	$(AS) $(ASFLAGS) $< -o $@
+
+$(BUILD_DIR)/fork-exec.o: fork-exec.c
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/hello.out: $(BUILD_DIR)/hello.o $(LLIBS)
 	$(LD) $(LDFLAGS) $^ -o $@
 
-$(BUILD_DIR)/hello.o: hello.c
-	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
+$(BUILD_DIR)/fork-exec.out: $(BUILD_DIR)/fork-exec.o $(LLIBS)
+	$(LD) $(LDFLAGS) $^ -o $@
+
 
 # nasm -f elf ./start.S -o ./start.o
 # ar rcs simple_crt.a $OBJS start.o
