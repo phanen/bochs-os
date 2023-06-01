@@ -54,23 +54,19 @@ enum segment_type {
   PT_PHDR             // program header table
 };
 
-// load elf file
-//    segment (offset, filesz) to mem (vaddr)
+// load elf segment to mem
+//    (offset, filesz) to (vaddr)
 static bool segment_load(int32_t fd, uint32_t offset, uint32_t filesz, uint32_t vaddr) {
 
   // TODO: force align...
   uint32_t vaddr_first_page = vaddr & 0xfffff000;
   uint32_t size_in_first_page = PG_SIZE - (vaddr & 0x00000fff);
-  uint32_t occupy_pages = 0;
 
+  uint32_t occupy_pages = 1;
   if (filesz > size_in_first_page) {
     uint32_t left_size = filesz - size_in_first_page;
     occupy_pages = DIV_ROUND_UP(left_size, PG_SIZE) + 1;
   }
-  else {
-    occupy_pages = 1;
-  }
-
 
   uint32_t page_i = 0;
   uint32_t vaddr_page = vaddr_first_page;
@@ -125,8 +121,7 @@ static int32_t load(const char* pathname) {
 
   // foreach phdr
   //    load all loadable segs
-  uint32_t prog_i = 0;
-  while (prog_i < elf_header.e_phnum) {
+  for (uint32_t i = 0; i < elf_header.e_phnum; i++) {
     memset(&prog_header, 0, prog_header_size);
 
     sys_lseek(fd, prog_header_offset, SEEK_SET);
@@ -142,7 +137,6 @@ static int32_t load(const char* pathname) {
     }
 
     prog_header_offset += elf_header.e_phentsize;
-    prog_i++;
   }
   return elf_header.e_entry;
 
@@ -167,6 +161,7 @@ int32_t sys_execv(const char* path, const char* argv[]) {
   }
 
   struct task_struct* cur = running_thread();
+  printk("bbb\n");
 
   // filename as proc name
   memcpy(cur->name, path, TASK_NAME_LEN);
