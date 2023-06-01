@@ -56,6 +56,7 @@ $(BUILD_DIR)/fork-exec.out: $(BUILD_DIR)/fork-exec.o $(LLIBS)
 # load to raw disk
 load:
 	dd if=$(BUILD_DIR)/hello.out of=../master-hd60M.img bs=512 count=30 seek=300 conv=notrunc
+	dd if=$(BUILD_DIR)/fork-exec.out of=../master-hd60M.img bs=512 count=40 seek=400 conv=notrunc
 
 clean:
 	rm -rf -- $(BUILD_DIR)/*
