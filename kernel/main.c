@@ -30,8 +30,10 @@ int main() {
    init_all();
    cls_screen();
 
-   loadelf2fs(300, 13928, "/hello");
-   loadelf2fs(400, 18028, "/fork-exec");
+   // loadelf2fs(300, 13928, "/hello");
+   // loadelf2fs(400, 18028, "/fork-exec");
+
+   loadelf2fs(300, 4488, "/hello");
 
    console_put_str("[phanium@bochs /]$ ");
    // shell_run();
