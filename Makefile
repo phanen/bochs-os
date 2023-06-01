@@ -1,4 +1,5 @@
 .PHONY = bochs \
+	kernel \
 	gdb \
 	boot-master \
 	clean-disk \
@@ -223,7 +224,7 @@ mbr-disasm: mbr.bin
 clean:
 	rm -rf -- *.{bin,o,out} -rf
 	rm -rf -- $(BUILD_DIR)/*
-	$(MAKE) -C ./user clean
+	# $(MAKE) -C ./user clean
 
 dep:
 	sudo pacman -S nasm gtk-2 xorg

@@ -15,6 +15,7 @@ INCS = -I ../lib \
 ASFLAGS = -f elf
 CFLAGS = -m32 -static -fno-builtin -nostdlib -fno-stack-protector \
 		 -mno-sse
+		 # -Wl -O2
 		 # -W -Wstrict-prototypes -Wmissing-prototypes
 
 LDFLAGS = -e main -static -m elf_i386
@@ -37,8 +38,8 @@ $(BUILD_DIR)/hello.o: hello.c
 
 # load to raw disk
 load:
-	dd if=$(BUILD_DIR)/hello.o of=../master-hd60M.img bs=512 count=10 seek=300 conv=notrunc
+	dd if=$(BUILD_DIR)/hello.out of=../master-hd60M.img bs=512 count=30 seek=300 conv=notrunc
 
 clean:
-	rm -rf -- $(BUILD_DIR)/* 
+	rm -rf -- $(BUILD_DIR)/*
 
