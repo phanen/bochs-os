@@ -1,14 +1,16 @@
 #include "wait_exit.h"
 #include "global.h"
 #include "debug.h"
+#include "pipe.h"
 #include "thread.h"
 #include "list.h"
 #include "stdio-kernel.h"
 #include "memory.h"
 #include "bitmap.h"
 #include "fs.h"
+#include "file.h"
 
- // free ppage -> free bitmap -> close all files
+// free ppage -> free bitmap -> close all files
 //    care nothing about vpage
 static void release_prog_resource(struct task_struct* release_thread) {
 
@@ -57,9 +59,21 @@ static void release_prog_resource(struct task_struct* release_thread) {
   // close all file
   //      parent's file? links count?
   for (uint8_t fd_i = 3; fd_i < MAX_FILES_OPEN_PER_PROC; fd_i++) {
-    if (release_thread->fd_table[fd_i] != -1) {
-      sys_close(fd_i);
+
+    if (release_thread->fd_table[fd_i] == -1) {
+      continue;
     }
+
+    if (is_pipe(fd_i)) {
+      int32_t global_fd = fd_local2global(fd_i);
+      if (--file_table[global_fd].fd_pos == 0){
+        mfree_page(PF_KERNEL, file_table[global_fd].fd_inode, 1);
+        file_table[global_fd].fd_inode = NULL;
+      }
+      continue;
+    }
+
+    sys_close(fd_i);
   }
 }
 

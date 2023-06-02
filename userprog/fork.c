@@ -1,4 +1,5 @@
 #include "fork.h"
+#include "pipe.h"
 #include "process.h"
 #include "memory.h"
 #include "interrupt.h"
@@ -109,14 +110,22 @@ static int32_t build_child_stack(struct task_struct* child_thread) {
 // child open same inode as its parent
 //    they share the same `pcb->fd_table`
 static void update_inode_open_cnts(struct task_struct* thread) {
-  int32_t local_fd = 3, global_fd = 0;
-  while (local_fd < MAX_FILES_OPEN_PER_PROC) {
-    global_fd = thread->fd_table[local_fd];
+
+  for (int32_t local_fd = 3; local_fd < MAX_FILES_OPEN_PER_PROC; local_fd++) {
+
+    int32_t global_fd = thread->fd_table[local_fd];
     ASSERT(global_fd < MAX_FILE_OPEN);
-    if (global_fd != -1) {
-      file_table[global_fd].fd_inode->i_open_cnts++;
+
+    if (global_fd == -1) {
+      continue;
     }
-    local_fd++;
+
+    if (is_pipe(local_fd)) {
+      file_table[global_fd].fd_pos++;
+      continue;
+    }
+
+    file_table[global_fd].fd_inode->i_open_cnts++;
   }
 }
 

@@ -1,4 +1,5 @@
 #include "fs.h"
+#include "pipe.h"
 #include "super_block.h"
 #include "inode.h"
 #include "dir.h"
@@ -378,7 +379,7 @@ int32_t sys_open(const char* pathname, uint8_t flags) {
     return fd;
 }
 
-static uint32_t fd_local2global(uint32_t local_fd) {
+uint32_t fd_local2global(uint32_t local_fd) {
     int32_t global_fd = running_thread()->fd_table[local_fd];
     ASSERT(global_fd >= 0 && global_fd < MAX_FILE_OPEN);
     return (uint32_t)global_fd;
@@ -386,13 +387,27 @@ static uint32_t fd_local2global(uint32_t local_fd) {
 
 // close by local fd
 int32_t sys_close(int32_t fd) {
+
+    // cannot close stdio now
+    if (fd <= 2)
+        return -1;
+
     int32_t ret = -1;
-    if (fd > 2) { //
-        uint32_t _fd = fd_local2global(fd);
+    uint32_t _fd = fd_local2global(fd);
+
+    if (is_pipe(fd)) {
+        if (--file_table[_fd].fd_pos == 0) {
+            mfree_page(PF_KERNEL, file_table[_fd].fd_inode, 1);
+            file_table[_fd].fd_inode = NULL;
+        }
+        ret = 0;
+    } 
+    else {
         ret = file_close(&file_table[_fd]);
-        // free the slot in local tab
-        running_thread()->fd_table[fd] = -1;
     }
+
+    // free the slot in local tab
+    running_thread()->fd_table[fd] = -1;
     return ret;
 }
 
@@ -401,6 +416,10 @@ int32_t sys_write(int32_t fd, const void* buf, uint32_t count) {
     if (fd < 0) {
         printk("sys_write: fd error\n");
         return -1;
+    }
+
+    if (is_pipe(fd)) {
+	 return pipe_write(fd, buf, count);
     }
 
     // write to stdout: count < 1024
@@ -434,9 +453,14 @@ int32_t sys_read(int32_t fd, void* buf, uint32_t count) {
     // }
 
     ASSERT(buf != NULL);
+
     if (fd < 0 || fd == stdout_no || fd == stderr_no) {
         printk("sys_read: fd error\n");
         return -1;
+    }
+
+    if (is_pipe(fd)) {
+        return pipe_read(fd, buf, count);
     }
 
     // read from device
@@ -910,7 +934,7 @@ int32_t sys_stat(const char* path, struct stat* buf) {
         buf->st_filetype = searched_record.file_type;
         buf->st_ino = inode_no;
         ret = 0;
-    } 
+    }
     else {
         printk("sys_stat: %s not found\n", path);
     }
