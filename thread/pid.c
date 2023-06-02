@@ -4,6 +4,8 @@
 
 uint8_t pid_bitmap_bits[128] = {0};
 
+static struct lock pid_lock;
+
 struct pid_pool {
    struct bitmap pid_bitmap;
    uint32_t pid_start;
