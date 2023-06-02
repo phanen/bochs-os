@@ -42,7 +42,9 @@ static int32_t copy_pcb_vaddrbitmap_stack0(struct task_struct* child_thread, str
   return 0;
 }
 
-// copy the body(content in vaddr) and stack3(sure, it's also just data in vaddr)
+// copy the body(content in vaddr) and stack3(sure, also just data in vaddr)
+//    via a kernel buf: parent->kernel_buf, switch to child, kernel_buf->child
+//    NOTE: btw, syscall won't switch addr space(page table)
 static void copy_body_stack3(struct task_struct* child_thread, struct task_struct* parent_thread, void* buf_page) {
 
   uint8_t* vaddr_btmp = parent_thread->userprog_vaddr.vaddr_bitmap.bits;
@@ -118,9 +120,9 @@ static void update_inode_open_cnts(struct task_struct* thread) {
   }
 }
 
-// 拷贝父进程本身所占资源给子进程
+// copy out child image
 static int32_t copy_process(struct task_struct* child_thread, struct task_struct* parent_thread) {
-  // 内核缓冲区,作为父进程用户空间的数据复制到子进程用户空间的中转
+
   void* buf_page = get_kernel_pages(1);
   if (buf_page == NULL) {
     return -1;
