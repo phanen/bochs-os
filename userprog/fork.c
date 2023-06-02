@@ -38,7 +38,7 @@ static int32_t copy_pcb_vaddrbitmap_stack0(struct task_struct* child_thread, str
   // // debug
   // printf(child_thread->name);
   // ASSERT(strlen(child_thread->name) < 11);
-  // strcat(child_thread->name,"_fork");
+  // strcpy(child_thread->name, "_fork");
   return 0;
 }
 

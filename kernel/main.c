@@ -20,6 +20,8 @@
 #include "shell.h"
 #include "keyboard.h"
 
+char name_buf[TASK_NAME_LEN];
+
 void init();
 
 void loadelf2fs(uint32_t sec_base, uint32_t file_size, char* filename);
@@ -28,18 +30,19 @@ int main() {
 
    put_str("you are in kernel now\n");
    init_all();
+
+   // FIXME: shell don't print first prompt when bootstrap
    cls_screen();
-
-   // loadelf2fs(300, 13888, "/hello");
-   // loadelf2fs(400, 17988, "/fork-exec");
-
-   loadelf2fs(300, 18024, "/hello");
-   loadelf2fs(400, 18028, "/fork-exec");
-
-   // loadelf2fs(300, 4488, "/a");
-   // loadelf2fs(300, 4972, "/a");
-
    console_put_str("[phanium@bochs /]$ ");
+
+   loadelf2fs(300, 18064, "/hello");
+   loadelf2fs(400, 18068, "/fork-exec");
+   loadelf2fs(500, 18064, "/cat");
+
+   // printf("main pid is %d\n", getpid());
+
+   thread_exit(running_thread(), true);
+
    // shell_run();
    while (1);
    return 0;
@@ -52,11 +55,6 @@ void loadelf2fs(uint32_t sec_base, uint32_t file_size, char* filename) {
 
    void* buf = sys_malloc(file_size);
    ide_read(sda, sec_base, buf, sec_cnt);
-
-   // for (int i = 0; i < sec_cnt; ++i) {
-   // sys_write(1, buf, 512);
-   // buf += 512;
-   // }
 
    int32_t fd = sys_open(filename, O_CREAT|O_RDWR);
    if (fd == -1) {
@@ -72,10 +70,24 @@ void loadelf2fs(uint32_t sec_base, uint32_t file_size, char* filename) {
 
 void init(void) {
    pid_t ret_pid = fork();
+
+   char buf[17];
    if(ret_pid) {
-      while (1);
-   } else {
+      int status, child_pid;
+      printf("init: hello\n");
+      while (1) {
+         child_pid = wait(&status);
+         printf("init: recieve %d, (status: %d)\n", child_pid, status);
+      }
+   } 
+   else {
+      // getname(name_buf);
+      // printf("shell pid is %d, name is %s", getpid(), name_buf);
+      // strcpy(running_thread()->name, "shell");
+      printf("shell: hello\n");
       shell_run();
    }
+
+   printf("init fork spin\n");
    while(1);
 }

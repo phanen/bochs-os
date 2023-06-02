@@ -186,7 +186,7 @@ int32_t sys_execv(const char* path, const char* argv[]) {
   // args
   intr_0_stack->ebx = (int32_t)argv;
   intr_0_stack->ecx = argc;
-  printk("path %s %x\n", path, entry_point);
+  // printk("path %s %x\n", path, entry_point);
 
   intr_0_stack->eip = (void*)entry_point;
   // intr_0_stack->eip = (void*)(0x08049030);
