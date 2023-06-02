@@ -11,6 +11,7 @@
 #include "fork.h"
 #include "exec.h"
 #include "wait_exit.h"
+#include "pipe.h"
 
 #define SYSCALL_NR 32
 
@@ -56,6 +57,7 @@ void syscall_init() {
 
   syscall_table[SYS_WAIT]       = sys_wait;
   syscall_table[SYS_EXIT]       = sys_exit;
+  syscall_table[SYS_PIPE]       = sys_pipe;
 
   put_str("syscall_init done\n");
 }

@@ -33,6 +33,7 @@ enum syscall_nr {
   SYS_EXECV,
   SYS_WAIT,
   SYS_EXIT,
+  SYS_PIPE,
 };
 
 // write -> int 0x80
@@ -69,5 +70,7 @@ int execv(const char* pathname, char** argv);
 
 void exit(int32_t status);
 int16_t wait(int32_t* status);
+
+int32_t pipe(int32_t pipefd[2]);
 
 #endif
