@@ -46,6 +46,10 @@ $(BUILD_DIR)/fork-exec.out: $(BUILD_DIR)/fork-exec.o $(LIBS)
 $(BUILD_DIR)/cat.out: $(BUILD_DIR)/cat.o $(LIBS)
 	$(LD) $(LDFLAGS) $^ -o $@
 
+$(BUILD_DIR)/pipe.out: $(BUILD_DIR)/pipe.o $(LIBS)
+	$(LD) $(LDFLAGS) $^ -o $@
+
+
 $(BUILD_DIR)/start.o: start.S
 	$(AS) $(ASFLAGS) $< -o $@
 
@@ -58,6 +62,9 @@ $(BUILD_DIR)/fork-exec.o: fork-exec.c
 $(BUILD_DIR)/cat.o: cat.c
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
+$(BUILD_DIR)/pipe.o: pipe.c
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
+
 # nasm -f elf ./start.S -o ./start.o
 
 # load to raw disk
@@ -65,6 +72,7 @@ load:
 	dd if=$(BUILD_DIR)/hello.out of=../master-hd60M.img bs=512 count=40 seek=300 conv=notrunc
 	dd if=$(BUILD_DIR)/fork-exec.out of=../master-hd60M.img bs=512 count=40 seek=400 conv=notrunc
 	dd if=$(BUILD_DIR)/cat.out of=../master-hd60M.img bs=512 count=40 seek=500 conv=notrunc
+	dd if=$(BUILD_DIR)/pipe.out of=../master-hd60M.img bs=512 count=40 seek=500 conv=notrunc
 
 clean:
 	rm -rf -- $(BUILD_DIR)/*

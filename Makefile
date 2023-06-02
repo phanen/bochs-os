@@ -70,6 +70,7 @@ OBJS = $(BUILD_DIR)/main.o \
 	   $(BUILD_DIR)/path_parse.o \
 	   $(BUILD_DIR)/exec.o \
 	   $(BUILD_DIR)/wait_exit.o \
+	   $(BUILD_DIR)/pipe.o \
 
 # FIXME: dependencies not complete, it may cause unexpected error
 #	for example:
@@ -198,6 +199,9 @@ $(BUILD_DIR)/exec.o: userprog/exec.c userprog/exec.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/wait_exit.o: userprog/wait_exit.c userprog/wait_exit.h
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/pipe.o: shell/pipe.c shell/pipe.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 # https://stackoverflow.com/questions/816370/how-do-you-force-a-makefile-to-rebuild-a-target
