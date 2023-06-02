@@ -45,6 +45,7 @@ OBJS = $(BUILD_DIR)/main.o \
 	   $(BUILD_DIR)/bitmap.o \
 	   $(BUILD_DIR)/memory.o \
 	   $(BUILD_DIR)/thread.o \
+	   $(BUILD_DIR)/pid.o \
 	   $(BUILD_DIR)/list.o \
 	   $(BUILD_DIR)/switch.o \
 	   $(BUILD_DIR)/sync.o \
@@ -124,6 +125,9 @@ $(BUILD_DIR)/thread.o: thread/thread.c thread/thread.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/sync.o: thread/sync.c thread/sync.h
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/pid.o: thread/pid.c thread/pid.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/list.o: lib/kernel/list.c lib/kernel/list.h
