@@ -1,9 +1,8 @@
 #include "stdio.h"
+#include "syscall.h"
 
-int main() {
-
+int main(int argc, char** argv) {
   printf("hello user world\n");
-
-  while(1);
+  execv(argv[0], argv);
   return 0;
 }
