@@ -184,9 +184,9 @@ void external_run() {
       return;
     }
     else {
-      for (char** p = argv; *p; ++p) {
-        printf(*p);
-      }
+      // for (char** p = argv; *p; ++p) {
+      //   printf(*p);
+      // }
       execv(argv[0], argv);
       printf("???\n");
     }

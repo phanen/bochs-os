@@ -161,7 +161,7 @@ int32_t sys_execv(const char* path, const char* argv[]) {
   }
 
   struct task_struct* cur = running_thread();
-  printk("bbb\n");
+
 
   // filename as proc name
   memcpy(cur->name, path, TASK_NAME_LEN);
