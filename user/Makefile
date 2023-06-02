@@ -33,6 +33,10 @@ all: $(BUILD_DIR)/hello.o \
 	 $(BUILD_DIR)/start.o \
 	 $(BUILD_DIR)/fork-exec.o \
 	 $(BUILD_DIR)/fork-exec.out \
+	 $(BUILD_DIR)/naive-crt.a
+
+$(BUILD_DIR)/naive-crt.a: $(LLIBS)
+	ar rcs $@ $^
 
 $(BUILD_DIR)/hello.o: hello.c
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
@@ -43,15 +47,14 @@ $(BUILD_DIR)/start.o: start.S
 $(BUILD_DIR)/fork-exec.o: fork-exec.c
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/hello.out: $(BUILD_DIR)/hello.o $(LLIBS)
+$(BUILD_DIR)/hello.out: $(BUILD_DIR)/hello.o $(BUILD_DIR)/naive-crt.a
 	$(LD) $(LDFLAGS) $^ -o $@
 
-$(BUILD_DIR)/fork-exec.out: $(BUILD_DIR)/fork-exec.o $(LLIBS)
+$(BUILD_DIR)/fork-exec.out: $(BUILD_DIR)/fork-exec.o $(BUILD_DIR)/naive-crt.a
 	$(LD) $(LDFLAGS) $^ -o $@
 
 
 # nasm -f elf ./start.S -o ./start.o
-# ar rcs simple_crt.a $OBJS start.o
 
 # load to raw disk
 load:
