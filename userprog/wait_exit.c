@@ -8,6 +8,61 @@
 #include "bitmap.h"
 #include "fs.h"
 
+ // free ppage -> free bitmap -> close all files
+//    care nothing about vpage
+static void release_prog_resource(struct task_struct* release_thread) {
+
+  uint32_t* pgdir_vaddr = release_thread->pgdir;
+
+  uint16_t user_pde_nr = 768;
+  uint16_t user_pte_nr = 1024;
+  uint32_t pte = 0;
+  uint32_t* v_pte_ptr = NULL;
+
+  uint32_t* cur_ptable = NULL;
+  uint32_t pg_phy_addr = 0;
+
+  // free all ppages (alloc by bitmap)
+  //    just search over page table
+  for (uint16_t pde_i = 0; pde_i < user_pde_nr; pde_i++) {
+
+    uint32_t cur_pde = *(pgdir_vaddr + pde_i);
+
+    if (!(cur_pde & 0x00000001))
+      continue;
+
+    cur_ptable = pte_ptr(pde_i << 22);
+
+    for (uint16_t pte_i = 0; pte_i < user_pte_nr; ++pte_i) {
+      pte = *(cur_ptable + pte_i);
+      if (!(pte & 0x00000001)) 
+        continue;
+
+      // free page frame
+      pg_phy_addr = pte & 0xfffff000;
+      free_a_phy_page(pg_phy_addr);
+    }
+
+    // free page frame for page table
+    pg_phy_addr = cur_pde & 0xfffff000;
+    free_a_phy_page(pg_phy_addr);
+  }
+
+  // free bitmap (recall that bitmap is alloced in memory)
+  uint32_t bitmap_pg_cnt = (release_thread->userprog_vaddr.vaddr_bitmap.btmp_bytes_len) / PG_SIZE;
+  uint8_t* user_vaddr_pool_bitmap = release_thread->userprog_vaddr.vaddr_bitmap.bits;
+  mfree_page(PF_KERNEL, user_vaddr_pool_bitmap, bitmap_pg_cnt);
+
+
+  // close all file
+  //      parent's file? links count?
+  for (uint8_t fd_i = 3; fd_i < MAX_FILES_OPEN_PER_PROC; fd_i++) {
+    if (release_thread->fd_table[fd_i] != -1) {
+      sys_close(fd_i);
+    }
+  }
+}
+
 // callback
 static bool find_child(struct list_elem* pelem, int32_t ppid) {
   struct task_struct* pthread = elem2entry(struct task_struct, all_list_tag, pelem);
