@@ -30,7 +30,9 @@ enum syscall_nr {
   SYS_GETCWD,
   SYS_CHDIR,
   SYS_PS,
-  SYS_EXECV
+  SYS_EXECV,
+  SYS_WAIT,
+  SYS_EXIT,
 };
 
 // write -> int 0x80
@@ -64,5 +66,8 @@ int32_t chdir(const char* path);
 void ps(void);
 
 int execv(const char* pathname, char** argv);
+
+void exit(int32_t status);
+int16_t wait(int32_t* status);
 
 #endif

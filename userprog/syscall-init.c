@@ -9,8 +9,8 @@
 #include "memory.h"
 #include "fs.h"
 #include "fork.h"
-
 #include "exec.h"
+#include "wait_exit.h"
 
 #define SYSCALL_NR 32
 
@@ -53,6 +53,9 @@ void syscall_init() {
   syscall_table[SYS_CHDIR]	= sys_chdir;
   syscall_table[SYS_PS]	        = sys_ps;
   syscall_table[SYS_EXECV]      = sys_execv;
+
+  syscall_table[SYS_WAIT]       = sys_wait;
+  syscall_table[SYS_EXIT]       = sys_exit;
 
   put_str("syscall_init done\n");
 }
