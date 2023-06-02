@@ -38,7 +38,7 @@ int main() {
    loadelf2fs(300, 18088, "/hello");
    loadelf2fs(400, 18092, "/fork-exec");
    loadelf2fs(500, 18084, "/cat");
-   loadelf2fs(500, 18084, "/pipe");
+   loadelf2fs(600, 18084, "/pipe");
 
    int fd = sys_open("/file0", O_CREAT|O_RDWR);
    sys_write(fd, "hello world\nhello world again\n", 30);
