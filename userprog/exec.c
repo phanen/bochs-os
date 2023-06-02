@@ -5,6 +5,7 @@
 #include "string.h"
 #include "global.h"
 #include "memory.h"
+#include "assert.h"
 
 #define ET_EXEC 2
 #define EM_386  3
@@ -151,6 +152,7 @@ die:
 int32_t sys_execv(const char* path, const char* argv[]) {
   uint32_t argc = 0;
 
+  assert(argv);
   while (argv[argc]) {
     argc++;
   }
@@ -173,6 +175,8 @@ int32_t sys_execv(const char* path, const char* argv[]) {
   intr_0_stack->ebx = (int32_t)argv;
   intr_0_stack->ecx = argc;
   intr_0_stack->eip = (void*)entry_point;
+  // intr_0_stack->eip = (void*)(0x08049030);
+  // intr_0_stack->eip = (void*)(0x080492c0);
 
   intr_0_stack->esp = (void*)0xc0000000;
 

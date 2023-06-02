@@ -1,6 +1,7 @@
 #include "stdio.h"
 #include "syscall.h"
 #include "string.h"
+#include "assert.h"
 
 int main(int argc, char** argv) {
 
@@ -20,6 +21,8 @@ int main(int argc, char** argv) {
   }
   else {
     char abs_path[512] = {0};
+
+    assert(argv[1]);
     printf("\n      I'm child prog, my pid:%d, I will exec %s right now\n", getpid(), argv[1]);
     if (argv[1][0] != '/') {
       getcwd(abs_path, 512);
@@ -35,4 +38,3 @@ int main(int argc, char** argv) {
   while(1);
   return 0;
 }
-
