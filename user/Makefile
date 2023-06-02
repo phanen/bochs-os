@@ -30,24 +30,12 @@ LIBS = $(BUILD_DIR)/naive-crt.a
 
 # OBJS = $(BUILD_DIR)/main.o
 
-all: $(BUILD_DIR)/hello.o \
-	 $(BUILD_DIR)/hello.out \
-	 $(BUILD_DIR)/start.o \
-	 $(BUILD_DIR)/fork-exec.o \
+all: $(BUILD_DIR)/hello.out \
 	 $(BUILD_DIR)/fork-exec.out \
-	 $(BUILD_DIR)/naive-crt.a
+	 $(BUILD_DIR)/cat.out \
 
 $(BUILD_DIR)/naive-crt.a: $(OBJS)
 	ar rcs $@ $^
-
-$(BUILD_DIR)/hello.o: hello.c
-	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
-
-$(BUILD_DIR)/start.o: start.S
-	$(AS) $(ASFLAGS) $< -o $@
-
-$(BUILD_DIR)/fork-exec.o: fork-exec.c
-	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/hello.out: $(BUILD_DIR)/hello.o $(LIBS)
 	$(LD) $(LDFLAGS) $^ -o $@
@@ -55,6 +43,20 @@ $(BUILD_DIR)/hello.out: $(BUILD_DIR)/hello.o $(LIBS)
 $(BUILD_DIR)/fork-exec.out: $(BUILD_DIR)/fork-exec.o $(LIBS)
 	$(LD) $(LDFLAGS) $^ -o $@
 
+$(BUILD_DIR)/cat.out: $(BUILD_DIR)/cat.o $(LIBS)
+	$(LD) $(LDFLAGS) $^ -o $@
+
+$(BUILD_DIR)/start.o: start.S
+	$(AS) $(ASFLAGS) $< -o $@
+
+$(BUILD_DIR)/hello.o: hello.c
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/fork-exec.o: fork-exec.c
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/cat.o: cat.c
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 # nasm -f elf ./start.S -o ./start.o
 
@@ -62,6 +64,7 @@ $(BUILD_DIR)/fork-exec.out: $(BUILD_DIR)/fork-exec.o $(LIBS)
 load:
 	dd if=$(BUILD_DIR)/hello.out of=../master-hd60M.img bs=512 count=40 seek=300 conv=notrunc
 	dd if=$(BUILD_DIR)/fork-exec.out of=../master-hd60M.img bs=512 count=40 seek=400 conv=notrunc
+	dd if=$(BUILD_DIR)/cat.out of=../master-hd60M.img bs=512 count=40 seek=500 conv=notrunc
 
 clean:
 	rm -rf -- $(BUILD_DIR)/*
