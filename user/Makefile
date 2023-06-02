@@ -18,7 +18,7 @@ CFLAGS = -m32 -static -fno-builtin -nostdlib -fno-stack-protector \
 		 # -Wl -O2
 		 # -W -Wstrict-prototypes -Wmissing-prototypes
 
-LDFLAGS = -e main -static -m elf_i386
+LDFLAGS = -static -m elf_i386
 
 LLIBS = $(BUILD_DIR)/start.o \
 		$(LIB_DIR)/string.o \
@@ -33,10 +33,10 @@ all: $(BUILD_DIR)/hello.o \
 	 $(BUILD_DIR)/start.o \
 	 $(BUILD_DIR)/fork-exec.o \
 	 $(BUILD_DIR)/fork-exec.out \
-	 $(BUILD_DIR)/naive-crt.a
+	 # $(BUILD_DIR)/naive-crt.a
 
-$(BUILD_DIR)/naive-crt.a: $(LLIBS)
-	ar rcs $@ $^
+# $(BUILD_DIR)/naive-crt.a: $(LLIBS)
+# 	ar rcs $@ $^
 
 $(BUILD_DIR)/hello.o: hello.c
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
@@ -47,10 +47,10 @@ $(BUILD_DIR)/start.o: start.S
 $(BUILD_DIR)/fork-exec.o: fork-exec.c
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/hello.out: $(BUILD_DIR)/hello.o $(BUILD_DIR)/naive-crt.a
+$(BUILD_DIR)/hello.out: $(BUILD_DIR)/hello.o $(LLIBS) # $(BUILD_DIR)/naive-crt.a
 	$(LD) $(LDFLAGS) $^ -o $@
 
-$(BUILD_DIR)/fork-exec.out: $(BUILD_DIR)/fork-exec.o $(BUILD_DIR)/naive-crt.a
+$(BUILD_DIR)/fork-exec.out: $(BUILD_DIR)/fork-exec.o $(LLIBS) # $(BUILD_DIR)/naive-crt.a
 	$(LD) $(LDFLAGS) $^ -o $@
 
 
