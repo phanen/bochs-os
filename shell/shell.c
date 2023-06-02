@@ -10,10 +10,12 @@
 #include "shell.h"
 #include "builtin_cmd.h"
 #include "path_parse.h"
-// #include "wait_exit.h"
+#include "wait_exit.h"
 
 // NOTE: shell aims to be ported into userland
 //    do not use syslevel api, (e.g. begin with `sys_`)
+
+extern char* name_buf;
 
 #define CMD_LEN           MAX_PATH_LEN
 #define MAX_ARG_NR        16
@@ -166,17 +168,8 @@ int32_t builtin_switch() {
 void external_run() {
 
   int32_t pid = fork();
-  if (pid) {
-    // force parent hang
-    //    otherwise, `final_path` is a global var in kernel
-    //    may be wiped out before child exec
 
-    // exit(-1);
-    printf("father\n");
-    while(1);
-  }
-  else {
-
+  if (!pid) {
     make_clear_abs_path(argv[0], final_path);
     argv[0] = final_path;
 
@@ -184,13 +177,14 @@ void external_run() {
     memset(&file_stat, 0, sizeof(struct stat));
     if (stat(argv[0], &file_stat) == -1) {
       printf("external_run: cannot access %s: No such file or directory\n", argv[0]);
-      return;
+      exit(-1);
     }
-    printf("child\n");
-
     execv(argv[0], argv);
   }
 
+  int32_t status, child_pid;
+  child_pid = wait(&status);
+  printf("shell recieve %d, (status: %d)\n", child_pid, status);
 }
 
 void shell_run() {
@@ -201,6 +195,7 @@ void shell_run() {
   while (1) {
 
     print_prompt();
+    // printf("shell pid is %d, name is %s", getpid(), name_buf);
 
     // read one line input
     memset(cmd_line, 0, CMD_LEN);
