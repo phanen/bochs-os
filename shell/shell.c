@@ -80,7 +80,7 @@ static void readline(char* buf, int32_t count) {
 
 // tokenize cmd_str into argv
 //      warn: in-place
-static int32_t cmd_parse(char* cmd_str, char** argv, char split) {
+static int32_t cmd_parse(char* cmd_str, char split) {
 
   assert(cmd_str != NULL);
 
@@ -184,13 +184,8 @@ void external_run() {
       return;
     }
     else {
-      // for (char** p = argv; *p; ++p) {
-      //   printf(*p);
-      // }
-      execv(argv[0], argv);
-      printf("???\n");
+      execv(argv[0], argv); // cannot return now
     }
-    // while(1);
   }
 
 }
@@ -198,13 +193,14 @@ void external_run() {
 void shell_run() {
 
   cwd_cache[0] = '/';
+  cwd_cache[1] = 0;
 
   while (1) {
 
     print_prompt();
 
-    memset(cmd_line, 0, CMD_LEN);
     // read one line input
+    memset(cmd_line, 0, CMD_LEN);
     readline(cmd_line, CMD_LEN);
 
     // no input
@@ -212,15 +208,19 @@ void shell_run() {
       continue;
     }
 
-    // tokenize
-    argc = -1;
-    argc = cmd_parse(cmd_line, argv, ' ');
+    // tokenize into argv
+    for (uint32_t i = 0; i < MAX_ARG_NR; i++) {
+      argv[i] = NULL;
+    }
+    argc = cmd_parse(cmd_line, ' ');
     if (argc == -1) {
       printf("num of arguments exceed %d\n", MAX_ARG_NR);
       continue;
     }
 
-    if (-2 == builtin_switch())
+    // at lease argv[0] is not null
+    int32_t bret = builtin_switch();
+    if (bret == -2)
       external_run();
   }
   panic("shell_run: should not be here");
