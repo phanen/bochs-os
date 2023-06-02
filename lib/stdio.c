@@ -68,6 +68,7 @@ uint32_t vsprintf(char* str, const char* format, va_list ap) {
 
       case 's': // string
         arg_str = va_arg(ap, char*);
+        assert(arg_str);
         strcpy(bp, arg_str);
         bp += strlen(arg_str);
         cur_char = *(++fp);

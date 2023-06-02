@@ -30,9 +30,8 @@ int memcmp(const void* a_, const void* b_, uint32_t size) {
   return 0;
 }
 
-// end by null, so where is NULL defined...
 char* strcpy(char* dst_, const char* src_) {
-  assert(dst_ != NULL && src_ != NULL); // may allow src = NULL?
+  assert(dst_ != NULL && src_ != NULL);
   char* r = dst_;
   while ((*dst_++ = *src_++)) {}
   return r;
