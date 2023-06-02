@@ -35,10 +35,13 @@ int main() {
    cls_screen();
    console_put_str("[phanium@bochs /]$ ");
 
-   loadelf2fs(300, 18064, "/hello");
-   loadelf2fs(400, 18068, "/fork-exec");
-   loadelf2fs(500, 18064, "/cat");
+   loadelf2fs(300, 18088, "/hello");
+   loadelf2fs(400, 18092, "/fork-exec");
+   loadelf2fs(500, 18084, "/cat");
+   loadelf2fs(500, 18084, "/pipe");
 
+   int fd = sys_open("/file0", O_CREAT|O_RDWR);
+   sys_write(fd, "hello world\nhello world again\n", 30);
    // printf("main pid is %d\n", getpid());
 
    thread_exit(running_thread(), true);
