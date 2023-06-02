@@ -4,6 +4,7 @@
 #include "stdint.h"
 #include "list.h"
 #include "memory.h"
+#include "pid.h"
 
 #define TASK_NAME_LEN 16
 
@@ -11,8 +12,6 @@
 
 // template function type for thread
 typedef void thread_func(void*);
-
-typedef uint16_t pid_t;
 
 // status for task
 enum task_status {

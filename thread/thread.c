@@ -10,6 +10,7 @@
 #include "sync.h"
 #include "file.h"
 #include "stdio.h"
+#include "pid.h"
 
 extern void init(void);
 
@@ -25,15 +26,6 @@ static struct list_elem* thread_tag; // just a buffer
 struct lock pid_lock;
 
 extern void switch_to(struct task_struct* cur, struct task_struct* next);
-
-// alloc pid for proc
-static pid_t allocate_pid() {
-  static pid_t next_pid = 0;
-  lock_acquire(&pid_lock);
-  next_pid++;
-  lock_release(&pid_lock);
-  return next_pid;
-}
 
 // a patch, backward compatible
 pid_t fork_pid() {
@@ -292,14 +284,14 @@ static bool elem2thread_info(struct list_elem* pelem, int arg UNUSED) {
   // strlen(max valid info string) < 15 = 16 - 1
   char out_pad[16] = {0};
 
-  // write 15 char 
+  // write 15 char
   //      (embed a attr, left align, pad with space)
   pad_print(out_pad, 16, &pthread->pid, 'd');
 
   if (pthread->parent_pid == -1) {
     pad_print(out_pad, 16, "NULL", 's');
-  } 
-  else { 
+  }
+  else {
     pad_print(out_pad, 16, &pthread->parent_pid, 'd');
   }
 
