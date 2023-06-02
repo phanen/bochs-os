@@ -335,8 +335,55 @@ void sys_ps() {
   list_traversal(&thread_all_list, elem2thread_info, 0);
 }
 
+// free the pcb, pgdir, rm it from list
+void thread_exit(struct task_struct* pthread, bool need_schedule) {
+
+  intr_disable();
+
+  pthread->status = TASK_DIED;
+
+  // pgdir
+  if (pthread->pgdir) {
+    mfree_page(PF_KERNEL, pthread->pgdir, 1);
+  }
+
+  if (elem_find(&thread_ready_list, &pthread->general_tag)) {
+    list_remove(&pthread->general_tag);
+  }
+  list_remove(&pthread->all_list_tag);
+
+  // pcb
+  if (pthread != main_thread) {
+    mfree_page(PF_KERNEL, pthread, 1);
+  }
+
+  release_pid(pthread->pid);
+
+  if (need_schedule) {
+    schedule();
+    PANIC("thread_exit: should not be here\n");
+  }
+}
+
+static bool pid_check(struct list_elem* pelem, int32_t pid) {
+  struct task_struct* pthread = elem2entry(struct task_struct, all_list_tag, pelem);
+  if (pthread->pid == pid) {
+    return true;
+  }
+  return false;
+}
+
+struct task_struct* pid2thread(int32_t pid) {
+  struct list_elem* pelem = list_traversal(&thread_all_list, pid_check, pid);
+  if (pelem == NULL) {
+    return NULL;
+  }
+  struct task_struct* pthread = elem2entry(struct task_struct, all_list_tag, pelem);
+  return pthread;
+}
+
 // init thread (thread lists and main thread)
-void thread_init(void) {
+void thread_init() {
   put_str("thread_init start\n");
   list_init(&thread_ready_list);
   list_init(&thread_all_list);

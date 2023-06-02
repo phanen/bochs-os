@@ -128,7 +128,10 @@ void thread_init();
 void thread_block(enum task_status stat);
 void thread_unblock(struct task_struct* pthread);
 
-void thread_yield(void);
+void thread_yield();
 
+void thread_exit(struct task_struct* pthread, bool need_schedule);
+
+struct task_struct* pid2thread(int32_t pid);
 
 #endif
