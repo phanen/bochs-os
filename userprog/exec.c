@@ -98,10 +98,12 @@ static int32_t load(const char* pathname) {
 
   int32_t fd = sys_open(pathname, O_RDONLY);
   if (fd == -1) {
+    printk("load: fail to open file\n");
     return -1;
   }
 
   if (sys_read(fd, &elf_header, sizeof(struct Elf32_Ehdr)) != sizeof(struct Elf32_Ehdr)) {
+    printk("load: fail to read\n");
     goto die;
   }
 
@@ -114,6 +116,14 @@ static int32_t load(const char* pathname) {
     || elf_header.e_version != 1 \
     || elf_header.e_phnum > 1024 \
     || elf_header.e_phentsize != sizeof(struct Elf32_Phdr)) {
+    printk("load: file type doesn't match\n");
+    printk("%x %x %x %x %x",
+           elf_header.e_type,
+           elf_header.e_machine,
+           elf_header.e_version,
+           elf_header.e_phnum,
+           elf_header.e_phentsize);
+
     goto die;
   }
 
@@ -133,6 +143,7 @@ static int32_t load(const char* pathname) {
     // load loadable seg
     if (PT_LOAD == prog_header.p_type) {
       if (!segment_load(fd, prog_header.p_offset, prog_header.p_filesz, prog_header.p_vaddr)) {
+        printk("load: segment_load error\n");
         goto die;
       }
     }
@@ -159,6 +170,7 @@ int32_t sys_execv(const char* path, const char* argv[]) {
 
   int32_t entry_point = load(path);
   if (entry_point == -1) {
+    printk("sys_execv: error to load\n");
     return -1;
   }
 
@@ -174,6 +186,8 @@ int32_t sys_execv(const char* path, const char* argv[]) {
   // args
   intr_0_stack->ebx = (int32_t)argv;
   intr_0_stack->ecx = argc;
+  printk("path %s %x\n", path, entry_point);
+
   intr_0_stack->eip = (void*)entry_point;
   // intr_0_stack->eip = (void*)(0x08049030);
   // intr_0_stack->eip = (void*)(0x080492c0);
