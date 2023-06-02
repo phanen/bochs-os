@@ -21,9 +21,6 @@ struct list thread_ready_list;  // TASK_READY task
 struct list thread_all_list;    // all tasks
 
 static struct list_elem* thread_tag; // just a buffer
-//  TODO: why not use local var?
-
-struct lock pid_lock;
 
 extern void switch_to(struct task_struct* cur, struct task_struct* next);
 
@@ -343,7 +340,8 @@ void thread_init(void) {
   put_str("thread_init start\n");
   list_init(&thread_ready_list);
   list_init(&thread_all_list);
-  lock_init(&pid_lock);
+
+  pid_pool_init();
 
   // init process has pid 1
   //    early than kernel main
