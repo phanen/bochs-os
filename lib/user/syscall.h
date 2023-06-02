@@ -7,7 +7,6 @@
 
 enum syscall_nr {
   SYS_GETPID,
-  SYS_WRITE,
   SYS_MALLOC,
   SYS_FREE,
   SYS_FORK,
@@ -16,6 +15,7 @@ enum syscall_nr {
 
   SYS_OPEN,
   SYS_CLOSE,
+  SYS_WRITE,
   SYS_READ,
   SYS_LSEEK,
   SYS_UNLINK,
@@ -34,10 +34,7 @@ enum syscall_nr {
 };
 
 // write -> int 0x80
-//       -> idt (c)
-//       -> intr entry in intr_entry_table (asm)
-//       -> syscall_handler (asm)
-//       -> syscall_table (index = eax)
+//       -> syscall_handler -> syscall_table (index = eax)
 //       -> sys_write
 
 uint32_t getpid();
