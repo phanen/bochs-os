@@ -14,8 +14,7 @@
 
 #define SYSCALL_NR 32
 
-typedef void* syscall;
-syscall syscall_table[SYSCALL_NR];
+void* syscall_table[SYSCALL_NR];
 
 uint32_t sys_getpid() {
   return running_thread()->pid;

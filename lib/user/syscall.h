@@ -5,8 +5,9 @@
 // #include "thread.h"
 #include "fs.h"
 
-enum SYSCALL_NR {
+enum syscall_nr {
   SYS_GETPID,
+  SYS_WRITE,
   SYS_MALLOC,
   SYS_FREE,
   SYS_FORK,
@@ -15,7 +16,6 @@ enum SYSCALL_NR {
 
   SYS_OPEN,
   SYS_CLOSE,
-  SYS_WRITE,
   SYS_READ,
   SYS_LSEEK,
   SYS_UNLINK,
@@ -30,7 +30,7 @@ enum SYSCALL_NR {
   SYS_GETCWD,
   SYS_CHDIR,
   SYS_PS,
-  SYS_EXECV,
+  SYS_EXECV
 };
 
 // write -> int 0x80
