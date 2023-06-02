@@ -10,9 +10,10 @@
 #include "shell.h"
 #include "builtin_cmd.h"
 #include "path_parse.h"
+// #include "wait_exit.h"
 
-// NOTE: this is a shell in userland
-//    we don't use any api begin with `FUC_`
+// NOTE: shell aims to be ported into userland
+//    do not use syslevel api, (e.g. begin with `sys_`)
 
 #define CMD_LEN           MAX_PATH_LEN
 #define MAX_ARG_NR        16
@@ -26,7 +27,7 @@ char final_path[MAX_PATH_LEN] = {0};
 char* argv[MAX_ARG_NR];
 int32_t argc = -1;
 
-void print_prompt(void) {
+static void print_prompt(void) {
   printf("[phanium@bochs %s]$ ", cwd_cache);
 }
 
@@ -124,7 +125,6 @@ static int32_t cmd_parse(char* cmd_str, char split) {
   return argc;
 }
 
-
 int32_t builtin_switch() {
 
   memset(final_path, 0, MAX_PATH_LEN);
@@ -170,6 +170,9 @@ void external_run() {
     // force parent hang
     //    otherwise, `final_path` is a global var in kernel
     //    may be wiped out before child exec
+
+    // exit(-1);
+    printf("father\n");
     while(1);
   }
   else {
@@ -183,9 +186,9 @@ void external_run() {
       printf("external_run: cannot access %s: No such file or directory\n", argv[0]);
       return;
     }
-    else {
-      execv(argv[0], argv); // cannot return now
-    }
+    printf("child\n");
+
+    execv(argv[0], argv);
   }
 
 }
@@ -220,6 +223,7 @@ void shell_run() {
 
     // at lease argv[0] is not null
     int32_t bret = builtin_switch();
+
     if (bret == -2)
       external_run();
   }
