@@ -25,7 +25,7 @@ int ioq_full(struct ioqueue* ioq) {
    // so... why we need intr off here?
    // proof: e.g.
    //    first you get: next_pos(ioq->head)
-   //    then the schedule happends: 
+   //    then the schedule happends:
    //    when back here: ioq->head has changes (may point to anywhere...
 
    // brief: we want the following statement be atom
@@ -109,4 +109,15 @@ void ioq_putchar(struct ioqueue* ioq, char byte) {
    if (ioq->consumer != NULL) {
       ioq_wake(&ioq->consumer);
    }
+}
+
+uint32_t ioq_length(struct ioqueue* ioq) {
+   uint32_t len = 0;
+   if (ioq->head >= ioq->tail) {
+      len = ioq->head - ioq->tail;
+   }
+   else {
+      len = ioq->head - ioq->tail + bufsize;
+   }
+   return len;
 }
