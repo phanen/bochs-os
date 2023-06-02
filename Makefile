@@ -224,8 +224,8 @@ mbr-disasm: mbr.bin
 	# ndisasm -b16 -o7c00h -a -s7c3eh mbr.bin
 
 clean:
-	rm -rf -- *.{bin,o,out} -rf
 	rm -rf -- $(BUILD_DIR)/*
+	# rm -rf -- *.{bin,o,out} -rf
 	# $(MAKE) -C ./user clean
 
 dep:

@@ -76,8 +76,7 @@ int32_t close(int32_t fd) {
   return _syscall1(SYS_CLOSE, fd);
 }
 
-// naive write (only write to console)
-uint32_t write(int32_t fd, const void* buf, uint32_t count) {
+int32_t write(int32_t fd, const void* buf, uint32_t count) {
   return _syscall3(SYS_WRITE, fd, buf, count);
 }
 

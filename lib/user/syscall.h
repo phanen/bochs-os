@@ -34,9 +34,11 @@ enum SYSCALL_NR {
 };
 
 // write -> int 0x80
-//  -> idt (c) -> intrientry in intr_entry_table (asm)
-//  -> idt_table (asm) -> syscall_handler (asm)
-//  -> syscall_table (index = eax) -> sys_write
+//       -> idt (c)
+//       -> intr entry in intr_entry_table (asm)
+//       -> syscall_handler (asm)
+//       -> syscall_table (index = eax)
+//       -> sys_write
 
 uint32_t getpid();
 void* malloc(uint32_t size);
@@ -48,7 +50,7 @@ void clear();
 
 int32_t open(char* pathname, uint8_t flag);
 int32_t close(int32_t fd);
-uint32_t write(int32_t fd, const void* buf, uint32_t count);
+int32_t write(int32_t fd, const void* buf, uint32_t count);
 int32_t read(int32_t fd, void* buf, uint32_t count);
 int32_t lseek(int32_t fd, int32_t offset, uint8_t whence);
 int32_t unlink(const char* pathname);
