@@ -31,6 +31,8 @@ int32_t get_free_slot_in_global(void) {
 // map local_fd to global_fd (in pcb fd table)
 int32_t pcb_fd_install(int32_t globa_fd) {
    struct task_struct* cur = running_thread();
+
+   //
    uint8_t local_fd = 3;
    // find a free slot, then map it
    for (; local_fd < MAX_FILES_OPEN_PER_PROC; local_fd++) {

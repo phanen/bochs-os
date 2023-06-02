@@ -9,10 +9,11 @@
 // max file num, also max file open num
 #define MAX_FILE_OPEN 32
 
+// mutiplex for file/pipe
 struct file {
-   uint32_t fd_pos;  // 0, size-1
-   uint32_t fd_flag;
-   struct inode* fd_inode;
+   uint32_t fd_pos;           // 0, size-1
+   uint32_t fd_flag;          // r/w/c, pipe: ffff
+   struct inode* fd_inode;    // inode buf for pipe
 };
 
 extern struct file file_table[MAX_FILE_OPEN];
