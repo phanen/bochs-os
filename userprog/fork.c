@@ -147,7 +147,8 @@ static int32_t copy_process(struct task_struct* child_thread, struct task_struct
   //    and set retval to 0 for child
   build_child_stack(child_thread);
 
-  // child and parent share the same `pcb->fd_table` now
+  // child and parent have the same copy of `pcb->fd_table` now
+  // FIXME: `close` child file, also `close` parent file??
   update_inode_open_cnts(child_thread);
 
   mfree_page(PF_KERNEL, buf_page, 1);
