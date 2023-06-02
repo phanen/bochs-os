@@ -30,10 +30,14 @@ int main() {
    init_all();
    cls_screen();
 
-   // loadelf2fs(300, 13928, "/hello");
-   // loadelf2fs(400, 18028, "/fork-exec");
+   // loadelf2fs(300, 13888, "/hello");
+   // loadelf2fs(400, 17988, "/fork-exec");
 
-   loadelf2fs(300, 4488, "/hello");
+   loadelf2fs(300, 18024, "/hello");
+   loadelf2fs(400, 18028, "/fork-exec");
+
+   // loadelf2fs(300, 4488, "/a");
+   // loadelf2fs(300, 4972, "/a");
 
    console_put_str("[phanium@bochs /]$ ");
    // shell_run();
@@ -50,8 +54,8 @@ void loadelf2fs(uint32_t sec_base, uint32_t file_size, char* filename) {
    ide_read(sda, sec_base, buf, sec_cnt);
 
    // for (int i = 0; i < sec_cnt; ++i) {
-      // sys_write(1, buf, 512);
-      // buf += 512;
+   // sys_write(1, buf, 512);
+   // buf += 512;
    // }
 
    int32_t fd = sys_open(filename, O_CREAT|O_RDWR);
