@@ -1,5 +1,5 @@
-#ifndef __SHELL_BUILDIN_CMD_H
-#define __SHELL_BUILDIN_CMD_H
+#ifndef __SHELL_BUILTIN_CMD_H
+#define __SHELL_BUILTIN_CMD_H
 
 #include "stdint.h"
 
