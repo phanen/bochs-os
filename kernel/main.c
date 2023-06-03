@@ -69,6 +69,7 @@ void loadelf2fs(uint32_t sec_base, uint32_t file_size, char* filename) {
       printk("file write error!\n");
       while(1);
    }
+   sys_close(fd);
 }
 
 void init(void) {
