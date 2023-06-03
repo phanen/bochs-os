@@ -19,6 +19,7 @@
 
 #include "shell.h"
 #include "keyboard.h"
+#include "io.h"
 
 char name_buf[TASK_NAME_LEN];
 
@@ -35,13 +36,15 @@ int main() {
    cls_screen();
    console_put_str("[phanium@bochs /]$ ");
 
-   loadelf2fs(300, 18088, "/hello");
-   loadelf2fs(400, 18092, "/fork-exec");
-   loadelf2fs(500, 18084, "/cat");
-   loadelf2fs(600, 18084, "/pipe");
+
+   loadelf2fs(300, 25000, "/hello");
+   loadelf2fs(400, 25000, "/fork-exec");
+   loadelf2fs(500, 25000, "/cat");
+   loadelf2fs(600, 25000, "/pipe");
+   loadelf2fs(700, 25000, "/echo");
 
    int fd = sys_open("/file0", O_CREAT|O_RDWR);
-   sys_write(fd, "hello world\nhello world again\n", 30);
+   sys_write(fd, "hello world", 11);
    // printf("main pid is %d\n", getpid());
 
    thread_exit(running_thread(), true);
@@ -56,9 +59,8 @@ void loadelf2fs(uint32_t sec_base, uint32_t file_size, char* filename) {
    uint32_t sec_cnt = DIV_ROUND_UP(file_size, SECTOR_SIZE);
    struct disk* sda = &channels[0].devices[0];
 
-   void* buf = sys_malloc(file_size);
+   void* buf = sys_malloc(sec_cnt * SECTOR_SIZE);
    ide_read(sda, sec_base, buf, sec_cnt);
-
    int32_t fd = sys_open(filename, O_CREAT|O_RDWR);
    if (fd == -1) {
       printk("open error");
