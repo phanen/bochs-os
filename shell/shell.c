@@ -127,7 +127,7 @@ static int32_t cmd_parse(char* cmd_str, char split) {
   return argc;
 }
 
-int32_t builtin_switch() {
+int32_t builtin_run() {
 
   memset(final_path, 0, MAX_PATH_LEN);
 
@@ -187,6 +187,63 @@ void external_run() {
   printf("shell recieve %d, (status: %d)\n", child_pid, status);
 }
 
+int32_t cmd_run () {
+  // at lease argv[0] is not null
+  int32_t builtin_ok = builtin_run();
+  if (builtin_ok != -2) {
+    return builtin_ok;
+  }
+
+  external_run();
+  return 0;
+}
+
+int32_t pipe_run() {
+
+  char* pipe_sym = strchr(cmd_line, '|');
+  if (!pipe_sym) { // no a pipe cmd
+    return -2;
+  }
+
+  int32_t fd[2] = {-1};
+  pipe(fd);
+
+  // write to pipe
+  dup2(fd[1], 1);
+
+  // trunc left part
+  char* each_cmd = cmd_line;
+  pipe_sym = strchr(each_cmd, '|');
+  *pipe_sym = 0;
+  argc = cmd_parse(each_cmd, ' ');
+  cmd_run();
+
+  // read from pipe
+  dup2(fd[0], 0);
+
+  // from the first right part
+  each_cmd = pipe_sym + 1;
+  while ((pipe_sym = strchr(each_cmd, '|'))) {
+    *pipe_sym = 0;
+    argc = cmd_parse(each_cmd, ' ');
+    cmd_run();
+    each_cmd = pipe_sym + 1;
+  }
+
+  // resume stdout
+  dup2(1, 1);
+
+  argc = cmd_parse(each_cmd, ' ');
+  cmd_run();
+
+  // resume stdin
+  dup2(0, 0);
+
+  close(fd[0]);
+  close(fd[1]);
+  return 0;
+}
+
 void shell_run() {
 
   cwd_cache[0] = '/';
@@ -202,9 +259,14 @@ void shell_run() {
     readline(cmd_line, CMD_LEN);
 
     // no input
-    if (cmd_line[0] == 0) {
+    if (!*cmd_line) {
       continue;
     }
+
+    int32_t pipe_ok = pipe_run();
+    if (pipe_ok != -2) {
+      continue;
+    } // else, no pipe sym
 
     // tokenize into argv
     for (uint32_t i = 0; i < MAX_ARG_NR; i++) {
@@ -216,11 +278,7 @@ void shell_run() {
       continue;
     }
 
-    // at lease argv[0] is not null
-    int32_t bret = builtin_switch();
-
-    if (bret == -2)
-      external_run();
+    cmd_run();
   }
   panic("shell_run: should not be here");
 }
