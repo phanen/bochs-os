@@ -34,6 +34,7 @@ all: $(BUILD_DIR)/hello.out \
 	 $(BUILD_DIR)/fork-exec.out \
 	 $(BUILD_DIR)/cat.out \
 	 $(BUILD_DIR)/pipe.out \
+	 $(BUILD_DIR)/echo.out \
 
 $(BUILD_DIR)/naive-crt.a: $(OBJS)
 	ar rcs $@ $^
@@ -50,6 +51,8 @@ $(BUILD_DIR)/cat.out: $(BUILD_DIR)/cat.o $(LIBS)
 $(BUILD_DIR)/pipe.out: $(BUILD_DIR)/pipe.o $(LIBS)
 	$(LD) $(LDFLAGS) $^ -o $@
 
+$(BUILD_DIR)/echo.out: $(BUILD_DIR)/echo.o $(LIBS)
+	$(LD) $(LDFLAGS) $^ -o $@
 
 $(BUILD_DIR)/start.o: start.S
 	$(AS) $(ASFLAGS) $< -o $@
@@ -66,6 +69,8 @@ $(BUILD_DIR)/cat.o: cat.c
 $(BUILD_DIR)/pipe.o: pipe.c
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
+$(BUILD_DIR)/echo.o: echo.c
+	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
 MAX_ELF_SIZE = 50
 
@@ -75,6 +80,7 @@ load:
 	dd if=$(BUILD_DIR)/fork-exec.out of=../master-hd60M.img bs=512 count=$(MAX_ELF_SIZE) seek=400 conv=notrunc
 	dd if=$(BUILD_DIR)/cat.out of=../master-hd60M.img bs=512 count=$(MAX_ELF_SIZE) seek=500 conv=notrunc
 	dd if=$(BUILD_DIR)/pipe.out of=../master-hd60M.img bs=512 count=$(MAX_ELF_SIZE) seek=600 conv=notrunc
+	dd if=$(BUILD_DIR)/echo.out of=../master-hd60M.img bs=512 count=$(MAX_ELF_SIZE) seek=700 conv=notrunc
 
 clean:
 	rm -rf -- $(BUILD_DIR)/*
