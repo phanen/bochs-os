@@ -52,6 +52,10 @@ make kernel.bin loader.bin mbr.bin
 # load all these binary into the master disk
 make boot-master
 
+# load user process into master disk
+# the kernel will load them into fs
+make userelf
+
 # run the os in bochs
 make bochs
 ```
