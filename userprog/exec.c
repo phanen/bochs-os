@@ -89,12 +89,13 @@ static bool segment_load(int32_t fd, uint32_t offset, uint32_t filesz, uint32_t 
   return true;
 }
 
-// load a whole elf file
+
+// load the whole elf file
 static int32_t load(const char* pathname) {
 
-  struct Elf32_Ehdr elf_header;
-  struct Elf32_Phdr prog_header;
-  memset(&elf_header, 0, sizeof(struct Elf32_Ehdr));
+  struct Elf32_Ehdr ehdr;
+  struct Elf32_Phdr phdr;
+  memset(&ehdr, 0, sizeof(struct Elf32_Ehdr));
 
   int32_t fd = sys_open(pathname, O_RDONLY);
   if (fd == -1) {
@@ -102,7 +103,7 @@ static int32_t load(const char* pathname) {
     return -1;
   }
 
-  if (sys_read(fd, &elf_header, sizeof(struct Elf32_Ehdr)) != sizeof(struct Elf32_Ehdr)) {
+  if (sys_read(fd, &ehdr, sizeof(struct Elf32_Ehdr)) != sizeof(struct Elf32_Ehdr)) {
     printk("load: fail to read\n");
     goto die;
   }
@@ -110,47 +111,46 @@ static int32_t load(const char* pathname) {
   // check magic
   //      7f 45 4c 46 01 01 01
   //                  32 le ver
-  if (memcmp(elf_header.e_ident, "\177ELF\1\1\1", 7) \
-    || elf_header.e_type != ET_EXEC \
-    || elf_header.e_machine != EM_386 \
-    || elf_header.e_version != 1 \
-    || elf_header.e_phnum > 1024 \
-    || elf_header.e_phentsize != sizeof(struct Elf32_Phdr)) {
+  if (memcmp(ehdr.e_ident, "\177ELF\1\1\1", 7) \
+    || ehdr.e_type != ET_EXEC \
+    || ehdr.e_machine != EM_386 \
+    || ehdr.e_version != 1 \
+    || ehdr.e_phnum > 1024 \
+    || ehdr.e_phentsize != sizeof(struct Elf32_Phdr)) {
     printk("load: file type doesn't match\n");
     printk("%x %x %x %x %x",
-           elf_header.e_type,
-           elf_header.e_machine,
-           elf_header.e_version,
-           elf_header.e_phnum,
-           elf_header.e_phentsize);
+           ehdr.e_type,
+           ehdr.e_machine,
+           ehdr.e_version,
+           ehdr.e_phnum,
+           ehdr.e_phentsize);
 
     goto die;
   }
 
-  Elf32_Off prog_header_offset = elf_header.e_phoff;
-  Elf32_Half prog_header_size = elf_header.e_phentsize;
+  Elf32_Off phoff = ehdr.e_phoff;
+  Elf32_Half phentsize = ehdr.e_phentsize;
 
   // foreach phdr
   //    load all loadable segs
-  for (uint32_t i = 0; i < elf_header.e_phnum; i++) {
-    memset(&prog_header, 0, prog_header_size);
+  for (uint32_t i = 0; i < ehdr.e_phnum; i++) {
+    memset(&phdr, 0, phentsize);
 
-    sys_lseek(fd, prog_header_offset, SEEK_SET);
-    if (sys_read(fd, &prog_header, prog_header_size) != prog_header_size) {
+    sys_lseek(fd, phoff, SEEK_SET);
+    if (sys_read(fd, &phdr, phentsize) != phentsize) {
       goto die;
     }
 
     // load loadable seg
-    if (PT_LOAD == prog_header.p_type) {
-      if (!segment_load(fd, prog_header.p_offset, prog_header.p_filesz, prog_header.p_vaddr)) {
-        printk("load: segment_load error\n");
-        goto die;
-      }
+    if (PT_LOAD == phdr.p_type && !segment_load(fd, phdr.p_offset, phdr.p_filesz, phdr.p_vaddr)) {
+      printk("load: segment_load error\n");
+      goto die;
     }
 
-    prog_header_offset += elf_header.e_phentsize;
+    phoff += ehdr.e_phentsize;
   }
-  return elf_header.e_entry;
+  sys_close(fd);
+  return ehdr.e_entry;
 
 die:
   sys_close(fd);
