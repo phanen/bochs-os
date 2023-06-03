@@ -10,17 +10,20 @@ int main(int argc, char** argv) {
     exit(-2);
   }
 
+  // read from sdtin
   if (argc == 1) {
     // umimplement
-    printf("cat: umimplement!\n");
-    exit(-3);
+    char buf[512] = {0};
+    read(0, buf, 512);
+    printf("%s", buf);
+    exit(0);
   }
 
   int buf_size = 1024;
   char abs_path[512] = {0};
   void* buf = malloc(buf_size);
 
-  if (buf == NULL) { 
+  if (buf == NULL) {
     printf("cat: malloc memory failed\n");
     return -1;
   }
