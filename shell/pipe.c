@@ -64,7 +64,7 @@ uint32_t pipe_write(int32_t fd, const void* buf, uint32_t count) {
   struct ioqueue* ioq = (struct ioqueue*)file_table[global_fd].fd_inode;
 
   uint32_t ioq_left = bufsize - ioq_length(ioq);
-  uint32_t size = MIN(ioq_left, ioq_left);
+  uint32_t size = MIN(count, ioq_left);
 
   while (bytes_write < size) {
     ioq_putchar(ioq, *buffer);
@@ -73,7 +73,6 @@ uint32_t pipe_write(int32_t fd, const void* buf, uint32_t count) {
   }
   return bytes_write;
 }
-
 
 // redirect old_local_fd  to new_local_fd
 //    actually similar to dup
@@ -84,7 +83,10 @@ void sys_dup2(uint32_t new_local_fd, uint32_t old_local_fd) {
   ASSERT(old_local_fd >= 0);
   ASSERT(new_local_fd >= 0);
 
+  // TODO: to design a better `close`
   if (new_local_fd < 3) {
+    // change local ref only,
+    //    then we can use dup(1, 1) to resume it
     cur->fd_table[old_local_fd] = new_local_fd;
   }
   else {
