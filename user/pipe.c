@@ -14,7 +14,6 @@ int main(int argc, char** argv) {
     write(fd[1], "Hi, my son, I love you!", 24);
     printf("\nI'm father, my pid is %d\n", getpid());
 
-    while (1);
     return 8;
   }
 
@@ -24,6 +23,5 @@ int main(int argc, char** argv) {
   printf("\nI'm child, my pid is %d\n", getpid());
   printf("I'm child, my father said to me: \"%s\"\n", buf);
 
-  while (1);
   return 9;
 }
