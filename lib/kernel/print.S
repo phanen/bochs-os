@@ -224,6 +224,8 @@ set_cursor:
    mov dx, 0x03d5
    mov al, bl
    out dx, al
+   popad
+   ret
 
 global cls_screen
 cls_screen:
