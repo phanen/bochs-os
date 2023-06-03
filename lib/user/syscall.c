@@ -147,3 +147,7 @@ int16_t wait(int32_t* status) {
 int32_t pipe(int32_t pipefd[2]) {
   return _syscall1(SYS_PIPE, pipefd);
 }
+
+void dup2(uint32_t new_fd, uint32_t old_fd) {
+  _syscall2(SYS_PIPE, new_fd, old_fd);
+}

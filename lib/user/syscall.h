@@ -34,6 +34,7 @@ enum syscall_nr {
   SYS_WAIT,
   SYS_EXIT,
   SYS_PIPE,
+  SYS_DUP2,
 };
 
 // write -> int 0x80
@@ -72,5 +73,7 @@ void exit(int32_t status);
 int16_t wait(int32_t* status);
 
 int32_t pipe(int32_t pipefd[2]);
+
+void dup2(uint32_t new_fd, uint32_t old_fd);
 
 #endif

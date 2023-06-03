@@ -58,6 +58,7 @@ void syscall_init() {
   syscall_table[SYS_WAIT]       = sys_wait;
   syscall_table[SYS_EXIT]       = sys_exit;
   syscall_table[SYS_PIPE]       = sys_pipe;
+  syscall_table[SYS_DUP2]       = sys_dup2;
 
   put_str("syscall_init done\n");
 }
