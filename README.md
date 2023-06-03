@@ -94,3 +94,10 @@ How does OS manage the process?
 
 ## some records
 WIP
+
+## TODO
+
+- [ ] port to qemu
+- [ ] built-in editor
+- [ ] shell readline support
+- [ ] built-in compiler
