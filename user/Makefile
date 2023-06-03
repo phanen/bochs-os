@@ -66,14 +66,15 @@ $(BUILD_DIR)/cat.o: cat.c
 $(BUILD_DIR)/pipe.o: pipe.c
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
-# nasm -f elf ./start.S -o ./start.o
+
+MAX_ELF_SIZE = 50
 
 # load to raw disk
 load:
-	dd if=$(BUILD_DIR)/hello.out of=../master-hd60M.img bs=512 count=40 seek=300 conv=notrunc
-	dd if=$(BUILD_DIR)/fork-exec.out of=../master-hd60M.img bs=512 count=40 seek=400 conv=notrunc
-	dd if=$(BUILD_DIR)/cat.out of=../master-hd60M.img bs=512 count=40 seek=500 conv=notrunc
-	dd if=$(BUILD_DIR)/pipe.out of=../master-hd60M.img bs=512 count=40 seek=600 conv=notrunc
+	dd if=$(BUILD_DIR)/hello.out of=../master-hd60M.img bs=512 count=$(MAX_ELF_SIZE) seek=300 conv=notrunc
+	dd if=$(BUILD_DIR)/fork-exec.out of=../master-hd60M.img bs=512 count=$(MAX_ELF_SIZE) seek=400 conv=notrunc
+	dd if=$(BUILD_DIR)/cat.out of=../master-hd60M.img bs=512 count=$(MAX_ELF_SIZE) seek=500 conv=notrunc
+	dd if=$(BUILD_DIR)/pipe.out of=../master-hd60M.img bs=512 count=$(MAX_ELF_SIZE) seek=600 conv=notrunc
 
 clean:
 	rm -rf -- $(BUILD_DIR)/*
