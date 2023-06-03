@@ -79,6 +79,7 @@ void builtin_ls(uint32_t argc, char** argv) {
     else {
       printf("%s\n", pathname);
     }
+    return;
   }
 
   if (file_stat.st_filetype != FT_DIRECTORY) {
