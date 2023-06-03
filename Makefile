@@ -76,7 +76,7 @@ OBJS = $(BUILD_DIR)/main.o \
 #	for example:
 #		if you see error stack magic, it may not caused by stackoverflow,
 #		but you need to recomplie timer.c (due to change of task_struct)
-bochs: boot-master slave-hd80M.img # userelf
+bochs: boot-master slave-hd80M.img userelf
 	# nm build/kernel.bin | grep " T " | awk '{ print $$1" "$$3 }' > kernel.sym
 	nm build/kernel.bin | awk '{ print $$1" "$$3 }' > kernel.sym
 	bochs -q -f bochs.conf
