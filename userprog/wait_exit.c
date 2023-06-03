@@ -15,13 +15,8 @@
 static void release_prog_resource(struct task_struct* release_thread) {
 
   uint32_t* pgdir_vaddr = release_thread->pgdir;
-
   uint16_t user_pde_nr = 768;
   uint16_t user_pte_nr = 1024;
-  uint32_t pte = 0;
-  uint32_t* v_pte_ptr = NULL;
-
-  uint32_t* cur_ptable = NULL;
   uint32_t pg_phy_addr = 0;
 
   // free all ppages (alloc by bitmap)
@@ -33,10 +28,10 @@ static void release_prog_resource(struct task_struct* release_thread) {
     if (!(cur_pde & 0x00000001))
       continue;
 
-    cur_ptable = pte_ptr(pde_i << 22);
+    uint32_t* cur_ptable = pte_ptr(pde_i << 22);
 
     for (uint16_t pte_i = 0; pte_i < user_pte_nr; ++pte_i) {
-      pte = *(cur_ptable + pte_i);
+      uint32_t pte = *(cur_ptable + pte_i);
       if (!(pte & 0x00000001)) 
         continue;
 
