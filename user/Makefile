@@ -33,6 +33,7 @@ LIBS = $(BUILD_DIR)/naive-crt.a
 all: $(BUILD_DIR)/hello.out \
 	 $(BUILD_DIR)/fork-exec.out \
 	 $(BUILD_DIR)/cat.out \
+	 $(BUILD_DIR)/pipe.out \
 
 $(BUILD_DIR)/naive-crt.a: $(OBJS)
 	ar rcs $@ $^
