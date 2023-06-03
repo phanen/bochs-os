@@ -5,6 +5,7 @@
 #include "ioqueue.h"
 #include "thread.h"
 #include "params.h"
+#include "debug.h"
 
 // if a given fd is a pipe
 bool is_pipe(uint32_t local_fd) {
@@ -71,4 +72,23 @@ uint32_t pipe_write(int32_t fd, const void* buf, uint32_t count) {
     buffer++;
   }
   return bytes_write;
+}
+
+
+// redirect old_local_fd  to new_local_fd
+//    actually similar to dup
+void sys_dup2(uint32_t new_local_fd, uint32_t old_local_fd) {
+
+  struct task_struct* cur = running_thread();
+
+  ASSERT(old_local_fd >= 0);
+  ASSERT(new_local_fd >= 0);
+
+  if (new_local_fd < 3) {
+    cur->fd_table[old_local_fd] = new_local_fd;
+  }
+  else {
+    uint32_t new_global_fd = cur->fd_table[new_local_fd];
+    cur->fd_table[old_local_fd] = new_global_fd;
+  }
 }
