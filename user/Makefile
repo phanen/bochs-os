@@ -14,7 +14,7 @@ INCS = -I ../lib \
 
 ASFLAGS = -f elf
 CFLAGS = -m32 -static -fno-builtin -nostdlib -fno-stack-protector \
-		 -mno-sse
+		 # -mno-sse
 		 # -Wl -O2
 		 # -W -Wstrict-prototypes -Wmissing-prototypes
 
