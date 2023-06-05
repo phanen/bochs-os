@@ -49,6 +49,7 @@ section loader vstart=LOADER_BASE_ADDR
     ards_nr dw 0
     ; loader_msg db "loader in the real"
 
+  [bits 16]
   loader_start:
     ; int 0x15, to get mem size
     xor ebx, ebx

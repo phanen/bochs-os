@@ -27,9 +27,9 @@ INCS = -I lib/kernel/ \
 	   -I fs/ \
 	   -I shell/ \
 
-ASFLAGS = -f elf
+ASFLAGS = -f elf -g
 CFLAGS = -m32 -static -fno-builtin -nostdlib -fno-stack-protector \
-		 -mno-sse
+		 -mno-sse -g
 		 # -W -Wstrict-prototypes -Wmissing-prototypes
 
 LDFLAGS = -e main -static -Ttext $(ENTRY_POINT) -m elf_i386
@@ -81,7 +81,7 @@ bochs: boot-master slave-hd80M.img userelf
 	nm build/kernel.bin | awk '{ print $$1" "$$3 }' > kernel.sym
 	bochs -q -f bochs.conf
 
-gdb: boot-master partition-slave
+gdb: boot-master slave-hd80M.img userelf
 	BXSHARE=/usr/local/share/bochs bochs-gdb -q -f bochs-gdb.conf
 
 $(BUILD_DIR)/mbr.bin: boot/mbr.S
