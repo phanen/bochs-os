@@ -1,0 +1,252 @@
++target remote 127.0.0.1:1234
+Quit
++q
+Continuing.
+
+Program stopped.
+0xc00052d4 in ?? ()
+Continuing.
+
+Program stopped.
+0xc0001987 in ?? ()
+Continuing.
+
+Program stopped.
+0xc00055f8 in ?? ()
+Continuing.
+
+Breakpoint 2, 0x00000caf in ?? ()
+No symbol table is loaded.  Use the "file" command.
+Breakpoint 3 at 0xcb1
+Breakpoint 4 at 0xcb
+Breakpoint 5 at 0xcb9
+Continuing.
+
+Breakpoint 3, 0x00000cb1 in ?? ()
+Continuing.
+
+Breakpoint 5, 0x00000cb9 in ?? ()
+Num     Type           Disp Enb Address    What
+1       breakpoint     keep y   0x00007c00 
+	breakpoint already hit 1 time
+2       breakpoint     keep y   0x00000caf 
+	breakpoint already hit 1 time
+3       breakpoint     keep y   0x00000cb1 
+	breakpoint already hit 1 time
+4       breakpoint     keep y   0x000000cb 
+5       breakpoint     keep y   0x00000cb9 
+	breakpoint already hit 1 time
+Continuing.
+
+Breakpoint 1, 0x00007c00 in ?? ()
+Detaching from program: /home/phanium/demo/asmdemo/bochs-os/build/kernel.bin, process 1
+Ending remote debugging.
+[Inferior 1 (process 1) detached]
+Detaching from pid process 1
+Ending remote debugging.
+[Inferior 1 (process 1) detached]
+Detaching from program: /home/phanium/demo/asmdemo/bochs-os/build/kernel.bin, process 1
+Ending remote debugging.
+[Inferior 1 (process 1) detached]
+Detaching from pid process 1
+Ending remote debugging.
+[Inferior 1 (process 1) detached]
+Detaching from pid process 1
+Ending remote debugging.
+[Inferior 1 (process 1) detached]
+Detaching from program: /home/phanium/demo/asmdemo/bochs-os/build/kernel.bin, process 1
+Remote communication error.  Target disconnected.: Broken pipe.
+Detaching from pid process 1
+Ending remote debugging.
+[Inferior 1 (process 1) detached]
+Detaching from pid process 1
+Remote communication error.  Target disconnected.: Broken pipe.
+Detaching from pid process 1
+Ending remote debugging.
+[Inferior 1 (process 1) detached]
+---------------------------[ STACK ]---
+0000 0000 0000 0000 0000 0000 0000 0000 
+0000 0000 0000 0000 0000 0000 0000 0000 
+---------------------------[ DS:SI ]---
+00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+---------------------------[ ES:DI ]---
+00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+----------------------------[ CPU ]----
+AX: 0000 BX: 0000 CX: 0000 DX: 0663
+SI: 0000 DI: 0000 SP: 0000 BP: 0000
+CS: F000 DS: 0000 ES: 0000 SS: 0000
+
+IP: E05B EIP:0000E05B
+CS:IP: F000:E05B (0xFE05B)
+SS:SP: 0000:0000 (0x00000)
+SS:BP: 0000:0000 (0x00000)
+OF <0>  DF <0>  IF <0>  TF <0>  SF <0>  ZF <0>  AF <0>  PF <0>  CF <0>
+ID <0>  VIP <0> VIF <0> AC <0>  VM <0>  RF <0>  NT <0>  IOPL <0>
+---------------------------[ CODE ]----
+   0xfe05b:	cmp    WORD PTR cs:[esi],0xff88
+   0xfe060:	je     0xfe062
+   0xfe062:	jne    0xd241d5ad
+   0xfe068:	mov    ss,edx
+   0xfe06a:	mov    sp,0x7000
+   0xfe06e:	add    BYTE PTR [eax],al
+   0xfe070:	mov    dx,0x36b2
+   0xfe074:	verw   cx
+   0xfe077:	xchg   edx,eax
+   0xfe078:	or     esp,DWORD PTR [esi+0x55]
+0x0000e05b in ?? ()
+---------------------------[ STACK ]---
+0000 0000 0000 0000 0000 0000 0000 0000 
+0000 0000 0000 0000 0000 0000 0000 0000 
+---------------------------[ DS:SI ]---
+00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+---------------------------[ ES:DI ]---
+00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+----------------------------[ CPU ]----
+AX: 0000 BX: 0000 CX: 0000 DX: 0663
+SI: 0000 DI: 0000 SP: 0000 BP: 0000
+CS: F000 DS: 0000 ES: 0000 SS: 0000
+
+IP: E062 EIP:0000E062
+CS:IP: F000:E062 (0xFE062)
+SS:SP: 0000:0000 (0x00000)
+SS:BP: 0000:0000 (0x00000)
+OF <0>  DF <0>  IF <0>  TF <0>  SF <0>  ZF <1>  AF <0>  PF <1>  CF <0>
+ID <0>  VIP <0> VIF <0> AC <0>  VM <0>  RF <0>  NT <0>  IOPL <0>
+---------------------------[ CODE ]----
+   0xfe062:	jne    0xd241d5ad
+   0xfe068:	mov    ss,edx
+   0xfe06a:	mov    sp,0x7000
+   0xfe06e:	add    BYTE PTR [eax],al
+   0xfe070:	mov    dx,0x36b2
+   0xfe074:	verw   cx
+   0xfe077:	xchg   edx,eax
+   0xfe078:	or     esp,DWORD PTR [esi+0x55]
+   0xfe07b:	push   di
+   0xfe07d:	push   si
+0x0000e062 in ?? ()
+---------------------------[ STACK ]---
+0000 0000 0000 0000 0000 0000 0000 0000 
+0000 0000 0000 0000 0000 0000 0000 0000 
+---------------------------[ DS:SI ]---
+00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+---------------------------[ ES:DI ]---
+00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+----------------------------[ CPU ]----
+AX: 0000 BX: 0000 CX: 0000 DX: 0663
+SI: 0000 DI: 0000 SP: 0000 BP: 0000
+CS: F000 DS: 0000 ES: 0000 SS: 0000
+
+IP: E066 EIP:0000E066
+CS:IP: F000:E066 (0xFE066)
+SS:SP: 0000:0000 (0x00000)
+SS:BP: 0000:0000 (0x00000)
+OF <0>  DF <0>  IF <0>  TF <0>  SF <0>  ZF <1>  AF <0>  PF <1>  CF <0>
+ID <0>  VIP <0> VIF <0> AC <0>  VM <0>  RF <0>  NT <0>  IOPL <0>
+---------------------------[ CODE ]----
+   0xfe066:	xor    edx,edx
+   0xfe068:	mov    ss,edx
+   0xfe06a:	mov    sp,0x7000
+   0xfe06e:	add    BYTE PTR [eax],al
+   0xfe070:	mov    dx,0x36b2
+   0xfe074:	verw   cx
+   0xfe077:	xchg   edx,eax
+   0xfe078:	or     esp,DWORD PTR [esi+0x55]
+   0xfe07b:	push   di
+   0xfe07d:	push   si
+0x0000e066 in ?? ()
+---------------------------[ STACK ]---
+0000 0000 0000 0000 0000 0000 0000 0000 
+0000 0000 0000 0000 0000 0000 0000 0000 
+---------------------------[ DS:SI ]---
+00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+---------------------------[ ES:DI ]---
+00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+----------------------------[ CPU ]----
+AX: 0000 BX: 0000 CX: 0000 DX: 0000
+SI: 0000 DI: 0000 SP: 0000 BP: 0000
+CS: F000 DS: 0000 ES: 0000 SS: 0000
+
+IP: E068 EIP:0000E068
+CS:IP: F000:E068 (0xFE068)
+SS:SP: 0000:0000 (0x00000)
+SS:BP: 0000:0000 (0x00000)
+OF <0>  DF <0>  IF <0>  TF <0>  SF <0>  ZF <1>  AF <0>  PF <1>  CF <0>
+ID <0>  VIP <0> VIF <0> AC <0>  VM <0>  RF <0>  NT <0>  IOPL <0>
+---------------------------[ CODE ]----
+   0xfe068:	mov    ss,edx
+   0xfe06a:	mov    sp,0x7000
+   0xfe06e:	add    BYTE PTR [eax],al
+   0xfe070:	mov    dx,0x36b2
+   0xfe074:	verw   cx
+   0xfe077:	xchg   edx,eax
+   0xfe078:	or     esp,DWORD PTR [esi+0x55]
+   0xfe07b:	push   di
+   0xfe07d:	push   si
+   0xfe07f:	push   bx
+0x0000e068 in ?? ()
+---------------------------[ STACK ]---
+0000 0000 0000 0000 0000 0000 0000 0000 
+0000 0000 0000 0000 0000 0000 0000 0000 
+---------------------------[ DS:SI ]---
+00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+---------------------------[ ES:DI ]---
+00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+----------------------------[ CPU ]----
+AX: 0000 BX: 0000 CX: 0000 DX: 0000
+SI: 0000 DI: 0000 SP: 0000 BP: 0000
+CS: F000 DS: 0000 ES: 0000 SS: 0000
+
+IP: E06A EIP:0000E06A
+CS:IP: F000:E06A (0xFE06A)
+SS:SP: 0000:0000 (0x00000)
+SS:BP: 0000:0000 (0x00000)
+OF <0>  DF <0>  IF <0>  TF <0>  SF <0>  ZF <1>  AF <0>  PF <1>  CF <0>
+ID <0>  VIP <0> VIF <0> AC <0>  VM <0>  RF <0>  NT <0>  IOPL <0>
+---------------------------[ CODE ]----
+   0xfe06a:	mov    sp,0x7000
+   0xfe06e:	add    BYTE PTR [eax],al
+   0xfe070:	mov    dx,0x36b2
+   0xfe074:	verw   cx
+   0xfe077:	xchg   edx,eax
+   0xfe078:	or     esp,DWORD PTR [esi+0x55]
+   0xfe07b:	push   di
+   0xfe07d:	push   si
+   0xfe07f:	push   bx
+   0xfe081:	sub    sp,0xc
+0x0000e06a in ?? ()
+Detaching from pid process 1
+Ending remote debugging.
+[Inferior 1 (process 1) detached]
+Detaching from pid process 1
+Ending remote debugging.
+[Inferior 1 (process 1) detached]
