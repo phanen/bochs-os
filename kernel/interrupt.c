@@ -163,7 +163,7 @@ enum intr_status intr_disable() {
   enum intr_status old_status;
   if (INTR_ON == intr_get_status()) {
     old_status = INTR_ON;
-    asm volatile("cli" : : : "memory");  // eflags.if=1
+    asm volatile("cli" : : : "memory");  // eflags.if=0
     return old_status;
   } else {
     old_status = INTR_OFF;
@@ -187,7 +187,7 @@ void idt_init() {
   idt_desc_init();
   exception_init(); // assign exception name, register handler
   pic_init();
-
+  // intr_disable();
   // why uint32_t?
   uint64_t idt_operand = ((sizeof(idt) - 1) | ((uint64_t)idt << 16));
   asm volatile("lidt %0" : : "m" (idt_operand));
