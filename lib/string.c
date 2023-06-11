@@ -3,26 +3,28 @@
 // #include "debug.h"
 #include "assert.h"
 
-void memset(void* dst_, uint8_t value, uint32_t size) {
-  assert(dst_ != NULL);
-  uint8_t* dst = (uint8_t*)dst_;
-  while (size--)
-    *dst++ = value;
+void* memset(void* s, uint8_t value, uint32_t n) {
+  assert(s != NULL);
+  uint8_t* p = (uint8_t*)s;
+  while (n--)
+    *p++ = value;
+  return s;
 }
 
-void memcpy(void* dst_, const void* src_, uint32_t size) {
-  assert(dst_ != NULL && src_ != NULL);
-  uint8_t* dst = dst_;
-  const uint8_t* src = src_;
-  while (size--)
-    *dst++ = *src++;
+void* memcpy(void* dst, const void* src, uint32_t n) {
+  assert(dst != NULL && src != NULL);
+  uint8_t* d = dst;
+  const uint8_t* s = src;
+  while (n--)
+    *d++ = *s++;
+  return dst;
 }
 
-int memcmp(const void* a_, const void* b_, uint32_t size) {
-  assert(a_ != NULL || b_!= NULL);
-  const char* a = a_;
-  const char* b = b_;
-  for (; size-- ; a++, b++) {
+int memcmp(const void* s1, const void* s2, uint32_t n) {
+  assert(s1 != NULL || s2!= NULL);
+  const char* a = s1;
+  const char* b = s2;
+  for (; n-- ; a++, b++) {
     if(*a != *b) {
       return *a > *b ? 1 : -1;
     }
