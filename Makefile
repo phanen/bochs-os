@@ -15,6 +15,7 @@ ENTRY_POINT = 0xc0001500
 AS = nasm
 CC = clang
 LD = ld
+BXIMAGE=/usr/local/bin/bximage
 
 ASINCS = -I boot/include
 INCS = -I lib/kernel/ \
@@ -206,11 +207,11 @@ $(BUILD_DIR)/pipe.o: shell/pipe.c shell/pipe.h
 
 # https://stackoverflow.com/questions/816370/how-do-you-force-a-makefile-to-rebuild-a-target
 master-hd60M.img:
-	rm -rf $@ && bximage -q -hd -mode="flat" -size=60 $@
+	rm -rf $@ && $(BXIMAGE) -q -hd -mode="flat" -size=60 $@
 	# TODO: dd if=/dev/zero of=hd60M.img bs=4K count=15360
 
 slave-hd80M.img:
-	rm -rf $@ && bximage -q -hd -mode="flat" -size=80 $@
+	rm -rf $@ && $(BXIMAGE) -q -hd -mode="flat" -size=80 $@
 	cat partition-slave.sfdisk | sfdisk $@
 
 boot-master: master-hd60M.img $(BUILD_DIR)/mbr.bin $(BUILD_DIR)/loader.bin $(BUILD_DIR)/kernel.bin
