@@ -1,3 +1,14 @@
+## features
+- about 7000 loc, based on intel IA-32
+- round-robbin process/thread schedule
+- IDE disk driver
+- virtual memory management
+- ext2-like file system
+- 27 syscall support
+- load 32 bit elf user program
+![pic](http://img.phanium.top/20230616211257.png)
+
+
 ## dependencies
 
 The dependencies you may need:
