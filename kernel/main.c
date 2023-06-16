@@ -42,6 +42,7 @@ int main() {
    loadelf2fs(500, 25000, "/cat");
    loadelf2fs(600, 25000, "/pipe");
    loadelf2fs(700, 25000, "/echo");
+   loadelf2fs(800, 50000, "/c4");
 
    int fd = sys_open("/file0", O_CREAT|O_RDWR);
    sys_write(fd, "hello world", 11);
