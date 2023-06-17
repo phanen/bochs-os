@@ -6,7 +6,7 @@
 - ext2-like file system
 - 27 syscall support
 - load 32 bit elf user program
-![pic](http://img.phanium.top/20230616211257.png)
+![pic](http://img.phanium.top/20230617161507.png)
 
 
 ## dependencies
