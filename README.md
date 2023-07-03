@@ -8,6 +8,7 @@
 - load 32 bit elf user program
 ![pic](http://img.phanium.top/20230617161507.png)
 
+> For documents or testcases, refer to [doc.md](./doc/doc.md) or [test.md](./doc/tests.md)
 
 ## dependencies
 
