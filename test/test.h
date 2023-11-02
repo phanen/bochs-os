@@ -20,16 +20,15 @@
 #include "string.h"
 #include "dir.h"
 
-void k_thread_a(void*);
-void k_thread_b(void*);
-void k_thread_c(void*);
-void k_thread_d(void*);
+void k_thread_a(void *);
+void k_thread_b(void *);
+void k_thread_c(void *);
+void k_thread_d(void *);
 
 void u_prog_a(void);
 void u_prog_b(void);
 void u_prog_c(void);
 void u_prog_d(void);
-
 
 int bss_var_a = 0, bss_var_b = 0;
 

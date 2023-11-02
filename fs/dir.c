@@ -13,90 +13,97 @@
 
 struct dir root_dir;
 
-void open_root_dir(struct partition* part) {
-   root_dir.inode = inode_open(part, part->sb->root_inode_no);
-   root_dir.dir_pos = 0;
+void open_root_dir(struct partition *part)
+{
+	root_dir.inode = inode_open(part, part->sb->root_inode_no);
+	root_dir.dir_pos = 0;
 }
 
 // dir inode_no -> dir inode
-struct dir* dir_open(struct partition* part, uint32_t inode_no) {
-   struct dir* pdir = (struct dir*)sys_malloc(sizeof(struct dir));
-   pdir->inode = inode_open(part, inode_no);
-   pdir->dir_pos = 0;
-   return pdir;
+struct dir *dir_open(struct partition *part, uint32_t inode_no)
+{
+	struct dir *pdir = (struct dir *)sys_malloc(sizeof(struct dir));
+	pdir->inode = inode_open(part, inode_no);
+	pdir->dir_pos = 0;
+	return pdir;
 }
 
-void dir_close(struct dir* dir) {
-   // never close root dir:
-   //	 root_dir in stack, cannot free
-   //	 root_dir <1M, cannot be free
-   //	 root_dir should be open, anyway
-   if (dir == &root_dir) {
-      return;
-   }
-   inode_close(dir->inode);
-   sys_free(dir);
+void dir_close(struct dir *dir)
+{
+	// never close root dir:
+	//	 root_dir in stack, cannot free
+	//	 root_dir <1M, cannot be free
+	//	 root_dir should be open, anyway
+	if (dir == &root_dir) {
+		return;
+	}
+	inode_close(dir->inode);
+	sys_free(dir);
 }
 
 // find file(dir_e) by name in current dir
 //    return when first match name (no matter what file type)
 //    `dir_e` should be alloc before
-bool search_dir_entry(struct partition* part, struct dir* pdir, \
-		      const char* name, struct dir_entry* dir_e) {
-   // buf to get all flatten ptrs
-   uint32_t* all_blocks = (uint32_t*)sys_malloc(FLATTEN_PTRS * sizeof(uint32_t));
-   if (all_blocks == NULL) {
-      printk("search_dir_entry: sys_malloc for all_blocks failed");
-      return false;
-   }
+bool search_dir_entry(struct partition *part, struct dir *pdir,
+		      const char *name, struct dir_entry *dir_e)
+{
+	// buf to get all flatten ptrs
+	uint32_t *all_blocks =
+		(uint32_t *)sys_malloc(FLATTEN_PTRS * sizeof(uint32_t));
+	if (all_blocks == NULL) {
+		printk("search_dir_entry: sys_malloc for all_blocks failed");
+		return false;
+	}
 
-   // get all flatten ptrs
-   uint32_t blk_i = 0;
-   for (; blk_i < DIRECT_PTRS; blk_i++) {
-      all_blocks[blk_i] = pdir->inode->i_sectors[blk_i];
-   }
-   blk_i = 0;
-   if (pdir->inode->i_sectors[DIRECT_PTRS]) { // indirect ptr
-      ide_read(part->my_disk, pdir->inode->i_sectors[DIRECT_PTRS],
-	       all_blocks + DIRECT_PTRS, 1);
-   }
+	// get all flatten ptrs
+	uint32_t blk_i = 0;
+	for (; blk_i < DIRECT_PTRS; blk_i++) {
+		all_blocks[blk_i] = pdir->inode->i_sectors[blk_i];
+	}
+	blk_i = 0;
+	if (pdir->inode->i_sectors[DIRECT_PTRS]) { // indirect ptr
+		ide_read(part->my_disk, pdir->inode->i_sectors[DIRECT_PTRS],
+			 all_blocks + DIRECT_PTRS, 1);
+	}
 
-   // blk buf
-   uint8_t* buf = (uint8_t*)sys_malloc(SECTOR_SIZE);
-   uint32_t dir_entry_size = part->sb->dir_entry_size;
-   //	 ensure dir entry never cross secs
-   uint32_t dir_entry_cnt = SECTOR_SIZE / dir_entry_size;
+	// blk buf
+	uint8_t *buf = (uint8_t *)sys_malloc(SECTOR_SIZE);
+	uint32_t dir_entry_size = part->sb->dir_entry_size;
+	//	 ensure dir entry never cross secs
+	uint32_t dir_entry_cnt = SECTOR_SIZE / dir_entry_size;
 
-   // foreach blk
-   for (; blk_i < FLATTEN_PTRS; blk_i++) {
-      if (all_blocks[blk_i] == 0) { // NULL ptr
-	 continue;
-      }
-      ide_read(part->my_disk, all_blocks[blk_i], buf, 1);
+	// foreach blk
+	for (; blk_i < FLATTEN_PTRS; blk_i++) {
+		if (all_blocks[blk_i] == 0) { // NULL ptr
+			continue;
+		}
+		ide_read(part->my_disk, all_blocks[blk_i], buf, 1);
 
-      struct dir_entry* p_de = (struct dir_entry*)buf;
-      uint32_t dir_entry_i = 0;
-      // TODO: avoid iterating all entries...
-      for (; dir_entry_i < dir_entry_cnt; p_de++, dir_entry_i++) {
-	 if (!strcmp(p_de->filename, name)) {
-	    memcpy(dir_e, p_de, dir_entry_size);
-	    sys_free(buf);
-	    sys_free(all_blocks);
-	    return true;
-	 }
-      }
-      memset(buf, 0, SECTOR_SIZE);
-   }
-   sys_free(buf);
-   sys_free(all_blocks);
-   return false;
+		struct dir_entry *p_de = (struct dir_entry *)buf;
+		uint32_t dir_entry_i = 0;
+		// TODO: avoid iterating all entries...
+		for (; dir_entry_i < dir_entry_cnt; p_de++, dir_entry_i++) {
+			if (!strcmp(p_de->filename, name)) {
+				memcpy(dir_e, p_de, dir_entry_size);
+				sys_free(buf);
+				sys_free(all_blocks);
+				return true;
+			}
+		}
+		memset(buf, 0, SECTOR_SIZE);
+	}
+	sys_free(buf);
+	sys_free(all_blocks);
+	return false;
 }
 
-void create_dir_entry(char* filename, uint32_t inode_no, uint8_t file_type, struct dir_entry* p_de) {
-   ASSERT(strlen(filename) <=  MAX_FILE_NAME_LEN);
-   memcpy(p_de->filename, filename, strlen(filename));
-   p_de->i_no = inode_no;
-   p_de->f_type = file_type;
+void create_dir_entry(char *filename, uint32_t inode_no, uint8_t file_type,
+		      struct dir_entry *p_de)
+{
+	ASSERT(strlen(filename) <= MAX_FILE_NAME_LEN);
+	memcpy(p_de->filename, filename, strlen(filename));
+	p_de->i_no = inode_no;
+	p_de->f_type = file_type;
 }
 
 // write p_de entry into parent_dir
@@ -105,250 +112,277 @@ void create_dir_entry(char* filename, uint32_t inode_no, uint8_t file_type, stru
 //    	 but pdir->inode->i_size will always be changed?
 //    	 this so API is used with `inode_sync`
 // FIXED: previous implement is buggy?
-bool sync_dir_entry(struct dir* parent_dir, struct dir_entry* p_de, void* io_buf) {
+bool sync_dir_entry(struct dir *parent_dir, struct dir_entry *p_de,
+		    void *io_buf)
+{
+	struct inode *dir_inode = parent_dir->inode;
+	uint32_t dir_size = dir_inode->i_size;
+	uint32_t dir_entry_size = cur_part->sb->dir_entry_size;
 
-   struct inode* dir_inode = parent_dir->inode;
-   uint32_t dir_size = dir_inode->i_size;
-   uint32_t dir_entry_size = cur_part->sb->dir_entry_size;
+	ASSERT(dir_size % dir_entry_size == 0);
 
-   ASSERT(dir_size % dir_entry_size == 0);
+	uint32_t dir_entrys_per_sec = (SECTOR_SIZE / dir_entry_size);
+	int32_t blk_lba = -1;
 
-   uint32_t dir_entrys_per_sec = (SECTOR_SIZE / dir_entry_size);
-   int32_t blk_lba = -1;
+	// flatten ptrs (140 * 4 < PAGE_SIZE though...)
+	uint32_t all_blocks[FLATTEN_PTRS] = { 0 };
+	for (uint8_t blk_i = 0; blk_i < DIRECT_PTRS; blk_i++) {
+		all_blocks[blk_i] = dir_inode->i_sectors[blk_i];
+	}
+	struct dir_entry *dir_e = (struct dir_entry *)io_buf;
 
-   // flatten ptrs (140 * 4 < PAGE_SIZE though...)
-   uint32_t all_blocks[FLATTEN_PTRS] = {0};
-   for (uint8_t blk_i = 0; blk_i < DIRECT_PTRS; blk_i++) {
-      all_blocks[blk_i] = dir_inode->i_sectors[blk_i];
-   }
-   struct dir_entry* dir_e = (struct dir_entry*)io_buf;
+	// find free dir_entry slot
+	uint8_t blk_i = 0;
+	bool has_flatten = false;
+	while (blk_i < FLATTEN_PTRS) {
+		int32_t blk_bm_i = -1;
 
-   // find free dir_entry slot
-   uint8_t blk_i = 0;
-   bool has_flatten = false;
-   while (blk_i < FLATTEN_PTRS) {
-      int32_t blk_bm_i = -1;
+		// find a free block ptr
+		//    1. alloc a free block
+		//    2. different cases
+		//    3. write to disk
+		if (all_blocks[blk_i] == 0) {
+			// alloc a blk, and sync blk bitmap
+			//	  race condition? may sync delay?
+			blk_lba = block_bitmap_alloc(cur_part);
+			if (blk_lba == -1) {
+				printk("alloc block bitmap for sync_dir_entry failed\n");
+				return false;
+			}
+			blk_bm_i = blk_lba - cur_part->sb->data_start_lba;
+			ASSERT(blk_bm_i != -1);
+			bitmap_sync(cur_part, blk_bm_i, BLOCK_BITMAP);
+			blk_bm_i = -1;
 
-      // find a free block ptr
-      //    1. alloc a free block
-      //    2. different cases
-      //    3. write to disk
-      if (all_blocks[blk_i] == 0) {
+			// for free direct ptr
+			if (blk_i < DIRECT_PTRS) {
+				dir_inode->i_sectors[blk_i] = blk_lba;
+				all_blocks[blk_i] = blk_lba;
+			}
+			// for free indirect ptr
+			else if (blk_i == DIRECT_PTRS && !has_flatten) {
+				// we use pre-alloc block as indirect tab
+				dir_inode->i_sectors[DIRECT_PTRS] = blk_lba;
 
-	 // alloc a blk, and sync blk bitmap
-	 //	  race condition? may sync delay?
-	 blk_lba = block_bitmap_alloc(cur_part);
-	 if (blk_lba == -1) {
-	    printk("alloc block bitmap for sync_dir_entry failed\n");
-	    return false;
-	 }
-	 blk_bm_i = blk_lba - cur_part->sb->data_start_lba;
-	 ASSERT(blk_bm_i != -1);
-	 bitmap_sync(cur_part, blk_bm_i, BLOCK_BITMAP);
-	 blk_bm_i = -1;
+				// then alloc a new block
+				blk_lba = -1;
+				blk_lba = block_bitmap_alloc(cur_part);
+				if (blk_lba == -1) { // rollback
+					// free the indirect block
+					blk_bm_i =
+						dir_inode
+							->i_sectors[DIRECT_PTRS] -
+						cur_part->sb->data_start_lba;
+					bitmap_set(&cur_part->block_bitmap,
+						   blk_bm_i, 0);
+					dir_inode->i_sectors[DIRECT_PTRS] = 0;
+					printk("alloc block bitmap for sync_dir_entry failed\n");
+					return false;
+				}
+				blk_bm_i =
+					blk_lba - cur_part->sb->data_start_lba;
+				ASSERT(blk_bm_i != -1);
+				bitmap_sync(cur_part, blk_bm_i, BLOCK_BITMAP);
 
-	 // for free direct ptr
-	 if (blk_i < DIRECT_PTRS) {
-	    dir_inode->i_sectors[blk_i] = blk_lba;
-	    all_blocks[blk_i] = blk_lba;
-	 }
-	 // for free indirect ptr
-	 else if (blk_i == DIRECT_PTRS && !has_flatten) {
-	    // we use pre-alloc block as indirect tab
-	    dir_inode->i_sectors[DIRECT_PTRS] = blk_lba;
+				// build a indirect tab in mem in-place
+				// then update the indirect tab into disk
+				all_blocks[DIRECT_PTRS] = blk_lba;
+				ide_write(cur_part->my_disk,
+					  dir_inode->i_sectors[DIRECT_PTRS],
+					  all_blocks + DIRECT_PTRS, 1);
+			}
+			// 2-direct
+			else {
+				all_blocks[blk_i] = blk_lba;
+				ide_write(cur_part->my_disk,
+					  dir_inode->i_sectors[DIRECT_PTRS],
+					  all_blocks + DIRECT_PTRS, 1);
+			}
+			// write entry -> mem block -> disk block
+			memset(io_buf, 0, 512);
+			memcpy(io_buf, p_de, dir_entry_size);
+			ide_write(cur_part->my_disk, all_blocks[blk_i], io_buf,
+				  1);
+			dir_inode->i_size += dir_entry_size;
+			return true;
+		}
 
-	    // then alloc a new block
-	    blk_lba = -1;
-	    blk_lba = block_bitmap_alloc(cur_part);
-	    if (blk_lba == -1) { // rollback
-	       // free the indirect block
-	       blk_bm_i = dir_inode->i_sectors[DIRECT_PTRS] - cur_part->sb->data_start_lba;
-	       bitmap_set(&cur_part->block_bitmap, blk_bm_i, 0);
-	       dir_inode->i_sectors[DIRECT_PTRS] = 0;
-	       printk("alloc block bitmap for sync_dir_entry failed\n");
-	       return false;
-	    }
-	    blk_bm_i = blk_lba - cur_part->sb->data_start_lba;
-	    ASSERT(blk_bm_i != -1);
-	    bitmap_sync(cur_part, blk_bm_i, BLOCK_BITMAP);
+		// no-free direct block and the indirec block has been alloc
+		// then load indirect block
+		if (blk_i == DIRECT_PTRS) {
+			ide_read(cur_part->my_disk,
+				 dir_inode->i_sectors[DIRECT_PTRS],
+				 all_blocks + DIRECT_PTRS, 1);
+			has_flatten = true;
+			continue;
+		}
 
-	    // build a indirect tab in mem in-place
-	    // then update the indirect tab into disk
-	    all_blocks[DIRECT_PTRS] = blk_lba;
-	    ide_write(cur_part->my_disk, dir_inode->i_sectors[DIRECT_PTRS],
-	       all_blocks + DIRECT_PTRS, 1);
-	 }
-	 // 2-direct
-	 else {
-	    all_blocks[blk_i] = blk_lba;
-	    ide_write(cur_part->my_disk, dir_inode->i_sectors[DIRECT_PTRS],
-	       all_blocks + DIRECT_PTRS, 1);
-	 }
-	 // write entry -> mem block -> disk block
-	 memset(io_buf, 0, 512);
-	 memcpy(io_buf, p_de, dir_entry_size);
-	 ide_write(cur_part->my_disk, all_blocks[blk_i], io_buf, 1);
-	 dir_inode->i_size += dir_entry_size;
-	 return true;
-      }
-
-      // no-free direct block and the indirec block has been alloc
-      // then load indirect block
-      if (blk_i == DIRECT_PTRS) {
-	 ide_read(cur_part->my_disk, dir_inode->i_sectors[DIRECT_PTRS],
-	   all_blocks + DIRECT_PTRS, 1);
-	 has_flatten = true;
-	 continue;
-      }
-
-      // find a non-free block ptr (try to find empty entry in it)
-      ide_read(cur_part->my_disk, all_blocks[blk_i], io_buf, 1);
-      for (uint8_t dir_entry_i = 0; dir_entry_i < dir_entrys_per_sec; dir_entry_i++) {
-	 if ((dir_e + dir_entry_i)->f_type == FT_UNKNOWN) { // empty
-	    memcpy(dir_e + dir_entry_i, p_de, dir_entry_size);
-	    ide_write(cur_part->my_disk, all_blocks[blk_i], io_buf, 1);
-	    dir_inode->i_size += dir_entry_size;
-	    return true;
-	 }
-      }
-      blk_i++;
-   }
-   // no free entry
-   printk("directory is full!\n");
-   return false;
+		// find a non-free block ptr (try to find empty entry in it)
+		ide_read(cur_part->my_disk, all_blocks[blk_i], io_buf, 1);
+		for (uint8_t dir_entry_i = 0; dir_entry_i < dir_entrys_per_sec;
+		     dir_entry_i++) {
+			if ((dir_e + dir_entry_i)->f_type ==
+			    FT_UNKNOWN) { // empty
+				memcpy(dir_e + dir_entry_i, p_de,
+				       dir_entry_size);
+				ide_write(cur_part->my_disk, all_blocks[blk_i],
+					  io_buf, 1);
+				dir_inode->i_size += dir_entry_size;
+				return true;
+			}
+		}
+		blk_i++;
+	}
+	// no free entry
+	printk("directory is full!\n");
+	return false;
 }
 
 // delete entry in pdir with inode_no
-bool delete_dir_entry(struct partition* part, struct dir* pdir, uint32_t inode_no, void* io_buf) {
+bool delete_dir_entry(struct partition *part, struct dir *pdir,
+		      uint32_t inode_no, void *io_buf)
+{
+	struct inode *dir_inode = pdir->inode;
 
-   struct inode* dir_inode = pdir->inode;
+	// paradigm: build a flatten ptrs array
+	uint32_t blk_i = 0, all_blocks[FLATTEN_PTRS] = { 0 };
+	while (blk_i < DIRECT_PTRS) {
+		all_blocks[blk_i] = dir_inode->i_sectors[blk_i];
+		blk_i++;
+	}
+	if (dir_inode->i_sectors[DIRECT_PTRS]) {
+		ide_read(part->my_disk, dir_inode->i_sectors[DIRECT_PTRS],
+			 all_blocks + DIRECT_PTRS, 1);
+	}
 
-   // paradigm: build a flatten ptrs array
-   uint32_t blk_i = 0, all_blocks[FLATTEN_PTRS] = {0};
-   while (blk_i < DIRECT_PTRS) {
-      all_blocks[blk_i] = dir_inode->i_sectors[blk_i];
-      blk_i++;
-   }
-   if (dir_inode->i_sectors[DIRECT_PTRS]) {
-      ide_read(part->my_disk,
-	       dir_inode->i_sectors[DIRECT_PTRS], all_blocks + DIRECT_PTRS, 1);
-   }
+	// dir_e will not cross secs
+	uint32_t dir_entry_size = part->sb->dir_entry_size;
+	uint32_t dir_entrys_per_sec = (SECTOR_SIZE / dir_entry_size);
+	struct dir_entry *dir_e = (struct dir_entry *)io_buf; // dir buf
+	struct dir_entry *dir_entry_found = NULL;
 
-   // dir_e will not cross secs
-   uint32_t dir_entry_size = part->sb->dir_entry_size;
-   uint32_t dir_entrys_per_sec = (SECTOR_SIZE / dir_entry_size);
-   struct dir_entry* dir_e = (struct dir_entry*)io_buf; // dir buf
-   struct dir_entry* dir_entry_found = NULL;
+	uint8_t dir_entry_idx, dir_entry_cnt;
+	// cnt tell us if we can delete the block
 
-   uint8_t dir_entry_idx, dir_entry_cnt;
-   // cnt tell us if we can delete the block
+	bool is_dir_first_block = false;
 
-   bool is_dir_first_block = false;
+	blk_i = 0;
+	while (blk_i < FLATTEN_PTRS) {
+		is_dir_first_block = false;
+		if (all_blocks[blk_i] == 0) {
+			blk_i++;
+			continue;
+		}
 
-   blk_i = 0;
-   while (blk_i < FLATTEN_PTRS) {
-      is_dir_first_block = false;
-      if (all_blocks[blk_i] == 0) {
-	 blk_i++;
-	 continue;
-      }
+		memset(io_buf, 0, SECTOR_SIZE);
+		ide_read(part->my_disk, all_blocks[blk_i], io_buf, 1);
 
-      memset(io_buf, 0, SECTOR_SIZE);
-      ide_read(part->my_disk, all_blocks[blk_i], io_buf, 1);
+		dir_entry_idx = dir_entry_cnt = 0;
+		// foreach entry
+		while (dir_entry_idx < dir_entrys_per_sec) {
+			// exist
+			if ((dir_e + dir_entry_idx)->f_type != FT_UNKNOWN) {
+				if (!strcmp((dir_e + dir_entry_idx)->filename,
+					    ".")) {
+					// this dir contain '.', then it must be the first blk of entry
+					// emm... why not use blk_i == 0 ?
+					is_dir_first_block = true;
+				} else if (strcmp((dir_e + dir_entry_idx)
+							  ->filename,
+						  ".") &&
+					   strcmp((dir_e + dir_entry_idx)
+							  ->filename,
+						  "..")) {
+					dir_entry_cnt++;
+					if ((dir_e + dir_entry_idx)->i_no ==
+					    inode_no) {
+						// never twice found
+						ASSERT(dir_entry_found == NULL);
+						dir_entry_found =
+							dir_e + dir_entry_idx;
+						// gono, to get `cnt`
+					}
+				}
+			}
+			dir_entry_idx++;
+		}
 
-      dir_entry_idx = dir_entry_cnt = 0;
-      // foreach entry
-      while (dir_entry_idx < dir_entrys_per_sec) {
-	 // exist
-	 if ((dir_e + dir_entry_idx)->f_type != FT_UNKNOWN) {
-	    if (!strcmp((dir_e + dir_entry_idx)->filename, ".")) {
-	       // this dir contain '.', then it must be the first blk of entry
-	       // emm... why not use blk_i == 0 ?
-	       is_dir_first_block = true;
-	    }
-	    else if (strcmp((dir_e + dir_entry_idx)->filename, ".") &&
-		  strcmp((dir_e + dir_entry_idx)->filename, "..")) {
-	       dir_entry_cnt++;
-	       if ((dir_e + dir_entry_idx)->i_no == inode_no) {
-		  // never twice found
-		  ASSERT(dir_entry_found == NULL);
-		  dir_entry_found = dir_e + dir_entry_idx;
-		  // gono, to get `cnt`
-	       }
-	    }
-	 }
-	 dir_entry_idx++;
-      }
+		if (dir_entry_found == NULL) {
+			blk_i++;
+			continue;
+		}
 
-      if (dir_entry_found == NULL) {
-	 blk_i++;
-	 continue;
-      }
+		// found
+		ASSERT(dir_entry_cnt >= 1);
 
-      // found
-      ASSERT(dir_entry_cnt >= 1);
+		// delete the block
+		//    if it's the first block(contain '.' '..'),
+		//    we can not delete it even if it's empty
+		if (dir_entry_cnt == 1 && !is_dir_first_block) {
+			// erase this block (bitmap)
+			uint32_t block_bitmap_idx =
+				all_blocks[blk_i] - part->sb->data_start_lba;
+			bitmap_set(&part->block_bitmap, block_bitmap_idx, 0);
+			bitmap_sync(cur_part, block_bitmap_idx, BLOCK_BITMAP);
 
+			// direct blk
+			if (blk_i < DIRECT_PTRS) {
+				dir_inode->i_sectors[blk_i] = 0;
+			}
+			// indirect blk
+			else {
+				// num of indirect blks
+				uint32_t indirect_blocks = 0;
+				uint32_t indirect_block_idx = DIRECT_PTRS;
+				while (indirect_block_idx < FLATTEN_PTRS) {
+					if (all_blocks[indirect_block_idx] !=
+					    0) {
+						indirect_blocks++;
+					}
+				}
+				// at lease cur blk
+				ASSERT(indirect_blocks >= 1);
 
-      // delete the block
-      //    if it's the first block(contain '.' '..'),
-      //    we can not delete it even if it's empty
-      if (dir_entry_cnt == 1 && !is_dir_first_block) {
-	 // erase this block (bitmap)
-	 uint32_t block_bitmap_idx = all_blocks[blk_i] - part->sb->data_start_lba;
-	 bitmap_set(&part->block_bitmap, block_bitmap_idx, 0);
-	 bitmap_sync(cur_part, block_bitmap_idx, BLOCK_BITMAP);
+				// erase only this indirect ptr in tab
+				if (indirect_blocks > 1) {
+					all_blocks[blk_i] = 0;
+					ide_write(
+						part->my_disk,
+						dir_inode->i_sectors[DIRECT_PTRS],
+						all_blocks + DIRECT_PTRS, 1);
+				}
+				// erase the whole indirect tab
+				else {
+					block_bitmap_idx =
+						dir_inode
+							->i_sectors[DIRECT_PTRS] -
+						part->sb->data_start_lba;
+					bitmap_set(&part->block_bitmap,
+						   block_bitmap_idx, 0);
+					bitmap_sync(cur_part, block_bitmap_idx,
+						    BLOCK_BITMAP);
+					dir_inode->i_sectors[DIRECT_PTRS] = 0;
+				}
+			}
+		}
+		// delete the entry
+		else {
+			memset(dir_entry_found, 0, dir_entry_size);
+			ide_write(part->my_disk, all_blocks[blk_i], io_buf, 1);
+		}
 
-	 // direct blk
-	 if (blk_i < DIRECT_PTRS) {
-	    dir_inode->i_sectors[blk_i] = 0;
-	 }
-	    // indirect blk
-	 else {
-	    // num of indirect blks
-	    uint32_t indirect_blocks = 0;
-	    uint32_t indirect_block_idx = DIRECT_PTRS;
-	    while (indirect_block_idx < FLATTEN_PTRS) {
-	       if (all_blocks[indirect_block_idx] != 0) {
-		  indirect_blocks++;
-	       }
-	    }
-	    // at lease cur blk
-	    ASSERT(indirect_blocks >= 1);
-
-	    // erase only this indirect ptr in tab
-	    if (indirect_blocks > 1) {
-	       all_blocks[blk_i] = 0;
-	       ide_write(part->my_disk,
-		  dir_inode->i_sectors[DIRECT_PTRS], all_blocks + DIRECT_PTRS, 1);
-	    }
-	    // erase the whole indirect tab
-	    else {
-	       block_bitmap_idx = dir_inode->i_sectors[DIRECT_PTRS] - part->sb->data_start_lba;
-	       bitmap_set(&part->block_bitmap, block_bitmap_idx, 0);
-	       bitmap_sync(cur_part, block_bitmap_idx, BLOCK_BITMAP);
-	       dir_inode->i_sectors[DIRECT_PTRS] = 0;
-	    }
-	 }
-      }
-	 // delete the entry
-      else {
-	 memset(dir_entry_found, 0, dir_entry_size);
-	 ide_write(part->my_disk, all_blocks[blk_i], io_buf, 1);
-      }
-
-      // udpate inode
-      ASSERT(dir_inode->i_size >= dir_entry_size);
-      dir_inode->i_size -= dir_entry_size;
-      memset(io_buf, 0, SECTOR_SIZE * 2);
-      // `inode_sync` may cross secs
-      inode_sync(part, dir_inode, io_buf);
-      return true;
-   }
-   // no such inode(file),
-   //	 you may need check usage of `search_file`
-   return false;
+		// udpate inode
+		ASSERT(dir_inode->i_size >= dir_entry_size);
+		dir_inode->i_size -= dir_entry_size;
+		memset(io_buf, 0, SECTOR_SIZE * 2);
+		// `inode_sync` may cross secs
+		inode_sync(part, dir_inode, io_buf);
+		return true;
+	}
+	// no such inode(file),
+	//	 you may need check usage of `search_file`
+	return false;
 }
-
 
 // return only one dir_entry
 // simple but powerful, together with:
@@ -361,90 +395,91 @@ bool delete_dir_entry(struct partition* part, struct dir* pdir, uint32_t inode_n
 //
 //    another problem is: why we don't implement it before `search_dir_entry`
 //	       since it's really useful...
-struct dir_entry* dir_read(struct dir* dir) {
+struct dir_entry *dir_read(struct dir *dir)
+{
+	struct dir_entry *dir_e = (struct dir_entry *)dir->dir_buf;
+	struct inode *dir_inode = dir->inode;
+	uint32_t all_blocks[FLATTEN_PTRS] = { 0 }, block_cnt = DIRECT_PTRS;
 
-   struct dir_entry* dir_e = (struct dir_entry*)dir->dir_buf;
-   struct inode* dir_inode = dir->inode;
-   uint32_t all_blocks[FLATTEN_PTRS] = {0}, block_cnt = DIRECT_PTRS;
+	uint32_t blk_i = 0, dir_entry_idx = 0;
 
-   uint32_t blk_i = 0, dir_entry_idx = 0;
+	while (blk_i < DIRECT_PTRS) {
+		all_blocks[blk_i] = dir_inode->i_sectors[blk_i];
+		blk_i++;
+	}
+	if (dir_inode->i_sectors[DIRECT_PTRS] != 0) {
+		ide_read(cur_part->my_disk, dir_inode->i_sectors[DIRECT_PTRS],
+			 all_blocks + DIRECT_PTRS, 1);
+		block_cnt = FLATTEN_PTRS;
+	}
 
-   while (blk_i < DIRECT_PTRS) {
-      all_blocks[blk_i] = dir_inode->i_sectors[blk_i];
-      blk_i++;
-   }
-   if (dir_inode->i_sectors[DIRECT_PTRS] != 0) {
-      ide_read(cur_part->my_disk,
-	       dir_inode->i_sectors[DIRECT_PTRS], all_blocks + DIRECT_PTRS, 1);
-      block_cnt = FLATTEN_PTRS;
-   }
+	uint32_t cur_dir_entry_pos = 0;
+	uint32_t dir_entry_size = cur_part->sb->dir_entry_size;
+	uint32_t dir_entrys_per_sec = SECTOR_SIZE / dir_entry_size;
 
-   uint32_t cur_dir_entry_pos = 0;
-   uint32_t dir_entry_size = cur_part->sb->dir_entry_size;
-   uint32_t dir_entrys_per_sec = SECTOR_SIZE / dir_entry_size;
+	// all blk, then all possible entry
+	for (blk_i = 0; blk_i < block_cnt; blk_i++) {
+		// read over
+		if (dir->dir_pos >= dir_inode->i_size) {
+			return NULL;
+		}
+		if (all_blocks[blk_i] == 0) {
+			blk_i++;
+			continue;
+		}
 
-   // all blk, then all possible entry
-   for (blk_i = 0; blk_i < block_cnt; blk_i++) {
-      // read over
-      if (dir->dir_pos >= dir_inode->i_size) {
-	 return NULL;
-      }
-      if (all_blocks[blk_i] == 0) {
-	 blk_i++;
-	 continue;
-      }
+		memset(dir_e, 0, SECTOR_SIZE);
+		ide_read(cur_part->my_disk, all_blocks[blk_i], dir_e, 1);
 
-      memset(dir_e, 0, SECTOR_SIZE);
-      ide_read(cur_part->my_disk, all_blocks[blk_i], dir_e, 1);
-
-      dir_entry_idx = 0; // idx of block frame
-      while (dir_entry_idx < dir_entrys_per_sec) {
-
-	 // find a entry
-	 if ((dir_e + dir_entry_idx)->f_type) {
-	    // if newer? (newer must append?)
-	    if (cur_dir_entry_pos < dir->dir_pos) {
-	       cur_dir_entry_pos += dir_entry_size;
-	       dir_entry_idx++;
-	       continue;
-	    }
-	    ASSERT(cur_dir_entry_pos == dir->dir_pos);
-	    dir->dir_pos += dir_entry_size; // next start point
-	    return dir_e + dir_entry_idx;
-	 }
-	 dir_entry_idx++;
-      }
-   }
-   return NULL;
+		dir_entry_idx = 0; // idx of block frame
+		while (dir_entry_idx < dir_entrys_per_sec) {
+			// find a entry
+			if ((dir_e + dir_entry_idx)->f_type) {
+				// if newer? (newer must append?)
+				if (cur_dir_entry_pos < dir->dir_pos) {
+					cur_dir_entry_pos += dir_entry_size;
+					dir_entry_idx++;
+					continue;
+				}
+				ASSERT(cur_dir_entry_pos == dir->dir_pos);
+				dir->dir_pos +=
+					dir_entry_size; // next start point
+				return dir_e + dir_entry_idx;
+			}
+			dir_entry_idx++;
+		}
+	}
+	return NULL;
 }
 
 // i.e. only . and ..
-bool dir_is_empty(struct dir* dir) {
-   struct inode* dir_inode = dir->inode;
-   return (dir_inode->i_size == cur_part->sb->dir_entry_size * 2);
+bool dir_is_empty(struct dir *dir)
+{
+	struct inode *dir_inode = dir->inode;
+	return (dir_inode->i_size == cur_part->sb->dir_entry_size * 2);
 }
 
 // remove a empty dir
-int32_t dir_remove(struct dir* parent_dir, struct dir* child_dir) {
+int32_t dir_remove(struct dir *parent_dir, struct dir *child_dir)
+{
+	struct inode *child_dir_inode = child_dir->inode;
 
-   struct inode* child_dir_inode  = child_dir->inode;
+	// dir is empty -> only one block
+	for (int32_t blk_i = 1; blk_i < TOTAL_PTRS; blk_i++) {
+		ASSERT(child_dir_inode->i_sectors[blk_i] == 0);
+	}
 
-   // dir is empty -> only one block
-   for (int32_t blk_i = 1; blk_i < TOTAL_PTRS; blk_i++) {
-      ASSERT(child_dir_inode->i_sectors[blk_i] == 0);
-   }
+	void *io_buf = sys_malloc(SECTOR_SIZE * 2);
+	if (io_buf == NULL) {
+		printk("dir_remove: malloc for io_buf failed\n");
+		return -1;
+	}
 
-   void* io_buf = sys_malloc(SECTOR_SIZE * 2);
-   if (io_buf == NULL) {
-      printk("dir_remove: malloc for io_buf failed\n");
-      return -1;
-   }
+	// delete entry
+	delete_dir_entry(cur_part, parent_dir, child_dir_inode->i_no, io_buf);
+	// delete inode
+	inode_release(cur_part, child_dir_inode->i_no);
 
-   // delete entry
-   delete_dir_entry(cur_part, parent_dir, child_dir_inode->i_no, io_buf);
-   // delete inode
-   inode_release(cur_part, child_dir_inode->i_no);
-
-   sys_free(io_buf);
-   return 0;
+	sys_free(io_buf);
+	return 0;
 }

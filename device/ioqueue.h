@@ -9,25 +9,25 @@
 
 // circular buffer (thread-safe)
 struct ioqueue {
-  struct lock lock; // write lock (who can set the waitlist and buf?)
+	struct lock lock; // write lock (who can set the waitlist and buf?)
 
-  struct task_struct* producer; // waiting producer
-  struct task_struct* consumer; // waiting consumer
+	struct task_struct *producer; // waiting producer
+	struct task_struct *consumer; // waiting consumer
 
-  char buf[bufsize]; // actual size: bufsize-1
+	char buf[bufsize]; // actual size: bufsize-1
 
-  int32_t head;
-  int32_t tail;
+	int32_t head;
+	int32_t tail;
 };
 
-void ioqueue_init(struct ioqueue* ioq);
+void ioqueue_init(struct ioqueue *ioq);
 
-int ioq_empty(struct ioqueue* ioq);
-int ioq_full(struct ioqueue* ioq);
+int ioq_empty(struct ioqueue *ioq);
+int ioq_full(struct ioqueue *ioq);
 
-char ioq_getchar(struct ioqueue* ioq);
-void ioq_putchar(struct ioqueue* ioq, char byte);
+char ioq_getchar(struct ioqueue *ioq);
+void ioq_putchar(struct ioqueue *ioq, char byte);
 
-uint32_t ioq_length(struct ioqueue* ioq);
+uint32_t ioq_length(struct ioqueue *ioq);
 
 #endif

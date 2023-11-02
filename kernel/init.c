@@ -11,19 +11,20 @@
 #include "ide.h"
 #include "fs.h"
 
-void init_all() {
-   put_str("init_all\n");
-   idt_init(); // set idt and PIC
-   mem_init(); // page table and mem alloc
-   thread_init(); // abstract main as thread
-   timer_init(); // init PIT
-   console_init(); // define console as a public resource
-   keyboard_init(); // register keyboard event handler
-   tss_init(); // update tss desc and ring3 desc
-   syscall_init(); // make syscall_table
+void init_all()
+{
+	put_str("init_all\n");
+	idt_init(); // set idt and PIC
+	mem_init(); // page table and mem alloc
+	thread_init(); // abstract main as thread
+	timer_init(); // init PIT
+	console_init(); // define console as a public resource
+	keyboard_init(); // register keyboard event handler
+	tss_init(); // update tss desc and ring3 desc
+	syscall_init(); // make syscall_table
 
-   intr_enable();    // enbale intr before
+	intr_enable(); // enbale intr before
 
-   ide_init();  // init the channels, disks, partitions
-   fs_init(); // scan or install fs
+	ide_init(); // init the channels, disks, partitions
+	fs_init(); // scan or install fs
 }
