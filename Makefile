@@ -1,21 +1,10 @@
-.PHONY = bochs \
-	kernel \
-	gdb \
-	boot-master \
-	clean-disk \
-	userelf \
-	dep \
-	clean \
-	mbr-disasm \
-	loader-disasm \
+include common.mk
 
 BUILD_DIR = ./build
-ENTRY_POINT = 0xc0001500
+ELF_DIR = ${BUILD_DIR}/elf
 
-AS = nasm
-CC = clang
-LD = ld
-BXIMAGE=/usr/local/bin/bximage
+$(shell mkdir -p $(BUILD_DIR))
+$(shell mkdir -p $(ELF_DIR))
 
 ASINCS = -I boot/include
 INCS = -I lib/kernel/ \
@@ -27,13 +16,6 @@ INCS = -I lib/kernel/ \
 	   -I lib/user/ \
 	   -I fs/ \
 	   -I shell/ \
-
-ASFLAGS = -f elf -g
-CFLAGS = -m32 -static -fno-builtin -nostdlib -fno-stack-protector \
-		 -mno-sse -g
-		 # -W -Wstrict-prototypes -Wmissing-prototypes
-
-LDFLAGS = -e main -static -Ttext $(ENTRY_POINT) -m elf_i386
 
 OBJS = $(BUILD_DIR)/main.o \
 	   $(BUILD_DIR)/init.o \
@@ -77,13 +59,11 @@ OBJS = $(BUILD_DIR)/main.o \
 #	for example:
 #		if you see error stack magic, it may not caused by stackoverflow,
 #		but you need to recomplie timer.c (due to change of task_struct)
-bochs: boot-master slave-hd80M.img userelf
-	# nm build/kernel.bin | grep " T " | awk '{ print $$1" "$$3 }' > kernel.sym
-	nm build/kernel.bin | awk '{ print $$1" "$$3 }' > kernel.sym
-	bochs -q -f bochs.conf
-
-gdb: boot-master slave-hd80M.img userelf
-	BXSHARE=/usr/local/share/bochs bochs-gdb -q -f bochs-gdb.conf
+.PHONY: run
+run: load fs userelf
+	# nm build/kernel.elf | grep " T " | awk '{ print $$1" "$$3 }' > kernel.sym
+	# nm build/kernel.elf | awk '{ print $$1" "$$3 }' > kernel.sym
+	$(BOCHS) -f $(BCONF)
 
 $(BUILD_DIR)/mbr.bin: boot/mbr.S
 	$(AS) $(ASINCS) $< -o $@
@@ -91,7 +71,7 @@ $(BUILD_DIR)/mbr.bin: boot/mbr.S
 $(BUILD_DIR)/loader.bin: boot/loader.S
 	$(AS) $(ASINCS) $< -o $@
 
-$(BUILD_DIR)/kernel.bin: $(OBJS)
+$(BUILD_DIR)/kernel.elf: $(OBJS)
 	$(LD) $(LDFLAGS) $^ -o $@
 
 $(BUILD_DIR)/kernel.o: kernel/kernel.S
@@ -205,51 +185,40 @@ $(BUILD_DIR)/wait_exit.o: userprog/wait_exit.c userprog/wait_exit.h
 $(BUILD_DIR)/pipe.o: shell/pipe.c shell/pipe.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
 
-# https://stackoverflow.com/questions/816370/how-do-you-force-a-makefile-to-rebuild-a-target
-master-hd60M.img:
-	rm -rf $@ && $(BXIMAGE) -q -hd -mode="flat" -size=60 $@
-	# TODO: dd if=/dev/zero of=hd60M.img bs=4K count=15360
+.PHONY: disk
+disk:
+	yes | $(BXIMAGE) -q -hd=60M -imgmode=flat -func=create boot.img
+	# dd if=/dev/zero of=boot.img bs=4M count=15
+	yes | $(BXIMAGE) -q -hd=80M -imgmode=flat -func=create fs.img
 
-slave-hd80M.img:
-	rm -rf $@ && $(BXIMAGE) -q -hd -mode="flat" -size=80 $@
-	cat partition-slave.sfdisk | sfdisk $@
+.PHONY: load
+load: disk $(BUILD_DIR)/mbr.bin $(BUILD_DIR)/loader.bin $(BUILD_DIR)/kernel.elf
+	dd if=$(BUILD_DIR)/mbr.bin of=boot.img bs=512B count=1 conv=notrunc
+	dd if=$(BUILD_DIR)/loader.bin of=boot.img bs=512B count=4 seek=2 conv=notrunc
+	# strip -R .got.plt kernel.elf -R .note.gnu.property -R .eh_frame kernel.elf
+	dd if=$(BUILD_DIR)/kernel.elf of=boot.img bs=512B count=200 seek=9 conv=notrunc # dd is smart enough
 
-boot-master: master-hd60M.img $(BUILD_DIR)/mbr.bin $(BUILD_DIR)/loader.bin $(BUILD_DIR)/kernel.bin
-	dd if=$(BUILD_DIR)/mbr.bin of=$< bs=512B count=1 conv=notrunc
-	dd if=$(BUILD_DIR)/loader.bin of=$< bs=512B count=4 seek=2 conv=notrunc
-	# strip -R .got.plt kernel.bin -R .note.gnu.property -R .eh_frame kernel.bin
-	dd if=$(BUILD_DIR)/kernel.bin of=$< bs=512B count=200 seek=9 conv=notrunc # dd is smart enough
+.PHONY: fs
+fs: disk
+	cat script/part.sfdisk | sfdisk fs.img
 
-userelf:
+.PHONY: userelf
+userelf: $(BUILD_DIR)/kernel.elf # ensure lib exist
 	$(MAKE) -C ./user
 	$(MAKE) -C ./user load
 
-clean-disk:
-	rm master-hd60M.img slave-hd80M.img -rf
-
-loader-disasm: loader.bin
-	objdump -D -b binary -mi386 -Mintel,i8086 $<
-
-mbr-disasm: mbr.bin
-	objdump -D -b binary -mi386 -Mintel,i8086 $<
+.PHONY: code
+code:
+	objdump -D -b binary -mi386 -Mintel,i8086 kernel.elf | less
 	# AT&T
 	# objdump -D -b binary -mi386 -Maddr16,data16 mbr.bin
 	# ndisasm -b16 -o7c00h -a -s7c3eh mbr.bin
 
+.PHONY: clean
 clean:
-	rm -rf -- $(BUILD_DIR)/*
-	# rm -rf -- *.{bin,o,out} -rf
-	# $(MAKE) -C ./user clean
+	rm $(BUILD_DIR) -rf
+	rm *.img
 
-dep:
-	sudo pacman -S nasm gtk-2 xorg
-	wget "https://sourceforge.net/projects/bochs/files/bochs/2.6.2/bochs-2.6.2.tar.gz/download" &&\
-		tar -xzf bochs-2.6.2.tar.gz &&\
-		(cd bochs-2.6.2 && ./configure \
-		--enable-debugger \
-		--enable-disasm \
-		--enable-iodebug \
-		--enable-x86-debugger \
-		--with-x \
-		--with-x11)
-	$(MAKE) -C bochs-2.6.2 install
+.PHONY: gdb
+gdb: load fs userelf
+	BXSHARE=/usr/share/bochs bochs-gdb -q -f script/bochs-gdb.conf

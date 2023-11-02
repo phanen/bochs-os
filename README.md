@@ -1,55 +1,34 @@
 ## features
-- about 7000 loc, based on intel IA-32
-- round-robbin process/thread schedule
-- IDE disk driver
+- a x86 operating system (tested on bochs-os)
+- round-robbin schedule
 - virtual memory management
 - ext2-like file system
-- 27 syscall support
-- load 32 bit elf user program
+- unix-like syscall support
+- support 32 bit elf
 ![pic](http://img.phanium.top/20230617161507.png)
 
-> For documents or testcases, refer to [doc.md](./doc/doc.md) or [test.md](./doc/tests.md)
+> documents: [doc.md](./doc/doc.md)
+> testcases: [test.md](./doc/tests.md)
 
 ## dependencies
+- `bochs` (emulator)
+    - (with `bximage` to create disk image)
+- `gtk2` (gui)
+- `nasm` (x86 assembler)
+- `clang` (or `gcc`)
+- `gdb` (optional)
+- `bochs-gdb` (optional)
+- `bear` (optional)
 
-The dependencies you may need:
-- necessary
-    - bochs: simulator to run the OS
-    - gtk-2: dep for bochs, to display the virtual terminal
-    - nasm: for IA-32 assembler
-    - clang: compile the kernel
-- optional
-    - bochs-gdb: if you prefer gdb (but works not well, I personal use native bochs debugger)
-    - gdb: debugger
-    - bear: generate `compile_commands.json`, clangd lsp
-
-(for archlinux) You can install all necessary dependencies as a target in `Makefile`
-> you can also try bochs in AUR (not tested)
-```make
-dep:
-	sudo pacman -S nasm gtk-2 xorg
-	wget "https://sourceforge.net/projects/bochs/files/bochs/2.6.2/bochs-2.6.2.tar.gz/download" &&\
-		tar -xzf bochs-2.6.2.tar.gz &&\
-		(cd bochs-2.6.2 && ./configure \
-		--enable-debugger \
-		--enable-disasm \
-		--enable-iodebug \
-		--enable-x86-debugger \
-		--with-x \
-		--with-x11)
-	$(MAKE) -C bochs-2.6.2 install
+for archlinux: (`bochs` can be found in aur or archlinuxcn repo)
+```sh
+sudo yay -S nasm gtk-2 xorg bochs clang
+# optional
+# sudo yay -S bochs-gdb gdb bear
 ```
-
-> other distro can install in similar way
 
 ## build
-
-Once you has all necessary dependencies installed, all you need is just `make`, and all chores will be done automatically.
-
-You can also generate lsp support at the same time:
-```bash
-make clean && bear -- make
-```
+> ensure all necessary dependencies installed
 
 To know more about the build, you can `make` in the follow procedure:
 ```bash
@@ -60,7 +39,7 @@ make master-hd60M.img
 make slave-hd80.img
 
 # build an elf kernel, raw loader binary, and a mbr (512B)
-make kernel.bin loader.bin mbr.bin
+make kernel.elf loader.bin mbr.bin
 # load all these binary into the master disk
 make boot-master
 
@@ -72,9 +51,11 @@ make userelf
 make bochs
 ```
 
-Trick: `make` use timestamp-based build by default, to force rebuilding a target with no dependencies, you can use `-B`:
-```
+Trick: force rebuild
+```sh
 make -B slave-hd80.img
+# generate lsp info
+bear -- make -B
 ```
 
 ## everything

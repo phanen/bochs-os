@@ -83,12 +83,12 @@ MAX_ELF_SIZE = 50
 
 # load to raw disk
 load:
-	dd if=$(BUILD_DIR)/hello.out of=../master-hd60M.img bs=512 count=$(MAX_ELF_SIZE) seek=300 conv=notrunc
-	dd if=$(BUILD_DIR)/fork-exec.out of=../master-hd60M.img bs=512 count=$(MAX_ELF_SIZE) seek=400 conv=notrunc
-	dd if=$(BUILD_DIR)/cat.out of=../master-hd60M.img bs=512 count=$(MAX_ELF_SIZE) seek=500 conv=notrunc
-	dd if=$(BUILD_DIR)/pipe.out of=../master-hd60M.img bs=512 count=$(MAX_ELF_SIZE) seek=600 conv=notrunc
-	dd if=$(BUILD_DIR)/echo.out of=../master-hd60M.img bs=512 count=$(MAX_ELF_SIZE) seek=700 conv=notrunc
-	dd if=$(BUILD_DIR)/c4.out of=../master-hd60M.img bs=512 count=$(MAX_ELF_SIZE) seek=800 conv=notrunc
+	dd if=$(BUILD_DIR)/hello.out of=../boot.img bs=512 count=$(MAX_ELF_SIZE) seek=300 conv=notrunc
+	dd if=$(BUILD_DIR)/fork-exec.out of=../boot.img bs=512 count=$(MAX_ELF_SIZE) seek=400 conv=notrunc
+	dd if=$(BUILD_DIR)/cat.out of=../boot.img bs=512 count=$(MAX_ELF_SIZE) seek=500 conv=notrunc
+	dd if=$(BUILD_DIR)/pipe.out of=../boot.img bs=512 count=$(MAX_ELF_SIZE) seek=600 conv=notrunc
+	dd if=$(BUILD_DIR)/echo.out of=../boot.img bs=512 count=$(MAX_ELF_SIZE) seek=700 conv=notrunc
+	dd if=$(BUILD_DIR)/c4.out of=../boot.img bs=512 count=$(MAX_ELF_SIZE) seek=800 conv=notrunc
 
 clean:
 	rm -rf -- $(BUILD_DIR)/*
