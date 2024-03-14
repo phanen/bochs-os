@@ -222,3 +222,7 @@ clean:
 .PHONY: gdb
 gdb: load fs userelf
 	BXSHARE=/usr/share/bochs bochs-gdb -q -f script/bochs-gdb.conf
+
+.PHONY: doc
+doc:
+	sh ./script/doc-merge.sh ./doc > ./doc/merge.md
