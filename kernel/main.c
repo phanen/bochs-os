@@ -1,25 +1,15 @@
 #include "print.h"
 #include "init.h"
-// #include "debug.h"
+#include "debug.h"
 #include "thread.h"
-#include "interrupt.h"
 #include "console.h"
-// #include "ioqueue.h"
-// #include "keyboard.h"
-#include "process.h"
 #include "syscall.h"
-#include "syscall-init.h"
-
 #include "stdio.h"
 #include "stdio-kernel.h"
 #include "memory.h"
 #include "fs.h"
-#include "string.h"
-#include "dir.h"
-
+#include "ide.h"
 #include "shell.h"
-#include "keyboard.h"
-#include "io.h"
 
 char name_buf[TASK_NAME_LEN];
 

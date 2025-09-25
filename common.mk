@@ -11,5 +11,6 @@ ENTRY_POINT = 0xc0001500
 LDFLAGS = -e main -static -Ttext $(ENTRY_POINT) -m elf_i386
 
 BOCHS = bochs -q
+# BOCHS = /usr/bin/bochs -q
 BCONF = script/bochs.conf
-BXIMAGE = bximage
+# BXIMAGE = bximage

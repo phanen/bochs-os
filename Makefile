@@ -60,10 +60,50 @@ OBJS = $(BUILD_DIR)/main.o \
 #		if you see error stack magic, it may not caused by stackoverflow,
 #		but you need to recomplie timer.c (due to change of task_struct)
 .PHONY: run
-run: load fs userelf
+run: boot.img fs.img userelf
 	# nm build/kernel.elf | grep " T " | awk '{ print $$1" "$$3 }' > kernel.sym
 	# nm build/kernel.elf | awk '{ print $$1" "$$3 }' > kernel.sym
+	rm *.img.lock || true
 	$(BOCHS) -f $(BCONF)
+
+boot.img: $(BUILD_DIR)/mbr.bin $(BUILD_DIR)/loader.bin $(BUILD_DIR)/kernel.elf
+	# yes | $(BXIMAGE) -q -hd=60M -imgmode=flat -func=create $@
+	# yes | $(BXIMAGE) -q -hd -mode="flat" -size=60 $@
+	dd if=/dev/zero of=$@ bs=1M count=60
+	dd if=$(BUILD_DIR)/mbr.bin of=$@ bs=512B count=1 conv=notrunc
+	dd if=$(BUILD_DIR)/loader.bin of=$@ bs=512B count=4 seek=2 conv=notrunc
+	# strip -R .got.plt kernel.elf -R .note.gnu.property -R .eh_frame kernel.elf
+	dd if=$(BUILD_DIR)/kernel.elf of=$@ bs=512B count=200 seek=9 conv=notrunc # dd is smart enough
+
+fs.img:
+	dd if=/dev/zero of=$@ bs=1M count=80
+	cat script/part.sfdisk | sfdisk fs.img
+
+.PHONY: userelf
+userelf: $(BUILD_DIR)/kernel.elf # ensure lib exist
+	$(MAKE) -C ./user
+	$(MAKE) -C ./user load
+
+.PHONY: clean
+clean:
+	rm $(BUILD_DIR) -rf
+	rm *.img || true
+	rm *.img.lock || true
+
+.PHONY: gdb
+gdb: boot.img fs.img userelf
+	bochs-gdb -q -f script/bochs-gdb.conf
+
+.PHONY: doc
+doc:
+	sh ./script/doc-merge.sh ./doc > ./doc/merge.md
+
+.PHONY: code
+code:
+	objdump -D -b binary -mi386 -Mintel,i8086 kernel.elf | less
+	# AT&T
+	# objdump -D -b binary -mi386 -Maddr16,data16 mbr.bin
+	# ndisasm -b16 -o7c00h -a -s7c3eh mbr.bin
 
 $(BUILD_DIR)/mbr.bin: boot/mbr.S
 	$(AS) $(ASINCS) $< -o $@
@@ -184,45 +224,3 @@ $(BUILD_DIR)/wait_exit.o: userprog/wait_exit.c userprog/wait_exit.h
 
 $(BUILD_DIR)/pipe.o: shell/pipe.c shell/pipe.h
 	$(CC) $(INCS) $(CFLAGS) -c $< -o $@
-
-.PHONY: disk
-disk:
-	yes | $(BXIMAGE) -q -hd=60M -imgmode=flat -func=create boot.img
-	# dd if=/dev/zero of=boot.img bs=4M count=15
-	yes | $(BXIMAGE) -q -hd=80M -imgmode=flat -func=create fs.img
-
-.PHONY: load
-load: disk $(BUILD_DIR)/mbr.bin $(BUILD_DIR)/loader.bin $(BUILD_DIR)/kernel.elf
-	dd if=$(BUILD_DIR)/mbr.bin of=boot.img bs=512B count=1 conv=notrunc
-	dd if=$(BUILD_DIR)/loader.bin of=boot.img bs=512B count=4 seek=2 conv=notrunc
-	# strip -R .got.plt kernel.elf -R .note.gnu.property -R .eh_frame kernel.elf
-	dd if=$(BUILD_DIR)/kernel.elf of=boot.img bs=512B count=200 seek=9 conv=notrunc # dd is smart enough
-
-.PHONY: fs
-fs: disk
-	cat script/part.sfdisk | sfdisk fs.img
-
-.PHONY: userelf
-userelf: $(BUILD_DIR)/kernel.elf # ensure lib exist
-	$(MAKE) -C ./user
-	$(MAKE) -C ./user load
-
-.PHONY: code
-code:
-	objdump -D -b binary -mi386 -Mintel,i8086 kernel.elf | less
-	# AT&T
-	# objdump -D -b binary -mi386 -Maddr16,data16 mbr.bin
-	# ndisasm -b16 -o7c00h -a -s7c3eh mbr.bin
-
-.PHONY: clean
-clean:
-	rm $(BUILD_DIR) -rf
-	rm *.img
-
-.PHONY: gdb
-gdb: load fs userelf
-	BXSHARE=/usr/share/bochs bochs-gdb -q -f script/bochs-gdb.conf
-
-.PHONY: doc
-doc:
-	sh ./script/doc-merge.sh ./doc > ./doc/merge.md

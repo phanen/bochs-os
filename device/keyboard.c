@@ -2,7 +2,6 @@
 #include "print.h"
 #include "interrupt.h"
 #include "io.h"
-#include "global.h"
 #include "ioqueue.h"
 
 #define KBD_BUF_PORT 0x60 // 8042 spec I/O port
@@ -34,6 +33,8 @@
 #define ctrl_r_make 0xe01d
 #define ctrl_r_break 0xe09d
 #define caps_lock_make 0x3a
+
+#define maybe_return 0xe01c
 
 struct ioqueue kbd_buf;
 
@@ -151,8 +152,8 @@ static void intr_keyboard_handler(void)
 		return;
 	}
 	// for makecode include only: ralt, rctl, and those in array
-	else if ((scancode > 0x00 && scancode < 0x3b) ||
-		 (scancode == alt_r_make) || (scancode == ctrl_r_make)) {
+	if ((scancode > 0x00 && scancode < 0x3b) || (scancode == alt_r_make) ||
+	    (scancode == ctrl_r_make) || (scancode == maybe_return)) {
 		// shift (caps_lock only work on letter, but not on num and sym)
 		int shift = 0;
 

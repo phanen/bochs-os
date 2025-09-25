@@ -50,6 +50,7 @@ section loader vstart=LOADER_BASE_ADDR
     ; loader_msg db "loader in the real"
 
   [bits 16]
+  ; jmp from mbr.S
   loader_start:
     ; int 0x15, to get mem size
     xor ebx, ebx
@@ -140,6 +141,8 @@ section loader vstart=LOADER_BASE_ADDR
     ; set gdtr
     lgdt [gdt_ptr]
 
+; hang:
+;     jmp hang
     ; enable PE in CR0
     mov eax, cr0
     or eax, 0x00000001
@@ -151,6 +154,7 @@ section loader vstart=LOADER_BASE_ADDR
 
   [bits 32]
   p_mode_start:
+    ; lidt [empty_idt_ptr]
 
     mov ax, SELECTOR_DATA
     mov ds, ax
@@ -377,3 +381,8 @@ rd_disk_m_32:
     add ebx, 2
     loop .go_on_read
     ret
+;
+; empty_idt_ptr:
+;     dw 0
+;     dd 0
+;

@@ -3,6 +3,8 @@
 BUILD_DIR = ./build
 LIB_DIR = ../build
 
+$(shell mkdir -p $(BUILD_DIR))
+
 AS = nasm
 CC = clang
 LD = ld
