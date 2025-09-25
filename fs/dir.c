@@ -8,7 +8,6 @@
 #include "debug.h"
 #include "memory.h"
 #include "string.h"
-#include "interrupt.h"
 #include "super_block.h"
 
 struct dir root_dir;

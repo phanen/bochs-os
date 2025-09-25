@@ -1,8 +1,6 @@
 #include "stdio-kernel.h"
-#include "print.h"
 #include "stdio.h"
 #include "console.h"
-#include "global.h"
 
 #include "stdarg.h"
 

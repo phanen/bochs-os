@@ -7,7 +7,6 @@
 #include "debug.h"
 #include "print.h"
 #include "process.h"
-#include "sync.h"
 #include "file.h"
 #include "stdio.h"
 #include "pid.h"

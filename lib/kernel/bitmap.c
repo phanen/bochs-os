@@ -1,8 +1,6 @@
 #include "bitmap.h"
 #include "stdint.h"
 #include "string.h"
-#include "print.h"
-#include "interrupt.h"
 #include "debug.h"
 
 // init bitmap all zero

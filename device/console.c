@@ -2,7 +2,6 @@
 #include "print.h"
 #include "stdint.h"
 #include "sync.h"
-#include "thread.h"
 
 // console is a abstract public resource
 // (actually print.c have enable us to interact with a single console

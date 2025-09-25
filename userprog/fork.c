@@ -7,7 +7,6 @@
 #include "thread.h"
 #include "string.h"
 #include "file.h"
-#include "stdio.h"
 
 extern void intr_exit(void);
 

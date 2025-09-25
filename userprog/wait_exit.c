@@ -4,7 +4,6 @@
 #include "pipe.h"
 #include "thread.h"
 #include "list.h"
-#include "stdio-kernel.h"
 #include "memory.h"
 #include "bitmap.h"
 #include "fs.h"

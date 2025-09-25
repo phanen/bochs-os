@@ -1,5 +1,4 @@
 #include "memory.h"
-#include "console.h"
 #include "stdint.h"
 #include "global.h"
 #include "debug.h"

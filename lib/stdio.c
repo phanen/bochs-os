@@ -1,10 +1,7 @@
 #include "stdio.h"
 #include "file.h"
-#include "interrupt.h"
-#include "global.h"
 #include "string.h"
 #include "syscall.h"
-#include "print.h"
 #include "assert.h"
 
 #include "stdarg.h"

@@ -1,11 +1,9 @@
-#include "builtin_cmd.h"
 #include "syscall.h"
 #include "stdio.h"
 #include "string.h"
 #include "fs.h"
 #include "global.h"
 #include "dir.h"
-#include "shell.h"
 #include "assert.h"
 
 // convert . or .. in abs_path

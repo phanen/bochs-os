@@ -6,7 +6,6 @@
 #include "memory.h"
 #include "interrupt.h"
 #include "list.h"
-#include "stdio-kernel.h"
 #include "string.h"
 #include "super_block.h"
 #include <stdint.h>

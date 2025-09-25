@@ -1,6 +1,5 @@
 #include "print.h"
 #include "init.h"
-#include "debug.h"
 #include "thread.h"
 #include "console.h"
 #include "syscall.h"

@@ -4,7 +4,6 @@
 #include "print.h"
 #include "thread.h"
 #include "console.h"
-#include "string.h"
 
 #include "memory.h"
 #include "fs.h"
