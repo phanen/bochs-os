@@ -37,17 +37,32 @@ SECTION MBR vstart=0x7c00
     mov byte [gs:0x06], 'g'
     mov byte [gs:0x07], 0xa4
 
+    mov ah, 0x42
+    mov dl, 0x80
+    mov si, dap
+    int 0x13 ; https://en.wikipedia.org/wiki/INT_13H
+    jmp LOADER_ENTRY_POINT
+
     mov eax, LOADER_START_SECTOR ; disk addr
     mov bx, LOADER_BASE_ADDR ; mem addr
     mov cx, 4 ; len/ sector count
     call rd_disk_m_16
     jmp LOADER_ENTRY_POINT
 
-    ; load from disk to mem, in 16 bit mode
+dap:
+    db 0x10                 ; packet size
+    db 0                    ; ..
+    dw 4                    ; block cnt
+    dw LOADER_BASE_ADDR     ; mem offset
+    dw 0x0000               ; mem seg
+    dq LOADER_START_SECTOR  ; LBA=2
+
+; load from disk to mem, in 16 bit mode
+; http://wiki.osdev.org/ATA_PIO_Mode
+; eax = disk addr
+; bx = mem addr
+; cx = len/ sector count
 rd_disk_m_16:
-      ; eax = disk addr
-      ; bx = mem addr
-      ; cx = len/ sector count
 
       ; backup
     mov esi, eax
@@ -92,13 +107,10 @@ rd_disk_m_16:
 
     ; polling (PIO)
   .not_ready:
-      ; ... sleep a round
     nop
     in al, dx
-      ; 7th: bsy, 4th: drdy
-    and al, 0x88
-      ; not bsy and rdy
-    cmp al, 0x08
+    and al, 0x88 ; 7th: bsy, 4th: drdy
+    cmp al, 0x08 ; not bsy and rdy
     jnz .not_ready
 
     ; read data
