@@ -9,9 +9,8 @@
 
 cs, ip 为什么不能 mov
 * 原子性需求: cs 改了, ip 没改, 寄
-* jmp call int ret 同时修改 cs 和 ip, 保证硬件级别的原子性
-
-同时也因为没法直接 mov, 有时通过原地跳转来修改寄存器
+* jmp call int ret 同时修改 cs:ip, 保证原子性
+* trick: 原地跳转来修改寄存器 flush pipeline
 ```
 jmp 0x90:xx
 ```
@@ -248,7 +247,7 @@ PATA 接口线缆: IDE 线
 ![img:disk-controler-pmio](https://i.imgur.com/5aN3gWI.png)
 * `CtlBR[4]` -> 0 为主盘, 1 为从盘
 * data: 读写 磁盘缓冲区 的数据
-* error: 读取失败的信息, 
+* error: 读取失败的信息,
 * feature: 存储格外的命令参数
 * sector count 待读取或写入的扇区数(号), 如果中间失败, 就表示尚未完成的扇区号
 * LBA 28: lba-low + lba-mid + lba-high + device.low4

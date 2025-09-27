@@ -1,5 +1,13 @@
+; vim:ft=nasm
+
 %include "boot.S"
 
+; https://www.nasm.us/docs/2.16.03/nasmdoc8.html#section-8.1.3
+; Sections can be ordered using follows=<section> or vfollows=<section>
+; as an alternative to specifying an explicit start address.
+; we can also use org (The function of the ORG directive is to specify
+; the origin address which NASM will assume the program begins at when
+; it is loaded into memory)
 section loader vstart=LOADER_BASE_ADDR
 
       ; actually it is initial stack top...
@@ -39,8 +47,7 @@ section loader vstart=LOADER_BASE_ADDR
       ; addr = 0x900 + (60+4)*8 = 0xb00
     total_mem_bytes dd 0
 
-    ; content of gdtr
-      ; to be load into gdtr
+    ; to be load into gdtr
     gdt_ptr dw GDT_LIMIT
             dd GDT_BASE
 
@@ -49,9 +56,9 @@ section loader vstart=LOADER_BASE_ADDR
     ards_nr dw 0
     ; loader_msg db "loader in the real"
 
-  [bits 16]
-  ; jmp from mbr.S
-  loader_start:
+
+  [bits 16] ; https://www.nasm.us/docs/2.16.03/nasmdoc7.html#section-7.1
+  loader_start: ; LOADER_ENTRY_POINT
     ; int 0x15, to get mem size
     xor ebx, ebx
     mov edx, 0x534d4150
@@ -141,8 +148,7 @@ section loader vstart=LOADER_BASE_ADDR
     ; set gdtr
     lgdt [gdt_ptr]
 
-; hang:
-;     jmp hang
+    ;jmp $
     ; enable PE in CR0
     mov eax, cr0
     or eax, 0x00000001
@@ -154,8 +160,6 @@ section loader vstart=LOADER_BASE_ADDR
 
   [bits 32]
   p_mode_start:
-    ; lidt [empty_idt_ptr]
-
     mov ax, SELECTOR_DATA
     mov ds, ax
     mov es, ax
@@ -381,8 +385,3 @@ rd_disk_m_32:
     add ebx, 2
     loop .go_on_read
     ret
-;
-; empty_idt_ptr:
-;     dw 0
-;     dd 0
-;

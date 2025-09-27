@@ -1,3 +1,5 @@
+; vim:ft=nasm
+
 [bits 32]
 section .text
 global switch_to

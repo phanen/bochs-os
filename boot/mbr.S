@@ -1,3 +1,5 @@
+; vim:ft=nasm
+
 %include "boot.S"
 
 SECTION MBR vstart=0x7c00
@@ -39,7 +41,7 @@ SECTION MBR vstart=0x7c00
     mov bx, LOADER_BASE_ADDR ; mem addr
     mov cx, 4 ; len/ sector count
     call rd_disk_m_16
-    jmp LOADER_BASE_ADDR + 0x300
+    jmp LOADER_ENTRY_POINT
 
     ; load from disk to mem, in 16 bit mode
 rd_disk_m_16:

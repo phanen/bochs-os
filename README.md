@@ -49,3 +49,6 @@ bear -- make -B
 * [ ] built-in editor
 * [ ] shell readline support
 * [ ] built-in compiler
+
+## credit
+* https://www.nasm.us

@@ -1,7 +1,9 @@
+; vim:ft=nasm
 
 ; loader (size < 2000B)
 LOADER_BASE_ADDR    equ      0x900
 LOADER_START_SECTOR equ        0x2
+LOADER_ENTRY_POINT  equ      LOADER_BASE_ADDR + 0x300
 PAGE_DIR_TABLE_POS  equ   0x100000 ; paddr of first PD
 
 ; kernel (size < 100K)

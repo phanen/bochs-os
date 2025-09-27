@@ -1,3 +1,5 @@
+; vim:ft=nasm
+
 [bits 32]
 %define ERROR_CODE nop ; error-code intr, do nothing
 %define ZERO push 0 ; non-error-code intr, then pad a dummy error_code

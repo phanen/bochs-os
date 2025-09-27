@@ -1,4 +1,5 @@
 AS = nasm
+# AS = yasm
 CC = clang
 LD = ld
 

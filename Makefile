@@ -66,6 +66,15 @@ run: boot.img fs.img userelf
 	rm *.img.lock || true
 	$(BOCHS) -f $(BCONF)
 
+qemu: boot.img fs.img userelf
+	qemu-system-i386 -m 32M \
+		-boot order=d \
+		-drive file=boot.img,if=ide,format=raw,index=0,media=disk \
+		-drive file=fs.img,if=ide,format=raw,index=1,media=disk \
+		-serial mon:stdio \
+		-nographic \
+		-S -s
+
 boot.img: $(BUILD_DIR)/mbr.bin $(BUILD_DIR)/loader.bin $(BUILD_DIR)/kernel.elf
 	# yes | $(BXIMAGE) -q -hd=60M -imgmode=flat -func=create $@
 	# yes | $(BXIMAGE) -q -hd -mode="flat" -size=60 $@
@@ -92,7 +101,8 @@ clean:
 
 .PHONY: gdb
 gdb: boot.img fs.img userelf
-	bochs-gdb -q -f script/bochs-gdb.conf
+	gdb
+	# bochs-gdb -q -f script/bochs-gdb.conf
 
 .PHONY: doc
 doc:
@@ -104,6 +114,7 @@ code:
 	# AT&T
 	# objdump -D -b binary -mi386 -Maddr16,data16 mbr.bin
 	# ndisasm -b16 -o7c00h -a -s7c3eh mbr.bin
+	# ndisasm -b16 -o900h -a -s7c3eh build/loader.bin
 
 $(BUILD_DIR)/mbr.bin: boot/mbr.S
 	$(AS) $(ASINCS) $< -o $@
