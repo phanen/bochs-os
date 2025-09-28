@@ -3,7 +3,8 @@
 %include "boot.S"
 
 SECTION MBR vstart=0x7c00
-
+    cli ; Disable interrupts
+    cld ; String operations increment
     mov ax, cs
     mov ds, ax
     mov es, ax
