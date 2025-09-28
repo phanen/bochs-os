@@ -67,13 +67,10 @@ run: boot.img fs.img userelf
 	$(BOCHS) -f $(BCONF)
 
 qemu: boot.img fs.img userelf
-	qemu-system-i386 -m 32M \
-		-boot order=d \
-		-drive file=boot.img,if=ide,format=raw,index=0,media=disk \
-		-drive file=fs.img,if=ide,format=raw,index=1,media=disk \
-		-serial mon:stdio \
-		-nographic \
-		-S -s
+	$(QEMU) $(QFLAGS)
+
+qemu-gdb: boot.img fs.img userelf
+	$(QEMU) $(QFLAGS) -S -s
 
 boot.img: $(BUILD_DIR)/mbr.bin $(BUILD_DIR)/loader.bin $(BUILD_DIR)/kernel.elf
 	# yes | $(BXIMAGE) -q -hd=60M -imgmode=flat -func=create $@
