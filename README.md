@@ -7,35 +7,19 @@
 * 32 bit elf
 ![pic](http://img.phanium.top/20230617161507.png)
 
-> documents: [doc.md](./doc/doc.md)
-> testcases: [test.md](./doc/tests.md)
-
 ## dependencies
-* `bochs` (<3.0, emulator)
-* `gtk2` (gui)
-* `nasm` (x86 assembler)
+* `bochs`/`qemu`
+* `nasm`
 * `clang`/`gcc`
-* `gdb` (optional)
-* `bochs-gdb` (optional)
-* `bear` (optional)
+* (optional: `gdb`/`bochs-gdb`/`bear`)
 
 ## build
-> ensure all necessary dependencies installed
-
-To know more about the build, you can `make` in the follow procedure:
 ```sh
-# master disk image for bootloaders and kernel
-make boot.img
-
-# slave disk image for fs (partitioning in mbr format)
-make fs.img
-
-# load user process into master disk
-# the kernel will load them into fs
-make userelf
-
-# run
+# run in bochs
 make
+
+# run in qemu
+make qemu
 
 # rebuild && run
 make -B
@@ -44,11 +28,18 @@ make -B
 bear -- make -B
 ```
 
+more documents
+* [doc.md](./doc/doc.md)
+* [test.md](./doc/tests.md)
+
 ## TODO
-* [ ] port to qemu
+* [x] port to qemu
 * [ ] built-in editor
 * [ ] shell readline support
 * [ ] built-in compiler
 
 ## credit
+* https://github.com/yifengyou/os-elephant
 * https://www.nasm.us
+* https://wiki.osdev.org
+* https://cdrdv2-public.intel.com/774493/325384-sdm-vol-3abcd.pdf

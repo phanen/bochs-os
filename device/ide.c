@@ -165,8 +165,9 @@ static bool busy_wait(struct disk *hd)
 //    wait before read
 //    select_disk -> select_sector -> cmd_out -> sema_down
 //    weak: check again(busy_wait) -> read_from_sector
-void ide_read(struct disk *hd, uint32_t lba, void *buf, uint32_t sec_cnt)
+static void _ide_read(struct disk *hd, uint32_t lba, void *buf)
 {
+	uint32_t sec_cnt = 1;
 	ASSERT(lba <= max_lba);
 	ASSERT(sec_cnt > 0);
 
@@ -209,8 +210,9 @@ void ide_read(struct disk *hd, uint32_t lba, void *buf, uint32_t sec_cnt)
 //    wait after write
 //    select_disk -> select_sector -> cmd_out -> write2sectorw -> sema_down
 //    weak: check again(busy_wait) -> read_from_sector
-void ide_write(struct disk *hd, uint32_t lba, void *buf, uint32_t sec_cnt)
+void _ide_write(struct disk *hd, uint32_t lba, void *buf)
 {
+	uint32_t sec_cnt = 1;
 	ASSERT(lba <= max_lba);
 	ASSERT(sec_cnt > 0);
 	lock_acquire(&hd->my_channel->lock);
@@ -243,6 +245,18 @@ void ide_write(struct disk *hd, uint32_t lba, void *buf, uint32_t sec_cnt)
 		secs_done += secs_op;
 	}
 	lock_release(&hd->my_channel->lock);
+}
+
+void ide_read(struct disk *hd, uint32_t lba, void *buf, uint32_t sec_cnt)
+{
+	for (uint32_t i = 0; i < sec_cnt; ++i)
+		_ide_read(hd, lba, buf + i * 512);
+}
+
+void ide_write(struct disk *hd, uint32_t lba, void *buf, uint32_t sec_cnt)
+{
+	for (uint32_t i = 0; i < sec_cnt; ++i)
+		_ide_write(hd, lba, buf + i * 512);
 }
 
 // word endian swap (1 word = 2 bytes)
