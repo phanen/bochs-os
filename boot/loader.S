@@ -140,6 +140,7 @@ section loader vstart=LOADER_BASE_ADDR
     .mem_get_ok:
       mov [total_mem_bytes], edx
 
+    cli
     ; enable A20
     in al, 0x92
     or al, 0000_0010b
@@ -148,7 +149,6 @@ section loader vstart=LOADER_BASE_ADDR
     ; set gdtr
     lgdt [gdt_ptr]
 
-    ;jmp $
     ; enable PE in CR0
     mov eax, cr0
     or eax, 0x00000001
