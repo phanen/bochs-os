@@ -133,6 +133,17 @@ rd_disk_m_16:
     mov [bx], ax
     add bx, 2
       ; check cx
+
+    ; not for bochs, but necessary for qemu
+    ; https://wiki.osdev.org/ATA_PIO_Mode#400ns_delays
+    or dl, 7
+    in al, dx ; delay 400ns to allow drive to set new values of BSY and DRQ
+    .pior_l:
+      in al, dx   ; grab a status byte
+      test al, 0x80   ; BSY flag set?
+      jne short .pior_l ; (all other flags are meaningless if BSY is set)
+      test al, 0x21   ; ERR or DF set?
+    sub dl, 7
     loop .go_on_read
     ret
 
