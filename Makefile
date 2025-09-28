@@ -70,7 +70,8 @@ qemu: boot.img fs.img userelf
 	$(QEMU) $(QFLAGS)
 
 qemu-gdb: boot.img fs.img userelf
-	$(QEMU) $(QFLAGS) -S -s
+	$(QEMU) $(QFLAGS) -S -s &>/dev/null &
+	gdb
 
 boot.img: $(BUILD_DIR)/mbr.bin $(BUILD_DIR)/loader.bin $(BUILD_DIR)/kernel.elf
 	# yes | $(BXIMAGE) -q -hd=60M -imgmode=flat -func=create $@

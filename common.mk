@@ -28,4 +28,4 @@ QEMU = qemu-system-i386
 BOCHS = bochs -q
 # BOCHS = /usr/bin/bochs -q
 BCONF = script/bochs.conf
-# BXIMAGE = bximage
+BXIMAGE = bximage

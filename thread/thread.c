@@ -51,11 +51,9 @@ static void kernel_thread(thread_func *function, void *func_arg)
 void thread_stack_init(struct task_struct *pthread, thread_func function,
 		       void *func_arg)
 {
-	// preserve the intr stack
-	pthread->self_kstack -= sizeof(struct intr_stack);
-
-	// set kernel thread stack
-	pthread->self_kstack -= sizeof(struct thread_stack);
+	// preserve the intr stack, kernel thread stack
+	pthread->self_kstack -=
+		sizeof(struct intr_stack) + sizeof(struct thread_stack);
 	struct thread_stack *kthread_stack =
 		(struct thread_stack *)pthread->self_kstack;
 	kthread_stack->eip =
